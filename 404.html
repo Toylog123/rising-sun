@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /><title>Redirecting...</title>
+<script>
+  // Capture the original path and redirect to root with path as query param
+  (function(){
+    var path = location.pathname.replace(/\/rising-sun/, '') || '/';
+    var search = location.search;
+    var hash = location.hash;
+    var target = location.origin + '/rising-sun/?p=' + encodeURIComponent(path + search) + hash;
+    location.replace(target);
+  })();
+</script>
+</head><body></body></html>

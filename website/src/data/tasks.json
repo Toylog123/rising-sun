@@ -1,0 +1,79 @@
+{
+  "advisor": "刘畅",
+  "members": ["周雨时", "谢俊杰", "佟亚龙", "肖睿颿"],
+  "tasks": [
+    { "id": "common-1", "assignee": "共同任务", "title": "占位符", "createdAt": "2026-04-01", "updates": [
+      { "date": "2026-04-01", "status": "执行中" }
+    ]},
+
+    { "id": "zys-1", "assignee": "周雨时", "title": "修改论文", "createdAt": "2025-11-14", "updates": [
+      { "date": "2025-11-14", "status": "执行中" },
+      { "date": "2025-11-29", "status": "执行中" },
+      { "date": "2025-12-06", "status": "执行中" },
+      { "date": "2026-01-09", "status": "执行中" },
+      { "date": "2026-01-20", "status": "执行中" },
+      { "date": "2026-03-10", "status": "进行中" },
+      { "date": "2026-04-01", "status": "进行中" },
+      { "date": "2026-04-17", "status": "进行中" },
+      { "date": "2026-06-06", "status": "进行中" },
+      { "date": "2026-07-07", "status": "进行中" },
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+    { "id": "zys-2", "assignee": "周雨时", "title": "构思课题方向", "createdAt": "2026-07-07", "updates": [
+      { "date": "2026-07-07", "status": "进行中" },
+      { "date": "2026-07-20", "status": "进行中", "note": "下次组会汇报" }
+    ]},
+
+    { "id": "xjj-1", "assignee": "谢俊杰", "title": "大量阅读整理关于 SET、SEU 的论文", "createdAt": "2026-01-09", "updates": [
+      { "date": "2026-01-09", "status": "进行中" },
+      { "date": "2026-01-20", "status": "进行中" },
+      { "date": "2026-03-10", "status": "进行中" },
+      { "date": "2026-04-01", "status": "进行中" },
+      { "date": "2026-04-17", "status": "进行中" },
+      { "date": "2026-06-06", "status": "进行中" },
+      { "date": "2026-07-07", "status": "进行中", "note": "下次组会分享参考文献阅读情况" },
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+    { "id": "xjj-2", "assignee": "谢俊杰", "title": "调研微处理器中错误自检技术", "createdAt": "2026-01-09", "updates": [
+      { "date": "2026-01-09", "status": "进行中" },
+      { "date": "2026-01-20", "status": "进行中" },
+      { "date": "2026-03-10", "status": "挂起" }
+    ]},
+    { "id": "xjj-3", "assignee": "谢俊杰", "title": "基于 ML 的故障分析方法，构思课题点", "createdAt": "2026-01-20", "updates": [
+      { "date": "2026-01-20", "status": "进行中" },
+      { "date": "2026-03-10", "status": "进行中" },
+      { "date": "2026-04-01", "status": "进行中" },
+      { "date": "2026-06-06", "status": "进行中" },
+      { "date": "2026-07-07", "status": "进行中", "note": "7 月底前完成初稿" },
+      { "date": "2026-07-20", "status": "进行中", "note": "本周完成初稿" }
+    ]},
+    { "id": "xjj-4", "assignee": "谢俊杰", "title": "用现有可靠性分析方法解决迈创核的工程问题", "createdAt": "2026-07-07", "updates": [
+      { "date": "2026-07-07", "status": "进行中" },
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+
+    { "id": "tyl-1", "assignee": "佟亚龙", "title": "修改学长论文", "createdAt": "2025-12-06", "updates": [
+      { "date": "2025-12-06", "status": "执行中" },
+      { "date": "2025-12-19", "status": "执行中" },
+      { "date": "2026-01-09", "status": "进行中" },
+      { "date": "2026-01-20", "status": "进行中" },
+      { "date": "2026-03-10", "status": "进行中" },
+      { "date": "2026-04-01", "status": "进行中" },
+      { "date": "2026-04-17", "status": "挂起" }
+    ]},
+    { "id": "tyl-2", "assignee": "佟亚龙", "title": "构思课题方向", "createdAt": "2026-07-07", "updates": [
+      { "date": "2026-07-07", "status": "进行中" },
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+
+    { "id": "xrf-1", "assignee": "肖睿颿", "title": "AI+EDA 方向论文阅读", "createdAt": "2026-07-20", "updates": [
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+    { "id": "xrf-2", "assignee": "肖睿颿", "title": "调研相关竞赛题目（ICCAD、EDA 精英挑战赛）", "createdAt": "2026-07-20", "updates": [
+      { "date": "2026-07-20", "status": "进行中" }
+    ]},
+    { "id": "xrf-3", "assignee": "肖睿颿", "title": "分析师兄论文缺点", "createdAt": "2026-07-20", "updates": [
+      { "date": "2026-07-20", "status": "进行中" }
+    ]}
+  ]
+}
