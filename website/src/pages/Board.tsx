@@ -14,47 +14,70 @@ export default function Board() {
   const tasks = allTasks.filter((t) => !t.archived);
   const seedMembers = useTaskStore((s) => s.members);
   const [member, setMember] = useState("全部");
+  const [statusFilter, setStatusFilter] = useState("全部");
 
   const groups = useMemo(() => {
     const names = Array.from(new Set([...seedMembers, ...tasks.map((t) => t.assignee)]));
     return names.sort((a, b) => (a === "共同任务" ? 1 : b === "共同任务" ? -1 : 0));
   }, [tasks, seedMembers]);
-  const chips = ["全部", ...groups];
+
+  const memberChips = ["全部", ...groups];
+  const statusChips = ["全部", ...COLUMNS.map((c) => c.title)];
 
   const visible = tasks.filter((t) => member === "全部" || t.assignee === member);
+  const cols = statusFilter === "全部" ? COLUMNS : COLUMNS.filter((c) => c.title === statusFilter);
+  const single = cols.length === 1;
+
+  const chipCls = (active: boolean) =>
+    `rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+      active
+        ? "bg-[#c96442] text-white shadow-sm"
+        : "bg-white border border-[#e8e4db] text-[#6b6560] hover:border-[#c96442]/30 hover:text-[#1a1a1a]"
+    }`;
+
+  const shownCount = visible.filter(
+    (t) => statusFilter === "全部" || statusTone(latestStatus(t)) === cols[0]?.tone
+  ).length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
             <LayoutGrid size={16} />
           </div>
           <h1 className="font-serif text-3xl font-bold text-[#1a1a1a]">总任务看板</h1>
         </div>
-        <p className="text-[#6b6560] ml-11">全组任务按状态汇总 · 共 {visible.length} 项</p>
+        <p className="text-[#6b6560] ml-11">全组任务汇总 · 当前显示 {shownCount} 项</p>
       </div>
 
-      {/* 成员筛选 */}
-      <div className="mb-8 flex flex-wrap gap-2">
-        {chips.map((c) => (
-          <button
-            key={c}
-            onClick={() => setMember(c)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
-              member === c
-                ? "bg-[#c96442] text-white shadow-sm"
-                : "bg-white border border-[#e8e4db] text-[#6b6560] hover:border-[#c96442]/30 hover:text-[#1a1a1a]"
-            }`}
-          >
-            {c}
-          </button>
-        ))}
+      {/* 筛选：状态 */}
+      <div className="mb-3">
+        <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[#9a9590]">按状态</div>
+        <div className="flex flex-wrap gap-2">
+          {statusChips.map((c) => (
+            <button key={c} onClick={() => setStatusFilter(c)} className={chipCls(statusFilter === c)}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 筛选：成员 */}
+      <div className="mb-8">
+        <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[#9a9590]">按成员</div>
+        <div className="flex flex-wrap gap-2">
+          {memberChips.map((c) => (
+            <button key={c} onClick={() => setMember(c)} className={chipCls(member === c)}>
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 看板列 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {COLUMNS.map((col) => {
+      <div className={`grid gap-4 ${single ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"}`}>
+        {cols.map((col) => {
           const list = visible
             .filter((t) => statusTone(latestStatus(t)) === col.tone)
             .sort((a, b) => (latestUpdate(b)?.date || "").localeCompare(latestUpdate(a)?.date || ""));
@@ -67,7 +90,7 @@ export default function Board() {
                   {list.length}
                 </span>
               </div>
-              <div className="space-y-2.5 min-h-[40px]">
+              <div className={single ? "grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 min-h-[40px]" : "space-y-2.5 min-h-[40px]"}>
                 {list.map((t) => {
                   const u = latestUpdate(t);
                   return (
@@ -84,9 +107,7 @@ export default function Board() {
                     </div>
                   );
                 })}
-                {list.length === 0 && (
-                  <p className="px-1.5 py-3 text-xs text-[#c3bcb2]">暂无任务</p>
-                )}
+                {list.length === 0 && <p className="px-1.5 py-3 text-xs text-[#c3bcb2]">暂无任务</p>}
               </div>
             </div>
           );
