@@ -14,6 +14,7 @@ export interface Task {
   title: string;
   createdAt: string; // 创建 / 首次布置时间
   updates: TaskUpdate[];
+  archived?: boolean; // 是否已归档
 }
 
 interface TaskState {
@@ -24,6 +25,8 @@ interface TaskState {
   addUpdate: (id: string, u: TaskUpdate) => void;
   removeTask: (id: string) => void;
   removeUpdate: (id: string, index: number) => void;
+  setArchived: (id: string, archived: boolean) => void;
+  archiveCompleted: () => void;
   resetSeed: () => void;
 }
 
@@ -70,6 +73,18 @@ export const useTaskStore = create<TaskState>()(
           tasks: s.tasks.map((x) =>
             x.id === id ? { ...x, updates: x.updates.filter((_, i) => i !== index) } : x
           ),
+        })),
+      setArchived: (id, archived) =>
+        set((s) => ({
+          tasks: s.tasks.map((x) => (x.id === id ? { ...x, archived } : x)),
+        })),
+      archiveCompleted: () =>
+        set((s) => ({
+          tasks: s.tasks.map((x) => {
+            const last = x.updates[x.updates.length - 1];
+            const done = last ? last.status.includes("完成") : false;
+            return done ? { ...x, archived: true } : x;
+          }),
         })),
       resetSeed: () => set({ tasks: seedTasks, members: seedMembers, advisor: seedAdvisor }),
     }),

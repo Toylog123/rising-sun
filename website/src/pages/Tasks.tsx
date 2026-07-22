@@ -5,7 +5,8 @@ import { useTaskStore } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
 
 export default function Tasks() {
-  const tasks = useTaskStore((s) => s.tasks);
+  const allTasks = useTaskStore((s) => s.tasks);
+  const tasks = allTasks.filter((t) => !t.archived);
   const seedMembers = useTaskStore((s) => s.members);
   const [params] = useSearchParams();
   const initialMember = params.get("member") || "全部";

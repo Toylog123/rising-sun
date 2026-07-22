@@ -4,7 +4,8 @@ import { useTaskStore, latestStatus, statusTone, latestUpdate } from "@/store/ta
 import StatusBadge from "@/components/StatusBadge";
 
 export default function Home() {
-  const tasks = useTaskStore((s) => s.tasks);
+  const allTasks = useTaskStore((s) => s.tasks);
+  const tasks = allTasks.filter((t) => !t.archived);
   const seedMembers = useTaskStore((s) => s.members);
   const advisor = useTaskStore((s) => s.advisor);
 

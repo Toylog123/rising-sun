@@ -10,7 +10,8 @@ const COLUMNS: { tone: Tone; title: string; dot: string; head: string }[] = [
 ];
 
 export default function Board() {
-  const tasks = useTaskStore((s) => s.tasks);
+  const allTasks = useTaskStore((s) => s.tasks);
+  const tasks = allTasks.filter((t) => !t.archived);
   const seedMembers = useTaskStore((s) => s.members);
   const [member, setMember] = useState("全部");
 
