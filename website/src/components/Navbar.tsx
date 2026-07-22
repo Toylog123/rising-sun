@@ -3,7 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { to: "/", label: "任务看板" },
+  { to: "/", label: "首页" },
+  { to: "/tasks", label: "任务看板" },
+  { to: "/board", label: "总看板" },
   { to: "/archive", label: "归档" },
   { to: "/new", label: "新建任务" },
 ];
