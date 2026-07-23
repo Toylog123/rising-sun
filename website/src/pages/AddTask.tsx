@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, GraduationCap, User } from "lucide-react";
 import { useTaskStore, todayStr, STATUS_OPTIONS } from "@/store/tasks";
 
 export default function AddTask() {
   const navigate = useNavigate();
   const addTask = useTaskStore((s) => s.addTask);
   const seedMembers = useTaskStore((s) => s.members);
+  const advisor = useTaskStore((s) => s.advisor);
   const tasks = useTaskStore((s) => s.tasks);
-  const members = Array.from(
-    new Set([...seedMembers, ...tasks.map((t) => t.assignee), "共同任务"])
-  );
 
-  const [assignee, setAssignee] = useState(members[0] || "");
+  // 老师 + 学生 + 任务中出现过的 assignee + 共同任务
+  const faculty = advisor ? [advisor] : [];
+  const students = Array.from(
+    new Set([
+      ...seedMembers,
+      ...tasks.map((t) => t.assignee),
+    ])
+  ).filter((n) => n !== advisor && n !== "共同任务");
+  const common = ["共同任务"];
+  const allAssignees = [...faculty, ...students, ...common];
+
+  const [assignee, setAssignee] = useState(allAssignees[0] || "");
   const [title, setTitle] = useState("");
   const [createdAt, setCreatedAt] = useState(todayStr());
   const [status, setStatus] = useState("进行中");
@@ -49,8 +58,21 @@ export default function AddTask() {
           <label className={label}>负责人</label>
           <input list="members" value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="选择或输入成员名（可新增）" className={field} />
           <datalist id="members">
-            {members.map((m) => <option key={m} value={m} />)}
+            {faculty.length > 0 && (
+              <optgroup label="🎓 指导老师">
+                {faculty.map((m) => <option key={m} value={m} />)}
+              </optgroup>
+            )}
+            {students.length > 0 && (
+              <optgroup label="👥 组员">
+                {students.map((m) => <option key={m} value={m} />)}
+              </optgroup>
+            )}
+            <optgroup label="📌 其他">
+              {common.map((m) => <option key={m} value={m} />)}
+            </optgroup>
           </datalist>
+          <p className="mt-1.5 text-xs text-[#9a9590]">提示：可以直接输入新名字，会自动加入组员列表</p>
         </div>
 
         <div>

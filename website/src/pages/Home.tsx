@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ListTodo, Plus, Users, TrendingUp, FlaskConical, GraduationCap } from "lucide-react";
+import { ListTodo, Plus, Users, TrendingUp, FlaskConical, GraduationCap, AlertCircle, RefreshCw, CloudOff } from "lucide-react";
 import { useTaskStore, latestStatus, statusTone, latestUpdate } from "@/store/tasks";
+import { timeAgo } from "@/lib/github";
 import StatusBadge from "@/components/StatusBadge";
 
 export default function Home() {
@@ -8,6 +10,19 @@ export default function Home() {
   const tasks = allTasks.filter((t) => !t.archived);
   const seedMembers = useTaskStore((s) => s.members);
   const advisor = useTaskStore((s) => s.advisor);
+  const syncStatus = useTaskStore((s) => s.syncStatus);
+  const syncError = useTaskStore((s) => s.syncError);
+  const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);
+  const ghToken = useTaskStore((s) => s.ghToken);
+  const pull = useTaskStore((s) => s.pull);
+
+  // 首次进入自动拉取最新（无 PAT 也能拉取公开仓库）
+  useEffect(() => {
+    if (syncStatus === "idle") {
+      pull();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const members = Array.from(
     new Set([
@@ -36,6 +51,34 @@ export default function Home() {
 
   return (
     <div className="font-sans">
+      {/* 同步状态横幅 */}
+      {syncStatus === "pulling" && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-amber-800">
+            <RefreshCw size={13} className="animate-spin shrink-0" />
+            <span>正在拉取最新任务数据…</span>
+          </div>
+        </div>
+      )}
+      {syncStatus === "error" && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-red-700">
+            <AlertCircle size={13} className="shrink-0" />
+            <span className="flex-1">同步失败：{syncError}</span>
+            <button onClick={() => pull()} className="font-medium underline hover:no-underline">重试</button>
+          </div>
+        </div>
+      )}
+      {!ghToken && syncStatus === "ready" && (
+        <div className="bg-[#faf9f5] border-b border-[#e8e4db]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-[#6b6560]">
+            <CloudOff size={13} className="shrink-0" />
+            <span className="flex-1">未配置 PAT，目前为只读浏览 · 数据 {timeAgo(lastSyncedAt)} 拉取</span>
+            <Link to="/tasks" className="font-medium text-[#c96442] hover:underline">前往设置 →</Link>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#faf9f5] via-[#f5f0e6] to-[#f0ece4]">
         <div className="absolute inset-0 opacity-[0.025]" style={{
