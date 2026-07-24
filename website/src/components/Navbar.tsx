@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload, Upload, Loader2 } from "lucide-react";
 import { useTaskStore } from "@/store/tasks";
@@ -55,8 +55,24 @@ function SyncIndicator() {
   const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);
   const syncError = useTaskStore((s) => s.syncError);
   const ghToken = useTaskStore((s) => s.ghToken);
-  const pull = useTaskStore((s) => s.pull);
+  const rateLimitResetAt = useTaskStore((s) => s.rateLimitResetAt);
+  const pullNow = useTaskStore((s) => s.pullNow);
   const dirtyCount = useTaskStore((s) => s.dirtyTaskIds.length + s.dirtyMembers.length + (s.dirtyAdvisor ? 1 : 0));
+  const [, setTick] = useState(0);
+  // 每秒刷新倒计时
+  useEffect(() => {
+    if (!rateLimitResetAt) return;
+    const id = setInterval(() => setTick((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, [rateLimitResetAt]);
+
+  const countdown = (() => {
+    if (!rateLimitResetAt) return null;
+    const left = Math.max(0, Math.ceil((rateLimitResetAt - Date.now()) / 1000));
+    if (left === 0) return "现在可重试";
+    if (left < 60) return `${left}秒后可重试`;
+    return `${Math.ceil(left / 60)}分钟${left % 60}秒后可重试`;
+  })();
 
   const config = (() => {
     if (!ghToken) {
@@ -72,7 +88,8 @@ function SyncIndicator() {
       return { color: "bg-amber-500 animate-pulse", icon: CloudUpload, label: "推送", title: "推送中…" };
     }
     if (syncStatus === "error") {
-      return { color: "bg-red-500", icon: CloudOff, label: "失败", title: `同步失败：${syncError ?? ""}` };
+      const errorMsg = countdown ?? syncError ?? "同步失败";
+      return { color: "bg-red-500", icon: CloudOff, label: countdown ? "限速" : "失败", title: `同步失败：${errorMsg}` };
     }
     return { color: "bg-green-500", icon: CloudDownload, label: timeAgo(lastSyncedAt), title: `已同步 · ${timeAgo(lastSyncedAt)}` };
   })();
@@ -81,7 +98,7 @@ function SyncIndicator() {
 
   return (
     <button
-      onClick={() => pull()}
+      onClick={() => pullNow()}
       title={config.title}
       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
     >

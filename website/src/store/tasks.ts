@@ -64,6 +64,7 @@ interface TaskState {
   syncStatus: SyncStatus;
   lastSyncedAt: number | null;
   syncError: string | null;
+  rateLimitResetAt: number | null;  // 限速恢复时间（epoch ms）
 
   // 手动同步：未提交的改动
   dirtyTaskIds: string[];        // 已改但未推送的任务 ID
@@ -100,10 +101,10 @@ interface TaskState {
   // 同步 mutator
   setToken: (token: string) => void;
   clearToken: () => void;
-  pull: () => Promise<void>;
-  pushAll: () => Promise<void>;             // 推送所有 dirty 改动到 GitHub
-  pushNow: () => Promise<void>;             // 兼容旧 API：等同 pushAll
-  dirtyCount: () => number;                // dirty 项总数（task+member+advisor）
+  pull: () => Promise<void>;          // debounce 500ms（连续点击合并）
+  pullNow: () => Promise<void>;       // 立即拉取（绕过 debounce）
+  pushAll: () => Promise<void>;
+  dirtyCount: () => number;
 }
 
 /** 把任意形态的 members 数组标准化成 Student[]，兼容老版本 string[] */
@@ -259,9 +260,17 @@ export const useTaskStore = create<TaskState>()(
         }, 600);
       };
 
+      let pullTimer: ReturnType<typeof setTimeout> | null = null;
+      let pulling = false;
+
       const pullInner = async () => {
+        if (pulling) {
+          // 已经在拉取中，直接返回（避免重复请求）
+          return;
+        }
+        pulling = true;
         try {
-          set({ syncStatus: "pulling", syncError: null });
+          set({ syncStatus: "pulling", syncError: null, rateLimitResetAt: null });
           const { data, sha } = await fetchTasks();
           set({
             tasks: normalizeTasks(data.tasks, data.advisor),
@@ -271,11 +280,31 @@ export const useTaskStore = create<TaskState>()(
             syncStatus: "ready",
             lastSyncedAt: Date.now(),
             syncError: null,
+            rateLimitResetAt: null,
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : "拉取失败";
-          set({ syncStatus: "error", syncError: msg });
+          const resetAt =
+            err instanceof GitHubApiError ? err.resetAt : null;
+          // 限速错误：默认 60 秒后可重试（未认证 API 没返回 X-RateLimit-Reset）
+          const finalResetAt =
+            resetAt ?? (msg.includes("速率受限") ? Date.now() + 60_000 : null);
+          set({
+            syncStatus: "error",
+            syncError: msg,
+            rateLimitResetAt: finalResetAt,
+          });
+        } finally {
+          pulling = false;
         }
+      };
+
+      const schedulePull = () => {
+        if (pullTimer) clearTimeout(pullTimer);
+        pullTimer = setTimeout(() => {
+          pullTimer = null;
+          void pullInner();
+        }, 500);
       };
 
       return {
@@ -287,6 +316,7 @@ export const useTaskStore = create<TaskState>()(
         syncStatus: "idle",
         lastSyncedAt: null,
         syncError: null,
+        rateLimitResetAt: null,
         dirtyTaskIds: [],
         dirtyMembers: [],
         dirtyAdvisor: false,
@@ -436,8 +466,8 @@ export const useTaskStore = create<TaskState>()(
         // 同步
         setToken: (token) => set({ ghToken: token.trim() }),
         clearToken: () => set({ ghToken: "", remoteSha: "", syncStatus: "idle", syncError: null }),
-        pull: () => pullInner(),
-        pushNow: () => pushInner("manual push"),
+        pull: () => Promise.resolve(schedulePull()),          // debounce 500ms
+        pullNow: () => pullInner(),         // 立即拉取
 
         // 手动同步：推送所有 dirty 改动
         pushAll: async () => {

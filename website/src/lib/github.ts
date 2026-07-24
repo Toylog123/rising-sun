@@ -31,11 +31,32 @@ export interface FetchResult<T> {
 
 export class GitHubApiError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  resetAt: number | null; // 限速恢复时间（epoch ms），null = 未知
+  constructor(message: string, status: number, resetAt: number | null = null) {
     super(message);
     this.status = status;
+    this.resetAt = resetAt;
     this.name = "GitHubApiError";
   }
+}
+
+/** 解析 GitHub 错误响应：消息 + rate limit reset 时间 */
+async function parseGitHubError(res: Response): Promise<{ message: string; resetAt: number | null }> {
+  let msg = `请求失败 (${res.status})`;
+  let resetAt: number | null = null;
+  try {
+    const body = await res.json();
+    if (body && typeof body.message === "string") msg = body.message;
+  } catch {
+    // ignore
+  }
+  // GitHub 限速头（未认证时通常没有，但拉取用户信息可能有）
+  const resetHeader = res.headers.get("X-RateLimit-Reset");
+  if (resetHeader) {
+    const sec = parseInt(resetHeader, 10);
+    if (!isNaN(sec)) resetAt = sec * 1000;
+  }
+  return { message: msg, resetAt };
 }
 
 /** UTF-8 字符串 → base64（正确处理中文等多字节字符） */
@@ -66,10 +87,13 @@ async function ghFetch(url: string): Promise<{ content: string; sha: string }> {
     },
   });
   if (!res.ok) {
-    let msg = `拉取失败 (${res.status})`;
-    if (res.status === 404) msg = "仓库或文件不存在，请检查仓库配置";
-    if (res.status === 403) msg = "GitHub API 速率受限，请稍后再试";
-    throw new GitHubApiError(msg, res.status);
+    const { message, resetAt } = await parseGitHubError(res);
+    let msg = message;
+    if (res.status === 404 && !message) msg = "仓库或文件不存在，请检查仓库配置";
+    if (res.status === 403 && (message.toLowerCase().includes("rate limit") || !message)) {
+      msg = "GitHub API 速率受限，请稍后再试";
+    }
+    throw new GitHubApiError(msg, res.status, resetAt);
   }
   const json = await res.json();
   return { content: json.content, sha: json.sha };
@@ -94,14 +118,16 @@ async function ghPut(
     body: JSON.stringify({ message, content, sha, branch: BRANCH }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    let msg = err.message || `推送失败 (${res.status})`;
-    if (res.status === 401) msg = "PAT 无效，请重新配置";
-    if (res.status === 403) msg = "权限不足，请确认 PAT 勾选了 Contents: Write";
-    if (res.status === 404) msg = "仓库或文件不存在";
-    if (res.status === 409) msg = "冲突：远端有更新，将自动重试";
-    if (res.status === 422) msg = "sha 不匹配，请刷新后重试";
-    throw new GitHubApiError(msg, res.status);
+    const { message, resetAt } = await parseGitHubError(res);
+    let msg = message;
+    if (res.status === 401 && !message) msg = "PAT 无效，请重新配置";
+    if (res.status === 403 && (message.toLowerCase().includes("rate limit") || (!message || message === `请求失败 (${res.status})`))) {
+      msg = "GitHub API 速率受限，请稍后再试";
+    }
+    if (res.status === 404 && !message) msg = "仓库或文件不存在";
+    if (res.status === 409 && !message) msg = "冲突：远端有更新，将自动重试";
+    if (res.status === 422 && !message) msg = "sha 不匹配，请刷新后重试";
+    throw new GitHubApiError(msg, res.status, resetAt);
   }
   const json = await res.json();
   return json.content.sha as string;
