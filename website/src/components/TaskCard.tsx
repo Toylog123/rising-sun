@@ -7,6 +7,7 @@ import {
   STATUS_OPTIONS,
   type Task,
 } from "@/store/tasks";
+import { confirmDialog } from "@/store/ui";
 import StatusBadge from "./StatusBadge";
 
 export default function TaskCard({ task }: { task: Task }) {
@@ -30,8 +31,15 @@ export default function TaskCard({ task }: { task: Task }) {
     setOpen(true);
   };
 
-  const handleSoftRemove = () => {
-    if (!confirm(`确定删除「${task.title}」？\n\n删除后会归档，可在「归档」页面恢复。`)) return;
+  const handleSoftRemove = async () => {
+    const ok = await confirmDialog({
+      title: `删除任务「${task.title}」？`,
+      description: "删除后会归档到「归档」页面，可在「已删除」Tab 恢复或永久删除。",
+      confirmText: "删除",
+      cancelText: "取消",
+      tone: "danger",
+    });
+    if (!ok) return;
     softRemoveTask(task.id);
   };
 

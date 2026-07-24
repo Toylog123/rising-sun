@@ -4,7 +4,7 @@ import { Search, ListTodo, User } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
 
-const STATUS_OPTIONS = ["全部", "进行中", "执行中", "挂起", "已完成", "未开始"];
+const STATUS_OPTIONS = ["全部", "进行中", "挂起", "已完成", "未开始"];
 
 export default function Tasks() {
   const allTasks = useTaskStore((s) => s.tasks);

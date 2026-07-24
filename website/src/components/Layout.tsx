@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Confirm from "@/components/Confirm";
 import { useTaskStore } from "@/store/tasks";
 
 export default function Layout() {
@@ -23,6 +24,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <Confirm />
     </div>
   );
 }

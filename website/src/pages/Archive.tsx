@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Archive as ArchiveIcon, CheckCheck, Trash2, RotateCcw } from "lucide-react";
 import { useTaskStore, statusTone, latestStatus, type Task } from "@/store/tasks";
+import { confirmDialog } from "@/store/ui";
 
 type TabKey = "all" | "completed" | "removed";
 
@@ -46,12 +47,23 @@ export default function Archive() {
     [current]
   );
 
-  const handlePermanentRemove = (t: Task) => {
-    const msg =
-      `确定永久删除「${t.title}」？\n\n` +
-      `该操作不可撤销：任务数据将从仓库的 tasks.json 中彻底删除。`;
-    if (!confirm(msg)) return;
-    if (!confirm("再次确认：真的要永久删除吗？")) return;
+  const handlePermanentRemove = async (t: Task) => {
+    const first = await confirmDialog({
+      title: `永久删除「${t.title}」？`,
+      description: "该操作不可撤销：任务数据将从仓库的 tasks.json 中彻底删除。",
+      confirmText: "我了解了，继续",
+      cancelText: "取消",
+      tone: "danger",
+    });
+    if (!first) return;
+    const second = await confirmDialog({
+      title: "再次确认",
+      description: `真的要永久删除「${t.title}」吗？此操作不可撤销。`,
+      confirmText: "永久删除",
+      cancelText: "取消",
+      tone: "danger",
+    });
+    if (!second) return;
     removeTask(t.id);
   };
 

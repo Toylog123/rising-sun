@@ -360,4 +360,4 @@ export function todayStr(): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-export const STATUS_OPTIONS = ["进行中", "执行中", "挂起", "已完成", "未开始"];
+export const STATUS_OPTIONS = ["进行中", "挂起", "已完成", "未开始"];

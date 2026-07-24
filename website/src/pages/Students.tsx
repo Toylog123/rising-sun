@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { useTaskStore, type Student } from "@/store/tasks";
 import { calcGrade, statusToneStudent } from "@/lib/students";
+import { confirmDialog } from "@/store/ui";
 import StudentEditor from "@/components/StudentEditor";
 
 const TONE_BG: Record<string, string> = {
@@ -39,8 +40,15 @@ export default function Students() {
     setEditing(s);
     setEditorOpen(true);
   };
-  const handleRemove = (s: Student) => {
-    if (!confirm(`确定移除「${s.name}」？仅删除成员档案，不影响已存在任务。`)) return;
+  const handleRemove = async (s: Student) => {
+    const ok = await confirmDialog({
+      title: `移除学生「${s.name}」？`,
+      description: "仅删除成员档案，不影响已存在任务。如需彻底删除该学生相关的所有任务，请到归档页处理。",
+      confirmText: "移除",
+      cancelText: "取消",
+      tone: "danger",
+    });
+    if (!ok) return;
     removeStudent(s.name);
   };
 
