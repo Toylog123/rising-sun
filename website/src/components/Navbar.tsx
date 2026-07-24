@@ -1,10 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload, Upload, Loader2 } from "lucide-react";
+import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload, Upload, Loader2, RefreshCw } from "lucide-react";
 import { useTaskStore } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 import TokenSetup from "./TokenSetup";
 import PushHistory from "./PushHistory";
+
+function ClearCacheButton() {
+  const [spinning, setSpinning] = useState(false);
+  const handleClick = () => {
+    if (spinning) return;
+    const ok = confirm("清空本地缓存 + 重新从 GitHub 拉取最新数据？");
+    if (!ok) return;
+    setSpinning(true);
+    try {
+      localStorage.clear();
+    } catch {
+      // ignore
+    }
+    setTimeout(() => location.reload(), 200);
+  };
+  return (
+    <button
+      onClick={handleClick}
+      title="清空本地缓存 + 重新拉取"
+      className="inline-flex items-center justify-center p-2 rounded-full text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4] transition-colors"
+    >
+      <RefreshCw size={15} className={spinning ? "animate-spin" : ""} />
+    </button>
+  );
+}
 
 const navLinks = [
   { to: "/", label: "首页" },
@@ -118,11 +143,11 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            <Link to="/" className="text-lg font-serif font-bold text-[#1a1a1a] tracking-wide hover:text-[#c96442] transition-colors duration-200">
+          <div className="flex items-center justify-between h-14 gap-4">
+            <Link to="/" className="text-lg font-serif font-bold text-[#1a1a1a] tracking-wide hover:text-[#c96442] transition-colors duration-200 shrink-0">
               Rising Sun
             </Link>
-            <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (
@@ -144,6 +169,7 @@ export default function Navbar() {
               <CommitButton />
               <SyncIndicator />
               <PushHistory />
+              <ClearCacheButton />
               <button
                 onClick={() => setTokenOpen(true)}
                 title="GitHub 同步设置"

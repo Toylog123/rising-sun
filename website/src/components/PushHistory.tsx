@@ -99,9 +99,8 @@ export default function PushHistory() {
                         {rec.count} 项
                       </span>
                     </div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-[#9a9590]">
-                      <span>{formatTime(rec.ts)}</span>
-                      <span className="text-[#6b6560]">{timeAgo(rec.ts)}</span>
+                    <div className="mt-1 text-xs text-[#9a9590]">
+                      {timeAgo(rec.ts)}
                     </div>
                   </button>
 

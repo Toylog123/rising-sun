@@ -97,7 +97,7 @@ export default function Students() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
             >
               <Plus size={15} />
-              添加学生
+              添加成员
             </button>
           </div>
           <p className="mt-4 text-[15px] text-[#4a4540] leading-relaxed max-w-2xl">

@@ -16,7 +16,11 @@ export default function Tasks() {
   const [q, setQ] = useState("");
 
   const groups = useMemo(() => {
-    const names = Array.from(new Set([...members.map((m) => m.name), ...tasks.flatMap((t) => t.assignees)]));
+    // 排除老师（role=teacher）：只让学生出现在成员筛选里
+    const studentNames = members
+      .filter((m) => m.role !== "teacher")
+      .map((m) => m.name);
+    const names = Array.from(new Set([...studentNames, ...tasks.flatMap((t) => t.assignees)]));
     return names.sort((a, b) => (a === "多人任务" ? 1 : b === "多人任务" ? -1 : 0));
   }, [tasks, members]);
 
