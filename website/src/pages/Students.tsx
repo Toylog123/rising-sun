@@ -20,7 +20,12 @@ export default function Students() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Student | null>(null);
 
-  const sorted = [...members].sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  // 自定义顺序：佟亚龙固定第一，其他人按拼音 zh-CN 排序
+  const sorted = [...members].sort((a, b) => {
+    if (a.name === "佟亚龙") return -1;
+    if (b.name === "佟亚龙") return 1;
+    return a.name.localeCompare(b.name, "zh-CN");
+  });
 
   const total = members.length;
   const active = members.filter((m) => m.status === "在读").length;

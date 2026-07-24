@@ -1,9 +1,9 @@
 {
   "advisor": "刘畅",
   "members": [
+    { "name": "佟亚龙", "enrolledAt": "2025-09", "status": "在读", "note": "AI+EDA 方向" },
     { "name": "周雨时", "enrolledAt": "2025-09", "status": "在读", "note": "AI+EDA 方向" },
     { "name": "谢俊杰", "enrolledAt": "2025-09", "status": "在读", "note": "容错 / 可靠性方向" },
-    { "name": "佟亚龙", "enrolledAt": "2025-09", "status": "在读", "note": "AI+EDA 方向" },
     { "name": "肖睿颿", "enrolledAt": "2026-09", "status": "在读", "note": "AI+EDA 方向（新入学）" }
   ],
   "tasks": [
