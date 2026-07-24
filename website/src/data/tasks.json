@@ -5,24 +5,22 @@
       "name": "佟亚龙",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "advisor": "刘畅",
       "note": "AI+EDA 方向",
-      "bio": "国防科技大学集成电路科学与工程硕士，主要研究方向为 AI for EDA，具体聚焦于 ECO（工程变更命令）智能化求解。",
-      "researchAreas": ["AI for EDA", "ECO"],
-      "email": "1622574463@qq.com",
-      "github": "https://github.com/Toylog123"
+      "advisor": "刘畅"
     },
     {
       "name": "周雨时",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "note": "AI+EDA 方向"
+      "note": "AI+EDA 方向",
+      "advisor": "刘畅"
     },
     {
       "name": "谢俊杰",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "note": "容错 / 可靠性方向"
+      "note": "容错 / 可靠性方向",
+      "advisor": "刘畅"
     },
     {
       "name": "肖睿颿",
