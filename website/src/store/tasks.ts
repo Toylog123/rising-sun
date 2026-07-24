@@ -128,8 +128,16 @@ function normalizeMembers(raw: unknown): Student[] {
     name: s.name ?? "",
     enrolledAt: s.enrolledAt ?? "",
     status: (s.status ?? "在读") as StudentStatus,
+    role: s.role,
     note: s.note,
     advisor: s.advisor,
+    avatar: s.avatar,
+    bio: s.bio,
+    researchAreas: s.researchAreas,
+    email: s.email,
+    homepage: s.homepage,
+    github: s.github,
+    title: s.title,
   }));
 }
 
