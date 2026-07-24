@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, ListTodo, User } from "lucide-react";
+import { Search, ListTodo, Users } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
 
@@ -16,17 +16,19 @@ export default function Tasks() {
   const [q, setQ] = useState("");
 
   const groups = useMemo(() => {
-    const names = Array.from(new Set([...members.map((m) => m.name), ...tasks.map((t) => t.assignee)]));
+    const names = Array.from(new Set([...members.map((m) => m.name), ...tasks.flatMap((t) => t.assignees)]));
     return names.sort((a, b) => (a === "共同任务" ? 1 : b === "共同任务" ? -1 : 0));
   }, [tasks, members]);
 
   const memberChips = ["全部", ...groups];
   const matchQ = (t: (typeof tasks)[number]) =>
-    q.trim() === "" || t.title.toLowerCase().includes(q.toLowerCase()) || t.assignee.includes(q);
+    q.trim() === "" ||
+    t.title.toLowerCase().includes(q.toLowerCase()) ||
+    t.assignees.some((a) => a.includes(q));
 
   const visible = tasks.filter(
     (t) =>
-      (member === "全部" || t.assignee === member) &&
+      (member === "全部" || t.assignees.includes(member)) &&
       (statusFilter === "全部" || latestStatus(t) === statusFilter) &&
       matchQ(t)
   );
@@ -88,12 +90,12 @@ export default function Tasks() {
       ) : (
         <div className="space-y-10">
           {visibleMembers.map((name) => {
-            const list = visible.filter((t) => t.assignee === name);
+            const list = visible.filter((t) => t.assignees.includes(name));
             if (list.length === 0) return null;
             return (
               <div key={name}>
                 <div className="flex items-center gap-2 mb-4">
-                  <User size={18} className="text-[#c96442]" />
+                  <Users size={18} className="text-[#c96442]" />
                   <h2 className="font-serif text-xl font-bold text-[#1a1a1a]">{name}</h2>
                   <span className="rounded-full bg-[#f0ece4] px-2 py-0.5 text-xs text-[#6b6560]">{list.length} 项</span>
                 </div>

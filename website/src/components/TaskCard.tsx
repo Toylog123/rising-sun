@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
+import { Users, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import {
   useTaskStore,
   latestStatus,
@@ -54,8 +54,15 @@ export default function TaskCard({ task }: { task: Task }) {
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6560]">
         <span className="flex items-center gap-1">
-          <User size={13} className="text-[#c96442]" />
-          {task.assignee}
+          <Users size={13} className="text-[#c96442]" />
+          {task.assignees.length === 1 ? (
+            task.assignees[0]
+          ) : (
+            <span>
+              {task.assignees.slice(0, 2).join("、")}
+              {task.assignees.length > 2 && ` 等 ${task.assignees.length} 人`}
+            </span>
+          )}
         </span>
         <span className="flex items-center gap-1">
           <CalendarClock size={13} />

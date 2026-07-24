@@ -41,7 +41,7 @@ export default function Archive() {
         new Set(
           [...current]
             .sort((a, b) => (b.removedAt || "").localeCompare(a.removedAt || ""))
-            .map((t) => t.assignee)
+            .flatMap((t) => t.assignees)
         )
       ),
     [current]
@@ -120,7 +120,7 @@ export default function Archive() {
       ) : (
         <div className="space-y-10">
           {groups.map((name) => {
-            const list = current.filter((t) => t.assignee === name);
+            const list = current.filter((t) => t.assignees.includes(name));
             if (list.length === 0) return null;
             return (
               <div key={name}>

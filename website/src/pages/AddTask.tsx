@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowLeft, GraduationCap, User, Sparkles } from "lucide-react";
+import { Plus, ArrowLeft, GraduationCap, Users, Sparkles, X, Check } from "lucide-react";
 import { useTaskStore, todayStr, STATUS_OPTIONS } from "@/store/tasks";
 import Combobox from "@/components/Combobox";
 
@@ -13,32 +13,47 @@ export default function AddTask() {
 
   const faculty = advisor ? [advisor] : [];
   const studentNames = Array.from(
-    new Set([...members.map((m) => m.name), ...tasks.map((t) => t.assignee)])
+    new Set([...members.map((m) => m.name), ...tasks.flatMap((t) => t.assignees)])
   ).filter((n) => n !== advisor && n !== "共同任务");
   const common = ["共同任务"];
 
   const [taskAdvisor, setTaskAdvisor] = useState(advisor || "");
-  const [assignee, setAssignee] = useState(studentNames[0] || "");
+  const [assignees, setAssignees] = useState<string[]>([]);
+  const [pendingPick, setPendingPick] = useState("");
   const [title, setTitle] = useState("");
   const [createdAt, setCreatedAt] = useState(todayStr());
   const [status, setStatus] = useState("进行中");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
 
+  const remainingStudents = studentNames.filter((n) => !assignees.includes(n));
+  const remainingCommon = common.filter((n) => !assignees.includes(n));
+
+  const addAssignee = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || assignees.includes(trimmed)) return;
+    setAssignees([...assignees, trimmed]);
+    setPendingPick("");
+  };
+
+  const removeAssignee = (name: string) => {
+    setAssignees(assignees.filter((a) => a !== name));
+  };
+
   const submit = () => {
-    if (!taskAdvisor.trim() || !assignee.trim() || !title.trim() || !createdAt) {
-      setError("请填写指导老师、负责人、任务标题和创建时间");
+    if (!taskAdvisor.trim() || assignees.length === 0 || !title.trim() || !createdAt) {
+      setError("请填写指导老师、协同成员（至少 1 位）、任务标题和创建时间");
       return;
     }
     addTask({
       advisor: taskAdvisor.trim(),
-      assignee: assignee.trim(),
+      assignees,
       title: title.trim(),
       createdAt,
       status,
       note: note.trim() || undefined,
     });
-    navigate(`/tasks?member=${encodeURIComponent(assignee.trim())}`);
+    navigate(`/tasks`);
   };
 
   const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
@@ -62,7 +77,6 @@ export default function AddTask() {
       </div>
 
       <div className="rounded-2xl bg-white border border-[#e8e4db] p-6 space-y-5">
-        {/* 指导老师 */}
         <div>
           <label className={label}>
             <span className="inline-flex items-center gap-1.5">
@@ -82,26 +96,61 @@ export default function AddTask() {
           </p>
         </div>
 
-        {/* 负责学生 */}
         <div>
           <label className={label}>
             <span className="inline-flex items-center gap-1.5">
-              <User size={14} className="text-[#c96442]" />
-              负责学生
+              <Users size={14} className="text-[#c96442]" />
+              协同成员
+              <span className="ml-1 text-xs font-normal text-[#9a9590]">
+                （{assignees.length} 位）
+              </span>
             </span>
           </label>
+
+          {assignees.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-2.5">
+              {assignees.map((a) => (
+                <span
+                  key={a}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-2.5 py-1 text-sm font-medium text-[#c96442]"
+                >
+                  <Check size={12} />
+                  {a}
+                  <button
+                    type="button"
+                    onClick={() => removeAssignee(a)}
+                    className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-[#c96442]/20 transition-colors"
+                    title="移除"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
           <Combobox
-            value={assignee}
-            onChange={setAssignee}
-            placeholder="点击 ▼ 查看候选，或直接输入"
+            value={pendingPick}
+            onChange={(v) => {
+              // Combobox onChange 在用户选中某项时会把 value 设为该选项
+              // 用 ref 模式更稳，但这里用一个轻量检测：value 非空 + pendingPick 旧值 → 自动加入
+              if (pendingPick && v !== pendingPick && !assignees.includes(v)) {
+                addAssignee(v);
+              } else {
+                setPendingPick(v);
+              }
+            }}
+            placeholder="点击 ▼ 查看候选，或输入名字添加"
             groups={[
-              { label: "👥 组员", icon: <User size={11} />, options: studentNames },
-              { label: "📌 其他", options: common },
+              ...(remainingStudents.length > 0
+                ? [{ label: "👥 组员", icon: <Users size={11} />, options: remainingStudents }]
+                : []),
+              ...(remainingCommon.length > 0 ? [{ label: "📌 其他", options: remainingCommon }] : []),
             ]}
             allowCustom
           />
           <p className="mt-1.5 text-xs text-[#9a9590]">
-            提示：可直接输入新名字（自动加入组员列表）
+            提示：可多次添加（每位成员都是协同成员，任意一位可添加进展）
           </p>
         </div>
 

@@ -28,12 +28,12 @@ export default function Home() {
   const members = Array.from(
     new Set([
       ...storeMembers.map((m) => m.name),
-      ...tasks.map((t) => t.assignee).filter((a) => a !== "共同任务"),
+      ...tasks.flatMap((t) => t.assignees).filter((a) => a !== "共同任务"),
     ])
   );
 
   const statOf = (name: string) => {
-    const list = tasks.filter((t) => t.assignee === name);
+    const list = tasks.filter((t) => t.assignees.includes(name));
     const done = list.filter((t) => statusTone(latestStatus(t)) === "green").length;
     const hold = list.filter((t) => statusTone(latestStatus(t)) === "red").length;
     const active = list.filter((t) => statusTone(latestStatus(t)) === "amber").length;
@@ -170,7 +170,9 @@ export default function Home() {
             {feed.map(({ t, u }) => (
               <div key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
                 <span className="text-xs font-semibold text-[#6b6560] w-24 shrink-0">{u!.date}</span>
-                <span className="text-sm font-medium text-[#1a1a1a]">{t.assignee}</span>
+                <span className="text-sm font-medium text-[#1a1a1a]">
+                  {t.assignees.length === 1 ? t.assignees[0] : `${t.assignees.slice(0, 2).join("、")}${t.assignees.length > 2 ? " 等" : ""}`}
+                </span>
                 <span className="text-sm text-[#6b6560] flex-1 min-w-[160px]">{t.title}</span>
                 <StatusBadge status={u!.status} />
                 {u!.note && <span className="text-xs text-[#9a9590] w-full sm:w-auto">（{u!.note}）</span>}

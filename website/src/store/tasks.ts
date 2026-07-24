@@ -5,14 +5,14 @@ import { fetchTasks, pushTasks, GitHubApiError, type RemoteData } from "@/lib/gi
 
 export interface TaskUpdate {
   date: string; // YYYY-MM-DD (组会日期)
-  status: string; // 进行中 / 执行中 / 挂起 / 已完成 / 未开始
+  status: string; // 进行中 / 挂起 / 已完成 / 未开始
   note?: string;
 }
 
 export interface Task {
   id: string;
   advisor?: string;       // 所属指导老师（默认 = 全局 advisor）
-  assignee: string;       // 成员名 或 "共同任务"
+  assignees: string[];    // 协同成员名单（学生名 / "共同任务"）
   title: string;
   createdAt: string;       // 创建 / 首次布置时间
   updates: TaskUpdate[];
@@ -54,7 +54,7 @@ interface TaskState {
   // 业务 mutator
   addTask: (t: {
     advisor?: string;
-    assignee: string;
+    assignees: string[];
     title: string;
     createdAt: string;
     status: string;
@@ -101,19 +101,34 @@ function normalizeMembers(raw: unknown): Student[] {
   }));
 }
 
-/** 把任意形态的 tasks 数组标准化，缺 advisor 时默认填充全局 advisor */
+/** 把任意形态的 tasks 数组标准化；缺 advisor 时默认填充全局 advisor；
+ *  旧版 assignee: string 自动迁移为 assignees: string[] */
 function normalizeTasks(raw: unknown, defaultAdvisor: string): Task[] {
   if (!Array.isArray(raw)) return [];
-  return (raw as Array<Partial<Task>>).map((t) => ({
-    id: t.id ?? `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    advisor: t.advisor ?? defaultAdvisor,
-    assignee: t.assignee ?? "共同任务",
-    title: t.title ?? "",
-    createdAt: t.createdAt ?? new Date().toISOString().slice(0, 10),
-    updates: Array.isArray(t.updates) ? (t.updates as TaskUpdate[]) : [],
-    archived: t.archived,
-    removedAt: t.removedAt,
-  }));
+  return (raw as Array<Partial<Task> & { assignee?: string | string[] }>).map((t) => {
+    let assignees: string[];
+    if (Array.isArray((t as Task).assignees)) {
+      assignees = (t as Task).assignees;
+    } else if (typeof t.assignee === "string") {
+      // 兼容旧数据
+      assignees = t.assignee ? [t.assignee] : ["共同任务"];
+    } else if (Array.isArray(t.assignee)) {
+      // 极端情况：assignee 已是数组（半迁移）
+      assignees = t.assignee;
+    } else {
+      assignees = ["共同任务"];
+    }
+    return {
+      id: t.id ?? `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      advisor: t.advisor ?? defaultAdvisor,
+      assignees,
+      title: t.title ?? "",
+      createdAt: t.createdAt ?? new Date().toISOString().slice(0, 10),
+      updates: Array.isArray(t.updates) ? (t.updates as TaskUpdate[]) : [],
+      archived: t.archived,
+      removedAt: t.removedAt,
+    };
+  });
 }
 
 const seedTasks = normalizeTasks(seed.tasks, (seed.advisor as string) ?? "");
@@ -240,7 +255,7 @@ export const useTaskStore = create<TaskState>()(
               {
                 id: `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                 advisor,
-                assignee: t.assignee,
+                assignees: t.assignees.length > 0 ? t.assignees : ["共同任务"],
                 title: t.title,
                 createdAt: t.createdAt,
                 updates: [{ date: t.createdAt, status: t.status, note: t.note }],
