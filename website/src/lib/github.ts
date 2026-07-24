@@ -26,6 +26,26 @@ export class GitHubApiError extends Error {
   }
 }
 
+/** UTF-8 字符串 → base64（正确处理中文等多字节字符） */
+function utf8ToBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+/** base64 → UTF-8 字符串（正确处理中文等多字节字符） */
+function base64ToUtf8(base64: string): string {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 /** 从 GitHub 拉取 tasks.json 内容 + sha（PUT 时需要 sha） */
 export async function fetchTasks(): Promise<FetchResult> {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
@@ -43,7 +63,7 @@ export async function fetchTasks(): Promise<FetchResult> {
   }
   const json = await res.json();
   // GitHub 返回 base64 编码内容，可能带换行
-  const decoded = atob(json.content.replace(/\n/g, ""));
+  const decoded = base64ToUtf8(json.content.replace(/\n/g, ""));
   return {
     data: JSON.parse(decoded) as RemoteData,
     sha: json.sha as string,
@@ -60,7 +80,7 @@ export async function pushTasks(
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
   // 兼容中文 content
   const json = JSON.stringify(data, null, 2);
-  const content = btoa(unescape(encodeURIComponent(json)));
+  const content = utf8ToBase64(json);
   const res = await fetch(url, {
     method: "PUT",
     headers: {

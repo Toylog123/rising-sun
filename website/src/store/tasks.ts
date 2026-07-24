@@ -240,7 +240,7 @@ export const useTaskStore = create<TaskState>()(
       };
     },
     {
-      name: "rising-sun-tasks-v4",
+      name: "rising-sun-tasks-v5",
       // 只持久化业务数据 + token + sha；运行时状态（syncStatus 等）每次刷新重新初始化
       partialize: (state) => ({
         tasks: state.tasks,
