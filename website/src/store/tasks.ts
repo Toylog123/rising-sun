@@ -89,6 +89,7 @@ interface TaskState {
     status: string;
     note?: string;
   }) => void;
+  updateTask: (id: string, patch: Partial<Omit<Task, "id" | "updates" | "archived" | "removedAt">>) => void;
   addUpdate: (id: string, u: TaskUpdate) => void;
   removeTask: (id: string) => void;             // 永久删除（硬删）
   softRemoveTask: (id: string) => void;         // 软删除：archived=true + removedAt=今天
@@ -377,6 +378,27 @@ export const useTaskStore = create<TaskState>()(
               ),
               dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
               pendingSummary: [...s.pendingSummary, `更新「${title}」→ ${detail}（${who}）`],
+            };
+          });
+        },
+        updateTask: (id, patch) => {
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            if (!t) return s;
+            const changedFields: string[] = [];
+            if (patch.title !== undefined && patch.title !== t.title) changedFields.push("标题");
+            if (patch.assignees !== undefined && JSON.stringify(patch.assignees) !== JSON.stringify(t.assignees)) changedFields.push("成员");
+            if (patch.createdAt !== undefined && patch.createdAt !== t.createdAt) changedFields.push("创建时间");
+            if (patch.advisor !== undefined && patch.advisor !== t.advisor) changedFields.push("指导老师");
+            const dirtyTaskIds = s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id];
+            const summary =
+              changedFields.length > 0
+                ? `修改任务「${patch.title ?? t.title}」的 ${changedFields.join("、")}`
+                : `修改任务「${t.title}」`;
+            return {
+              tasks: s.tasks.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+              dirtyTaskIds,
+              pendingSummary: [...s.pendingSummary, summary],
             };
           });
         },

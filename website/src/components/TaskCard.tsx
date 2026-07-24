@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
+import { Pencil, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import {
   useTaskStore,
   latestStatus,
@@ -9,6 +9,7 @@ import {
 } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
 import StatusBadge from "./StatusBadge";
+import TaskEditor from "./TaskEditor";
 
 export default function TaskCard({ task }: { task: Task }) {
   const [open, setOpen] = useState(false);
@@ -16,6 +17,7 @@ export default function TaskCard({ task }: { task: Task }) {
   const [date, setDate] = useState(todayStr());
   const [status, setStatus] = useState("进行中");
   const [note, setNote] = useState("");
+  const [editing, setEditing] = useState(false);
 
   const addUpdate = useTaskStore((s) => s.addUpdate);
   const softRemoveTask = useTaskStore((s) => s.softRemoveTask);
@@ -43,26 +45,37 @@ export default function TaskCard({ task }: { task: Task }) {
     softRemoveTask(task.id);
   };
 
+  const assigneeText =
+    task.assignees.length === 1
+      ? task.assignees[0]
+      : task.assignees.length > 2
+      ? `${task.assignees.slice(0, 2).join("、")} 等 ${task.assignees.length} 人`
+      : task.assignees.join("、");
+
   return (
     <div className={`rounded-2xl bg-white border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20 ${task.archived ? "border-dashed border-[#d5d0c8] opacity-90" : "border-[#e8e4db]"}`}>
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-serif text-base font-semibold leading-snug text-[#1a1a1a]">
           {task.title}
         </h3>
-        <StatusBadge status={cur} />
+        <div className="flex items-center gap-2 shrink-0">
+          <StatusBadge status={cur} />
+          {!task.archived && (
+            <button
+              onClick={() => setEditing(true)}
+              title="编辑"
+              className="p-1 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6560]">
         <span className="flex items-center gap-1">
-          <Users size={13} className="text-[#c96442]" />
-          {task.assignees.length === 1 ? (
-            task.assignees[0]
-          ) : (
-            <span>
-              {task.assignees.slice(0, 2).join("、")}
-              {task.assignees.length > 2 && ` 等 ${task.assignees.length} 人`}
-            </span>
-          )}
+          <CalendarClock size={13} className="text-[#c96442]" />
+          {assigneeText}
         </span>
         <span className="flex items-center gap-1">
           <CalendarClock size={13} />
@@ -146,6 +159,8 @@ export default function TaskCard({ task }: { task: Task }) {
           </div>
         </div>
       )}
+
+      <TaskEditor open={editing} task={task} onClose={() => setEditing(false)} />
     </div>
   );
 }
