@@ -129,10 +129,11 @@ export default function Combobox({
         />
         <button
           type="button"
-          onClick={() => {
-            setOpen((v) => !v);
-            inputRef.current?.focus();
+          onMouseDown={(e) => {
+            // 阻止 button 获取焦点，避免 input.onFocus 强制重开
+            e.preventDefault();
           }}
+          onClick={() => setOpen((v) => !v)}
           className="px-3 py-2.5 text-[#6b6560] hover:text-[#c96442] transition-colors"
           tabIndex={-1}
           title={open ? "收起候选" : "展开候选"}
