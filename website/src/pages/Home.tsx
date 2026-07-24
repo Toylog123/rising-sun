@@ -44,7 +44,7 @@ export default function Home() {
 
   const members = Array.from(
     new Set([
-      ...storeMembers.map((m) => m.name),
+      ...storeMembers.filter((m) => m.role !== "teacher").map((m) => m.name),
       ...tasks.flatMap((t) => t.assignees).filter((a) => a !== "多人任务"),
     ])
   );

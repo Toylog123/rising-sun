@@ -36,9 +36,11 @@ export default function Students() {
     [members]
   );
 
-  const total = members.length;
-  const active = members.filter((m) => m.status === "在读").length;
-  const alumni = members.filter((m) => m.status === "已毕业").length;
+  const students = members.filter((m) => m.role !== "teacher");
+  const teachers = members.filter((m) => m.role === "teacher");
+  const total = students.length;
+  const active = students.filter((m) => m.status === "在读").length;
+  const alumni = students.filter((m) => m.status === "已毕业").length;
 
   const statOf = (name: string) => {
     const list = tasks.filter((t) => t.assignees.includes(name));
