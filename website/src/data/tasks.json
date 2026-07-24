@@ -36,7 +36,9 @@
       "enrolledAt": "2025-09",
       "status": "在读",
       "advisor": "刘畅",
-      "note": "AI+EDA 方向"
+      "note": "AI+EDA 方向",
+      "bio": "国防科技大学集成电路科学与工程硕士，研究方向为 AI for EDA，关注 AI 驱动的物理设计与可制造性优化。",
+      "researchAreas": ["AI for EDA", "物理设计"]
     },
     {
       "name": "谢俊杰",
@@ -44,7 +46,9 @@
       "enrolledAt": "2025-09",
       "status": "在读",
       "advisor": "刘畅",
-      "note": "容错 / 可靠性方向"
+      "note": "容错 / 可靠性方向",
+      "bio": "国防科技大学集成电路科学与工程硕士，研究方向为芯片可靠性与 ECO（工程变更命令）智能化求解，关注容错设计与可制造性优化。",
+      "researchAreas": ["ECO", "可靠性设计", "容错计算"]
     },
     {
       "name": "肖睿颿",
@@ -52,7 +56,9 @@
       "enrolledAt": "2025-09",
       "status": "在读",
       "advisor": "刘畅",
-      "note": "AI+EDA 方向"
+      "note": "AI+EDA 方向",
+      "bio": "国防科技大学集成电路科学与工程硕士（2025 级新生），研究方向为 AI for EDA，关注 AI 驱动的物理设计与可制造性优化。",
+      "researchAreas": ["AI for EDA", "物理设计"]
     }
   ],
   "tasks": [
