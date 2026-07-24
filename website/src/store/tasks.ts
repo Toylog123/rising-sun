@@ -51,6 +51,12 @@ interface TaskState {
   lastSyncedAt: number | null;
   syncError: string | null;
 
+  // 手动同步：未提交的改动
+  dirtyTaskIds: string[];        // 已改但未推送的任务 ID
+  dirtyMembers: string[];        // 已改但未推送的学生姓名
+  dirtyAdvisor: boolean;         // advisor 是否改动
+  isPushing: boolean;            // 是否正在 pushAll
+
   // 业务 mutator
   addTask: (t: {
     advisor?: string;
@@ -77,7 +83,9 @@ interface TaskState {
   setToken: (token: string) => void;
   clearToken: () => void;
   pull: () => Promise<void>;
-  pushNow: () => Promise<void>;
+  pushAll: () => Promise<void>;             // 推送所有 dirty 改动到 GitHub
+  pushNow: () => Promise<void>;             // 兼容旧 API：等同 pushAll
+  dirtyCount: () => number;                // dirty 项总数（task+member+advisor）
 }
 
 /** 把任意形态的 members 数组标准化成 Student[]，兼容老版本 string[] */
@@ -164,7 +172,7 @@ export const useTaskStore = create<TaskState>()(
             return;
           }
 
-          set({ syncStatus: "pushing", syncError: null });
+          set({ syncStatus: "pushing", syncError: null, isPushing: true });
 
           const data: RemoteData = {
             advisor: state.advisor,
@@ -182,6 +190,11 @@ export const useTaskStore = create<TaskState>()(
                 syncStatus: "ready",
                 lastSyncedAt: Date.now(),
                 syncError: null,
+                // 推送成功：清空 dirty
+                dirtyTaskIds: [],
+                dirtyMembers: [],
+                dirtyAdvisor: false,
+                isPushing: false,
               });
               return;
             } catch (err) {
@@ -201,7 +214,7 @@ export const useTaskStore = create<TaskState>()(
           }
         } catch (err) {
           const msg = err instanceof Error ? err.message : "推送失败";
-          set({ syncStatus: "error", syncError: msg });
+          set({ syncStatus: "error", syncError: msg, isPushing: false });
         } finally {
           pushing = false;
           if (pending) {
@@ -247,13 +260,18 @@ export const useTaskStore = create<TaskState>()(
         syncStatus: "idle",
         lastSyncedAt: null,
         syncError: null,
+        dirtyTaskIds: [],
+        dirtyMembers: [],
+        dirtyAdvisor: false,
+        isPushing: false,
 
         addTask: (t) => {
           const advisor = t.advisor || get().advisor;
+          const id = `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
           set((s) => ({
             tasks: [
               {
-                id: `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                id,
                 advisor,
                 assignees: t.assignees.length > 0 ? t.assignees : ["共同任务"],
                 title: t.title,
@@ -262,42 +280,44 @@ export const useTaskStore = create<TaskState>()(
               },
               ...s.tasks,
             ],
+            dirtyTaskIds: [...new Set([...s.dirtyTaskIds, id])],
           }));
-          schedulePush(`add: ${t.title}`);
         },
         addUpdate: (id, u) => {
           set((s) => ({
             tasks: s.tasks.map((x) =>
               x.id === id ? { ...x, updates: sortUpdates([...x.updates, u]) } : x
             ),
+            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
           }));
-          schedulePush(`update: ${id}`);
         },
         removeTask: (id) => {
-          set((s) => ({ tasks: s.tasks.filter((x) => x.id !== id) }));
-          schedulePush(`remove: ${id}`);
+          set((s) => ({
+            tasks: s.tasks.filter((x) => x.id !== id),
+            dirtyTaskIds: s.dirtyTaskIds.filter((x) => x !== id), // 已删任务不再 dirty
+          }));
         },
         softRemoveTask: (id) => {
           set((s) => ({
             tasks: s.tasks.map((x) =>
               x.id === id ? { ...x, archived: true, removedAt: todayStr() } : x
             ),
+            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
           }));
-          schedulePush(`soft-remove: ${id}`);
         },
         removeUpdate: (id, index) => {
           set((s) => ({
             tasks: s.tasks.map((x) =>
               x.id === id ? { ...x, updates: x.updates.filter((_, i) => i !== index) } : x
             ),
+            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
           }));
-          schedulePush(`update-remove: ${id}`);
         },
         setArchived: (id, archived) => {
           set((s) => ({
             tasks: s.tasks.map((x) => (x.id === id ? { ...x, archived } : x)),
+            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
           }));
-          schedulePush(archived ? `archive: ${id}` : `restore: ${id}`);
         },
         archiveCompleted: () => {
           set((s) => ({
@@ -306,12 +326,22 @@ export const useTaskStore = create<TaskState>()(
               const done = last ? last.status.includes("完成") : false;
               return done ? { ...x, archived: true } : x;
             }),
+            dirtyTaskIds: s.tasks
+              .filter((x) => !x.archived)
+              .map((x) => x.id)
+              .filter((id) => !s.dirtyTaskIds.includes(id))
+              .concat(s.dirtyTaskIds),
           }));
-          schedulePush(`archive-completed`);
         },
         resetSeed: () => {
-          set({ tasks: seedTasks, members: seedMembers, advisor: seedAdvisor });
-          schedulePush(`reset: reseed`);
+          set({
+            tasks: seedTasks,
+            members: seedMembers,
+            advisor: seedAdvisor,
+            dirtyTaskIds: seedTasks.map((t) => t.id),
+            dirtyMembers: seedMembers.map((m) => m.name),
+            dirtyAdvisor: true,
+          });
         },
 
         // 学生管理
@@ -320,18 +350,20 @@ export const useTaskStore = create<TaskState>()(
           if (!name) return;
           set((cur) => ({
             members: [...cur.members, { ...s, name }],
+            dirtyMembers: [...new Set([...cur.dirtyMembers, name])],
           }));
-          schedulePush(`add-student: ${name}`);
         },
         updateStudent: (name, patch) => {
           set((s) => ({
             members: s.members.map((x) => (x.name === name ? { ...x, ...patch } : x)),
+            dirtyMembers: s.dirtyMembers.includes(name) ? s.dirtyMembers : [...s.dirtyMembers, name],
           }));
-          schedulePush(`update-student: ${name}`);
         },
         removeStudent: (name) => {
-          set((s) => ({ members: s.members.filter((x) => x.name !== name) }));
-          schedulePush(`remove-student: ${name}`);
+          set((s) => ({
+            members: s.members.filter((x) => x.name !== name),
+            dirtyMembers: s.dirtyMembers.filter((m) => m !== name),
+          }));
         },
 
         // 同步
@@ -339,16 +371,33 @@ export const useTaskStore = create<TaskState>()(
         clearToken: () => set({ ghToken: "", remoteSha: "", syncStatus: "idle", syncError: null }),
         pull: () => pullInner(),
         pushNow: () => pushInner("manual push"),
+
+        // 手动同步：推送所有 dirty 改动
+        pushAll: async () => {
+          const state = get();
+          if (state.isPushing) return;
+          const dirtyCount =
+            state.dirtyTaskIds.length + state.dirtyMembers.length + (state.dirtyAdvisor ? 1 : 0);
+          if (dirtyCount === 0) return;
+          await pushInner(`commit: ${dirtyCount} changes`);
+        },
+        dirtyCount: () => {
+          const s = get();
+          return s.dirtyTaskIds.length + s.dirtyMembers.length + (s.dirtyAdvisor ? 1 : 0);
+        },
       };
     },
     {
-      name: "rising-sun-tasks-v6",
+      name: "rising-sun-tasks-v7",
       partialize: (state) => ({
         tasks: state.tasks,
         members: state.members,
         advisor: state.advisor,
         ghToken: state.ghToken,
         remoteSha: state.remoteSha,
+        dirtyTaskIds: state.dirtyTaskIds,
+        dirtyMembers: state.dirtyMembers,
+        dirtyAdvisor: state.dirtyAdvisor,
       }),
     }
   )

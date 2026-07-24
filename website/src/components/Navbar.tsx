@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload } from "lucide-react";
+import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload, Upload, Loader2 } from "lucide-react";
 import { useTaskStore } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 import TokenSetup from "./TokenSetup";
@@ -13,16 +13,56 @@ const navLinks = [
   { to: "/new", label: "新建任务" },
 ];
 
+function CommitButton() {
+  const dirtyCount = useTaskStore((s) => s.dirtyTaskIds.length + s.dirtyMembers.length + (s.dirtyAdvisor ? 1 : 0));
+  const isPushing = useTaskStore((s) => s.isPushing);
+  const syncStatus = useTaskStore((s) => s.syncStatus);
+  const pushAll = useTaskStore((s) => s.pushAll);
+
+  if (dirtyCount === 0) return null;
+
+  const isError = syncStatus === "error";
+
+  return (
+    <button
+      onClick={() => pushAll()}
+      disabled={isPushing}
+      title={isError ? `上次失败，点重试提交 ${dirtyCount} 项` : `提交 ${dirtyCount} 项未同步的改动`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm transition-all ${
+        isError
+          ? "bg-red-600 text-white hover:bg-red-700"
+          : "bg-amber-500 text-white hover:bg-amber-600"
+      } disabled:opacity-70`}
+    >
+      {isPushing ? (
+        <>
+          <Loader2 size={13} className="animate-spin" />
+          提交中…
+        </>
+      ) : (
+        <>
+          <Upload size={13} />
+          提交 {dirtyCount} 项
+        </>
+      )}
+    </button>
+  );
+}
+
 function SyncIndicator() {
   const syncStatus = useTaskStore((s) => s.syncStatus);
   const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);
   const syncError = useTaskStore((s) => s.syncError);
   const ghToken = useTaskStore((s) => s.ghToken);
   const pull = useTaskStore((s) => s.pull);
+  const dirtyCount = useTaskStore((s) => s.dirtyTaskIds.length + s.dirtyMembers.length + (s.dirtyAdvisor ? 1 : 0));
 
   const config = (() => {
     if (!ghToken) {
       return { color: "bg-[#9a9590]", icon: CloudOff, label: "未配置", title: "未配置 PAT（只读），点击设置" };
+    }
+    if (dirtyCount > 0) {
+      return { color: "bg-amber-500", icon: Upload, label: `未提交 ${dirtyCount}`, title: `${dirtyCount} 项本地改动未同步到 GitHub` };
     }
     if (syncStatus === "pulling") {
       return { color: "bg-amber-500 animate-pulse", icon: CloudDownload, label: "拉取", title: "拉取中…" };
@@ -83,6 +123,7 @@ export default function Navbar() {
               })}
             </div>
             <div className="hidden md:flex items-center gap-1">
+              <CommitButton />
               <SyncIndicator />
               <button
                 onClick={() => setTokenOpen(true)}
@@ -113,7 +154,8 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-              <div className="flex items-center gap-2 px-4 py-2 border-t border-[#f0ece4] mt-2 pt-3">
+              <div className="flex items-center gap-2 px-4 py-2 border-t border-[#f0ece4] mt-2 pt-3 flex-wrap">
+                <CommitButton />
                 <SyncIndicator />
                 <button
                   onClick={() => { setMobileOpen(false); setTokenOpen(true); }}
