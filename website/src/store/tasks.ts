@@ -56,6 +56,7 @@ interface TaskState {
   dirtyMembers: string[];        // 已改但未推送的学生姓名
   dirtyAdvisor: boolean;         // advisor 是否改动
   isPushing: boolean;            // 是否正在 pushAll
+  pendingSummary: string[];      // 每次改动的简短描述（推送时作为 commit message）
 
   // 业务 mutator
   addTask: (t: {
@@ -264,10 +265,12 @@ export const useTaskStore = create<TaskState>()(
         dirtyMembers: [],
         dirtyAdvisor: false,
         isPushing: false,
+        pendingSummary: [],
 
         addTask: (t) => {
           const advisor = t.advisor || get().advisor;
           const id = `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+          const who = t.assignees.join("、") || "共同任务";
           set((s) => ({
             tasks: [
               {
@@ -281,45 +284,74 @@ export const useTaskStore = create<TaskState>()(
               ...s.tasks,
             ],
             dirtyTaskIds: [...new Set([...s.dirtyTaskIds, id])],
+            pendingSummary: [...s.pendingSummary, `新建任务「${t.title}」（${who}）`],
           }));
         },
         addUpdate: (id, u) => {
-          set((s) => ({
-            tasks: s.tasks.map((x) =>
-              x.id === id ? { ...x, updates: sortUpdates([...x.updates, u]) } : x
-            ),
-            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
-          }));
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            const title = t?.title ?? id;
+            const who = (t?.assignees ?? []).join("、");
+            const detail = u.note ? `${u.status}（${u.note}）` : u.status;
+            return {
+              tasks: s.tasks.map((x) =>
+                x.id === id ? { ...x, updates: sortUpdates([...x.updates, u]) } : x
+              ),
+              dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
+              pendingSummary: [...s.pendingSummary, `更新「${title}」→ ${detail}（${who}）`],
+            };
+          });
         },
         removeTask: (id) => {
-          set((s) => ({
-            tasks: s.tasks.filter((x) => x.id !== id),
-            dirtyTaskIds: s.dirtyTaskIds.filter((x) => x !== id), // 已删任务不再 dirty
-          }));
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            return {
+              tasks: s.tasks.filter((x) => x.id !== id),
+              dirtyTaskIds: s.dirtyTaskIds.filter((x) => x !== id),
+              pendingSummary: t ? [...s.pendingSummary, `永久删除任务「${t.title}」`] : s.pendingSummary,
+            };
+          });
         },
         softRemoveTask: (id) => {
-          set((s) => ({
-            tasks: s.tasks.map((x) =>
-              x.id === id ? { ...x, archived: true, removedAt: todayStr() } : x
-            ),
-            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
-          }));
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            const title = t?.title ?? id;
+            return {
+              tasks: s.tasks.map((x) =>
+                x.id === id ? { ...x, archived: true, removedAt: todayStr() } : x
+              ),
+              dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
+              pendingSummary: [...s.pendingSummary, `删除「${title}」（归档到「已删除」）`],
+            };
+          });
         },
         removeUpdate: (id, index) => {
-          set((s) => ({
-            tasks: s.tasks.map((x) =>
-              x.id === id ? { ...x, updates: x.updates.filter((_, i) => i !== index) } : x
-            ),
-            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
-          }));
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            return {
+              tasks: s.tasks.map((x) =>
+                x.id === id ? { ...x, updates: x.updates.filter((_, i) => i !== index) } : x
+              ),
+              dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
+              pendingSummary: [...s.pendingSummary, `撤销任务「${t?.title ?? id}」的第 ${index + 1} 次进展`],
+            };
+          });
         },
         setArchived: (id, archived) => {
-          set((s) => ({
-            tasks: s.tasks.map((x) => (x.id === id ? { ...x, archived } : x)),
-            dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
-          }));
+          set((s) => {
+            const t = s.tasks.find((x) => x.id === id);
+            const title = t?.title ?? id;
+            return {
+              tasks: s.tasks.map((x) => (x.id === id ? { ...x, archived } : x)),
+              dirtyTaskIds: s.dirtyTaskIds.includes(id) ? s.dirtyTaskIds : [...s.dirtyTaskIds, id],
+              pendingSummary: [...s.pendingSummary, `${archived ? "归档" : "恢复"}「${title}」`],
+            };
+          });
         },
         archiveCompleted: () => {
+          const count = get().tasks.filter(
+            (x) => !x.archived && latestStatus(x).includes("完成")
+          ).length;
           set((s) => ({
             tasks: s.tasks.map((x) => {
               const last = x.updates[x.updates.length - 1];
@@ -331,17 +363,19 @@ export const useTaskStore = create<TaskState>()(
               .map((x) => x.id)
               .filter((id) => !s.dirtyTaskIds.includes(id))
               .concat(s.dirtyTaskIds),
+            pendingSummary: [...s.pendingSummary, `一键归档已完成任务（${count} 项）`],
           }));
         },
         resetSeed: () => {
-          set({
+          set((s) => ({
             tasks: seedTasks,
             members: seedMembers,
             advisor: seedAdvisor,
             dirtyTaskIds: seedTasks.map((t) => t.id),
             dirtyMembers: seedMembers.map((m) => m.name),
             dirtyAdvisor: true,
-          });
+            pendingSummary: [...s.pendingSummary, `重置数据为初始种子`],
+          }));
         },
 
         // 学生管理
@@ -351,18 +385,24 @@ export const useTaskStore = create<TaskState>()(
           set((cur) => ({
             members: [...cur.members, { ...s, name }],
             dirtyMembers: [...new Set([...cur.dirtyMembers, name])],
+            pendingSummary: [...cur.pendingSummary, `添加学生「${name}」`],
           }));
         },
         updateStudent: (name, patch) => {
-          set((s) => ({
-            members: s.members.map((x) => (x.name === name ? { ...x, ...patch } : x)),
-            dirtyMembers: s.dirtyMembers.includes(name) ? s.dirtyMembers : [...s.dirtyMembers, name],
-          }));
+          set((s) => {
+            const fields = Object.keys(patch).filter((k) => k !== "name");
+            return {
+              members: s.members.map((x) => (x.name === name ? { ...x, ...patch } : x)),
+              dirtyMembers: s.dirtyMembers.includes(name) ? s.dirtyMembers : [...s.dirtyMembers, name],
+              pendingSummary: [...s.pendingSummary, `修改学生「${name}」的 ${fields.join("、") || "信息"}`],
+            };
+          });
         },
         removeStudent: (name) => {
           set((s) => ({
             members: s.members.filter((x) => x.name !== name),
             dirtyMembers: s.dirtyMembers.filter((m) => m !== name),
+            pendingSummary: [...s.pendingSummary, `移除学生「${name}」`],
           }));
         },
 
