@@ -142,11 +142,22 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 gap-4">
-            <Link to="/" className="text-lg font-serif font-bold text-[#1a1a1a] tracking-wide hover:text-[#c96442] transition-colors duration-200 shrink-0">
-              Rising Sun
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center h-14 gap-6">
+            {/* 左：品牌 */}
+            <Link
+              to="/"
+              className="flex items-center gap-2 shrink-0 group"
+            >
+              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[#c96442] to-[#e08a63] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                <span className="text-white font-serif font-bold text-sm">R</span>
+              </div>
+              <span className="hidden sm:inline text-base font-serif font-bold text-[#1a1a1a] tracking-wide group-hover:text-[#c96442] transition-colors">
+                Rising Sun
+              </span>
             </Link>
+
+            {/* 中：栏目导航 */}
             <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
@@ -165,15 +176,18 @@ export default function Navbar() {
                 );
               })}
             </div>
-            <div className="hidden md:flex items-center gap-1">
+
+            {/* 右：工具区 */}
+            <div className="flex items-center gap-1 shrink-0">
               <CommitButton />
+              <div className="hidden md:block w-px h-6 bg-[#e8e4db] mx-1" />
               <SyncIndicator />
               <PushHistory />
               <ClearCacheButton />
               <button
                 onClick={() => setTokenOpen(true)}
                 title="GitHub 同步设置"
-                className="inline-flex items-center justify-center p-2 rounded-full text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4] transition-colors"
+                className="inline-flex items-center justify-center h-8 w-8 rounded-full text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4] transition-colors"
               >
                 <Settings size={16} />
               </button>
