@@ -8,12 +8,9 @@ import PushHistory from "./PushHistory";
 
 const navLinks = [
   { to: "/", label: "首页" },
-  { to: "/gallery", label: "学生风采" },
+  { to: "/tasks", label: "任务" },
+  { to: "/students", label: "成员" },
   { to: "/meetings", label: "组会" },
-  { to: "/tasks", label: "任务列表" },
-  { to: "/students", label: "学生管理" },
-  { to: "/archive", label: "归档" },
-  { to: "/new", label: "新建任务" },
 ];
 
 function CommitButton() {

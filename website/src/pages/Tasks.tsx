@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Search, ListTodo, Users } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, ListTodo, Users, Plus, Archive } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
 
@@ -50,9 +50,25 @@ export default function Tasks() {
             <ListTodo size={16} />
           </div>
           <div>
-            <h1 className="font-serif text-3xl font-bold text-[#1a1a1a] leading-none">任务列表</h1>
+            <h1 className="font-serif text-3xl font-bold text-[#1a1a1a] leading-none">任务</h1>
             <p className="mt-1 text-sm text-[#6b6560]">共 {visible.length} 项任务</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/archive"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#1a1a1a] transition-colors"
+          >
+            <Archive size={15} />
+            归档
+          </Link>
+          <Link
+            to="/new"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+          >
+            <Plus size={15} />
+            新建任务
+          </Link>
         </div>
       </div>
 

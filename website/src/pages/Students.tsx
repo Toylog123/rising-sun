@@ -26,26 +26,6 @@ function avatarColor(name: string): string {
   return `linear-gradient(135deg, hsl(${hue}, 60%, 65%), hsl(${(hue + 40) % 360}, 70%, 55%))`;
 }
 
-function Avatar({ name, src }: { name: string; src?: string }) {
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={name}
-        className="h-20 w-20 rounded-full object-cover ring-2 ring-white shadow-md"
-      />
-    );
-  }
-  return (
-    <div
-      className="h-20 w-20 rounded-full ring-2 ring-white shadow-md flex items-center justify-center text-white text-xl font-serif font-bold"
-      style={{ background: avatarColor(name) }}
-    >
-      {name.charAt(0)}
-    </div>
-  );
-}
-
 export default function Students() {
   const advisor = useTaskStore((s) => s.advisor);
   const members = useTaskStore((s) => s.members);
@@ -160,7 +140,12 @@ export default function Students() {
                   <div className="h-2 bg-gradient-to-r from-[#c96442] to-[#e08a63]" />
                   <div className="p-5">
                     <div className="flex items-start gap-3">
-                      <Avatar name={s.name} src={s.avatar} />
+                      <div
+                        className="h-14 w-14 shrink-0 rounded-full ring-2 ring-white shadow-md flex items-center justify-center text-white text-lg font-serif font-bold"
+                        style={{ background: avatarColor(s.name) }}
+                      >
+                        {s.name.charAt(0)}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-serif text-lg font-bold text-[#1a1a1a] truncate">
                           {s.name}
