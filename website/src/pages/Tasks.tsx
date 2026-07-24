@@ -17,7 +17,7 @@ export default function Tasks() {
 
   const groups = useMemo(() => {
     const names = Array.from(new Set([...members.map((m) => m.name), ...tasks.flatMap((t) => t.assignees)]));
-    return names.sort((a, b) => (a === "共同任务" ? 1 : b === "共同任务" ? -1 : 0));
+    return names.sort((a, b) => (a === "多人任务" ? 1 : b === "多人任务" ? -1 : 0));
   }, [tasks, members]);
 
   const memberChips = ["全部", ...groups];

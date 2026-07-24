@@ -12,7 +12,7 @@ export interface TaskUpdate {
 export interface Task {
   id: string;
   advisor?: string;       // 所属指导老师（默认 = 全局 advisor）
-  assignees: string[];    // 协同成员名单（学生名 / "共同任务"）
+  assignees: string[];    // 协同成员名单（学生名 / "多人任务"）
   title: string;
   createdAt: string;       // 创建 / 首次布置时间
   updates: TaskUpdate[];
@@ -28,9 +28,23 @@ export interface Student {
   status: StudentStatus;
   note?: string;
   advisor?: string;        // 默认继承全局 advisor
+  // 学生风采展示字段（可选）
+  avatar?: string;          // 照片 URL（也支持 public/ 下相对路径）
+  bio?: string;             // 个人简介（一两句话）
+  researchAreas?: string[]; // 研究方向
+  email?: string;
+  homepage?: string;
+  github?: string;
 }
 
 export type SyncStatus = "idle" | "pulling" | "pushing" | "error" | "ready";
+
+export interface PushRecord {
+  ts: number;            // 推送时间戳
+  message: string;       // commit message
+  items: string[];       // 推送的具体改动列表（每条 = 一次 mutator 的摘要）
+  count: number;         // 改了多少项
+}
 
 export interface PushPayload {
   tasks: Task[];
@@ -57,6 +71,9 @@ interface TaskState {
   dirtyAdvisor: boolean;         // advisor 是否改动
   isPushing: boolean;            // 是否正在 pushAll
   pendingSummary: string[];      // 每次改动的简短描述（推送时作为 commit message）
+
+  // 推送历史（最近 20 条）
+  pushHistory: PushRecord[];
 
   // 业务 mutator
   addTask: (t: {
@@ -120,12 +137,12 @@ function normalizeTasks(raw: unknown, defaultAdvisor: string): Task[] {
       assignees = (t as Task).assignees;
     } else if (typeof t.assignee === "string") {
       // 兼容旧数据
-      assignees = t.assignee ? [t.assignee] : ["共同任务"];
+      assignees = t.assignee ? [t.assignee] : ["多人任务"];
     } else if (Array.isArray(t.assignee)) {
       // 极端情况：assignee 已是数组（半迁移）
       assignees = t.assignee;
     } else {
-      assignees = ["共同任务"];
+      assignees = ["多人任务"];
     }
     return {
       id: t.id ?? `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -186,16 +203,25 @@ export const useTaskStore = create<TaskState>()(
           for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
               const newSha = await pushTasks(data, sha, state.ghToken, message);
+              // 推送成功：记录历史 + 清 dirty
+              const items = state.pendingSummary;
+              const record: PushRecord = {
+                ts: Date.now(),
+                message,
+                items: items.length > 0 ? [...items] : [message],
+                count: items.length,
+              };
               set({
                 remoteSha: newSha,
                 syncStatus: "ready",
                 lastSyncedAt: Date.now(),
                 syncError: null,
-                // 推送成功：清空 dirty
                 dirtyTaskIds: [],
                 dirtyMembers: [],
                 dirtyAdvisor: false,
                 isPushing: false,
+                pendingSummary: [],
+                pushHistory: [record, ...state.pushHistory].slice(0, 20),
               });
               return;
             } catch (err) {
@@ -266,17 +292,18 @@ export const useTaskStore = create<TaskState>()(
         dirtyAdvisor: false,
         isPushing: false,
         pendingSummary: [],
+        pushHistory: [],
 
         addTask: (t) => {
           const advisor = t.advisor || get().advisor;
           const id = `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-          const who = t.assignees.join("、") || "共同任务";
+          const who = t.assignees.join("、") || "多人任务";
           set((s) => ({
             tasks: [
               {
                 id,
                 advisor,
-                assignees: t.assignees.length > 0 ? t.assignees : ["共同任务"],
+                assignees: t.assignees.length > 0 ? t.assignees : ["多人任务"],
                 title: t.title,
                 createdAt: t.createdAt,
                 updates: [{ date: t.createdAt, status: t.status, note: t.note }],
@@ -419,7 +446,13 @@ export const useTaskStore = create<TaskState>()(
           const dirtyCount =
             state.dirtyTaskIds.length + state.dirtyMembers.length + (state.dirtyAdvisor ? 1 : 0);
           if (dirtyCount === 0) return;
-          await pushInner(`commit: ${dirtyCount} changes`);
+          // 用 pendingSummary 的前 3 条拼接成 commit message
+          const summary = state.pendingSummary.slice(0, 3).join("; ");
+          const message =
+            state.pendingSummary.length > 3
+              ? `${summary} 等 ${state.pendingSummary.length} 项`
+              : summary || `commit: ${dirtyCount} changes`;
+          await pushInner(message);
         },
         dirtyCount: () => {
           const s = get();
@@ -438,6 +471,7 @@ export const useTaskStore = create<TaskState>()(
         dirtyTaskIds: state.dirtyTaskIds,
         dirtyMembers: state.dirtyMembers,
         dirtyAdvisor: state.dirtyAdvisor,
+        pushHistory: state.pushHistory,
       }),
     }
   )

@@ -1,9 +1,30 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ListTodo, Plus, Users, TrendingUp, FlaskConical, GraduationCap, AlertCircle, RefreshCw, CloudOff } from "lucide-react";
+import {
+  Users, TrendingUp, FlaskConical, GraduationCap, Cpu, Sparkles, BookOpen,
+  AlertCircle, RefreshCw, CloudOff, Calendar, ArrowRight,
+} from "lucide-react";
 import { useTaskStore, latestStatus, statusTone, latestUpdate } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 import StatusBadge from "@/components/StatusBadge";
+
+const DIRECTIONS = [
+  {
+    icon: Cpu,
+    title: "芯片设计自动化",
+    desc: "聚焦物理设计、布局布线、时序分析等关键环节，用算法和机器学习替代传统人工迭代，缩短设计周期、提升芯片性能与良率。",
+  },
+  {
+    icon: Sparkles,
+    title: "AI for EDA",
+    desc: "将大模型、强化学习、图神经网络等前沿 AI 技术应用于 EDA 工具链，探索智能布图、跨层优化、可解释性分析等新范式。",
+  },
+  {
+    icon: FlaskConical,
+    title: "工程变更优化（ECO）",
+    desc: "面向设计后期的工程变更场景，研究高效、低代价的 ECO 求解方法，自动化修复时序、功耗、拥塞违例，加速流片进程。",
+  },
+];
 
 export default function Home() {
   const allTasks = useTaskStore((s) => s.tasks);
@@ -16,19 +37,15 @@ export default function Home() {
   const ghToken = useTaskStore((s) => s.ghToken);
   const pull = useTaskStore((s) => s.pull);
 
-  // 首次进入自动拉取最新（无 PAT 也能拉取公开仓库）
   useEffect(() => {
-    if (syncStatus === "idle") {
-      pull();
-    }
+    if (syncStatus === "idle") pull();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // members 现在是 Student[]，展平成名字集合
   const members = Array.from(
     new Set([
       ...storeMembers.map((m) => m.name),
-      ...tasks.flatMap((t) => t.assignees).filter((a) => a !== "共同任务"),
+      ...tasks.flatMap((t) => t.assignees).filter((a) => a !== "多人任务"),
     ])
   );
 
@@ -80,18 +97,22 @@ export default function Home() {
         </div>
       )}
 
-      {/* Hero */}
+      {/* Hero 宣传区 */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#faf9f5] via-[#f5f0e6] to-[#f0ece4]">
         <div className="absolute inset-0 opacity-[0.025]" style={{
           backgroundImage: "radial-gradient(circle, #c96442 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }} />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="max-w-2xl">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+          <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-[#e8e4db] px-3 py-1 text-xs text-[#6b6560] shadow-sm">
                 <FlaskConical size={12} className="text-[#c96442]" />
-                Rising Sun 课题组 · AI for EDA / ECO
+                芯片设计自动化 · EDA
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-3 py-1 text-xs font-medium text-[#c96442]">
+                <Sparkles size={12} />
+                成立于 2025
               </div>
               {advisor && (
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-3 py-1 text-xs font-medium text-[#c96442]">
@@ -100,31 +121,71 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <h1 className="font-serif text-4xl sm:text-5xl font-black text-[#1a1a1a] leading-tight tracking-tight">
+            <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tight">
               Rising Sun
-              <span className="block mt-1 text-2xl sm:text-3xl font-light text-[#6b6560] tracking-widest">
-                任务管理看板
+              <span className="block mt-2 text-xl sm:text-2xl font-light text-[#6b6560] tracking-widest">
+                芯片设计自动化课题组
               </span>
             </h1>
-            <p className="mt-5 text-base text-[#4a4540] leading-relaxed max-w-lg">
-              按成员追踪课题任务与每期组会的进展情况，共 <strong className="text-[#1a1a1a]">{totalTasks}</strong> 项任务，已完成 <strong className="text-[#1a1a1a]">{doneTasks}</strong> 项。
+            <p className="mt-6 text-base sm:text-lg text-[#4a4540] leading-relaxed max-w-2xl">
+              我们是一个年轻的课题组，成立于 2025 年，专注于<strong className="text-[#1a1a1a] font-semibold">芯片设计自动化（EDA）</strong>方向。
+              围绕物理设计、布局布线、工程变更优化（ECO）等关键环节，结合机器学习与运筹优化方法，
+              探索更智能、更高效的 EDA 算法与工具。
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/tasks" className="inline-flex items-center gap-2 rounded-full bg-[#c96442] px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-[#c96442]/20 transition-all hover:bg-[#b5573a] hover:shadow-lg hover:shadow-[#c96442]/30">
-                <ListTodo size={16} />
-                查看任务看板
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/students" className="inline-flex items-center gap-2 rounded-full bg-[#c96442] px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-[#c96442]/20 transition-all hover:bg-[#b5573a] hover:shadow-lg hover:shadow-[#c96442]/30">
+                <Users size={16} />
+                了解组员
+                <ArrowRight size={14} />
               </Link>
-              <Link to="/new" className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-6 py-2.5 text-sm font-medium text-[#1a1a1a] transition-all hover:border-[#c96442]/30 hover:shadow-md">
-                <Plus size={14} />
-                新建任务
+              <Link to="/meetings" className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-6 py-2.5 text-sm font-medium text-[#1a1a1a] transition-all hover:border-[#c96442]/30 hover:shadow-md">
+                <Calendar size={16} />
+                组会记录
+              </Link>
+              <Link to="/tasks" className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-6 py-2.5 text-sm font-medium text-[#1a1a1a] transition-all hover:border-[#c96442]/30 hover:shadow-md">
+                <BookOpen size={16} />
+                研究进展
               </Link>
             </div>
           </div>
         </div>
       </section>
 
+      {/* 研究方向 */}
+      <section className="bg-[#faf9f5] border-t border-[#e8e4db]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-3 py-1 text-xs text-[#6b6560] mb-3 shadow-sm">
+              <FlaskConical size={12} className="text-[#c96442]" />
+              研究方向
+            </div>
+            <h2 className="font-serif text-3xl font-bold text-[#1a1a1a]">我们在做什么</h2>
+            <p className="mt-3 text-sm text-[#6b6560] max-w-2xl mx-auto">
+              从算法到工具，从理论到工程 —— 我们围绕芯片设计自动化的关键难题展开研究。
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {DIRECTIONS.map((d) => {
+              const Icon = d.icon;
+              return (
+                <article
+                  key={d.title}
+                  className="rounded-2xl bg-white border border-[#e8e4db] p-6 transition-all hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/30"
+                >
+                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#c96442]/10 text-[#c96442] mb-4">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-[#1a1a1a]">{d.title}</h3>
+                  <p className="mt-2 text-sm text-[#4a4540] leading-relaxed">{d.desc}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* 成员进度概览 */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center gap-3 mb-8">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
             <Users size={16} />
@@ -133,18 +194,32 @@ export default function Home() {
             <h2 className="font-serif text-2xl font-bold text-[#1a1a1a]">成员进度概览</h2>
             <p className="text-sm text-[#6b6560]">指导老师 {advisor} · 组员 {members.length} 人</p>
           </div>
+          <Link
+            to="/students"
+            className="ml-auto inline-flex items-center gap-1 text-sm text-[#c96442] hover:text-[#b5573a] transition-colors"
+          >
+            查看全部
+            <ArrowRight size={14} />
+          </Link>
         </div>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {members.map((m) => {
             const s = statOf(m);
             return (
-              <Link key={m} to={`/tasks?member=${encodeURIComponent(m)}`} className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20">
+              <Link
+                key={m}
+                to="/gallery"
+                className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20"
+              >
                 <div className="flex items-center justify-between">
                   <span className="font-serif text-lg font-semibold text-[#1a1a1a]">{m}</span>
                   <span className="text-xs text-[#6b6560]">{s.total} 项任务</span>
                 </div>
                 <div className="mt-3 h-2 w-full rounded-full bg-[#f0ece4] overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#c96442] to-[#e08a63] transition-all" style={{ width: `${s.pct}%` }} />
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#c96442] to-[#e08a63] transition-all"
+                    style={{ width: `${s.pct}%` }}
+                  />
                 </div>
                 <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6b6560]">
                   <span className="text-[#c96442] font-semibold">进行中 {s.active}</span>

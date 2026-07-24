@@ -1,10 +1,12 @@
 import type { Task, Student } from "@/store/tasks";
+import type { Meeting } from "@/store/meetings";
 
 // GitHub 仓库配置（与 vite.config.ts 的 base 一致）
 const OWNER = "Toylog123";
 const REPO = "rising-sun";
-const PATH = "website/src/data/tasks.json";
 const BRANCH = "main";
+const TASKS_PATH = "website/src/data/tasks.json";
+const MEETINGS_PATH = "website/src/data/meetings.json";
 
 export interface RemoteData {
   advisor: string;
@@ -12,8 +14,12 @@ export interface RemoteData {
   tasks: Task[];
 }
 
-export interface FetchResult {
-  data: RemoteData;
+export interface RemoteMeetingsData {
+  meetings: Meeting[];
+}
+
+export interface FetchResult<T> {
+  data: T;
   sha: string;
 }
 
@@ -46,9 +52,7 @@ function base64ToUtf8(base64: string): string {
   return new TextDecoder("utf-8").decode(bytes);
 }
 
-/** 从 GitHub 拉取 tasks.json 内容 + sha（PUT 时需要 sha） */
-export async function fetchTasks(): Promise<FetchResult> {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
+async function ghFetch(url: string): Promise<{ content: string; sha: string }> {
   const res = await fetch(url, {
     headers: {
       Accept: "application/vnd.github+json",
@@ -62,25 +66,17 @@ export async function fetchTasks(): Promise<FetchResult> {
     throw new GitHubApiError(msg, res.status);
   }
   const json = await res.json();
-  // GitHub 返回 base64 编码内容，可能带换行
-  const decoded = base64ToUtf8(json.content.replace(/\n/g, ""));
-  return {
-    data: JSON.parse(decoded) as RemoteData,
-    sha: json.sha as string,
-  };
+  return { content: json.content, sha: json.sha };
 }
 
-/** 提交 tasks.json 到 GitHub（PUT API） */
-export async function pushTasks(
-  data: RemoteData,
+async function ghPut(
+  url: string,
+  data: unknown,
   sha: string,
   token: string,
   message: string
 ): Promise<string> {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${PATH}`;
-  // 兼容中文 content
-  const json = JSON.stringify(data, null, 2);
-  const content = utf8ToBase64(json);
+  const content = utf8ToBase64(JSON.stringify(data, null, 2));
   const res = await fetch(url, {
     method: "PUT",
     headers: {
@@ -89,12 +85,7 @@ export async function pushTasks(
       "Content-Type": "application/json",
       "X-GitHub-Api-Version": "2022-11-28",
     },
-    body: JSON.stringify({
-      message,
-      content,
-      sha,
-      branch: BRANCH,
-    }),
+    body: JSON.stringify({ message, content, sha, branch: BRANCH }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -106,8 +97,52 @@ export async function pushTasks(
     if (res.status === 422) msg = "sha 不匹配，请刷新后重试";
     throw new GitHubApiError(msg, res.status);
   }
-  const json2 = await res.json();
-  return json2.content.sha as string;
+  const json = await res.json();
+  return json.content.sha as string;
+}
+
+/** 从 GitHub 拉取 tasks.json */
+export async function fetchTasks(): Promise<FetchResult<RemoteData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${TASKS_PATH}`);
+  return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
+}
+
+/** 提交 tasks.json */
+export async function pushTasks(
+  data: RemoteData,
+  sha: string,
+  token: string,
+  message: string
+): Promise<string> {
+  return ghPut(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${TASKS_PATH}`,
+    data,
+    sha,
+    token,
+    message
+  );
+}
+
+/** 从 GitHub 拉取 meetings.json */
+export async function fetchMeetings(): Promise<FetchResult<RemoteMeetingsData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${MEETINGS_PATH}`);
+  return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
+}
+
+/** 提交 meetings.json */
+export async function pushMeetings(
+  data: RemoteMeetingsData,
+  sha: string,
+  token: string,
+  message: string
+): Promise<string> {
+  return ghPut(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${MEETINGS_PATH}`,
+    data,
+    sha,
+    token,
+    message
+  );
 }
 
 /** 仅测试 token 是否有效（拉取一次） */

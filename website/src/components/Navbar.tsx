@@ -4,11 +4,14 @@ import { Menu, X, Settings, CloudOff, CloudDownload, CloudUpload, Upload, Loader
 import { useTaskStore } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 import TokenSetup from "./TokenSetup";
+import PushHistory from "./PushHistory";
 
 const navLinks = [
   { to: "/", label: "首页" },
+  { to: "/gallery", label: "学生风采" },
+  { to: "/meetings", label: "组会" },
   { to: "/tasks", label: "任务列表" },
-  { to: "/students", label: "学生" },
+  { to: "/students", label: "学生管理" },
   { to: "/archive", label: "归档" },
   { to: "/new", label: "新建任务" },
 ];
@@ -125,6 +128,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-1">
               <CommitButton />
               <SyncIndicator />
+              <PushHistory />
               <button
                 onClick={() => setTokenOpen(true)}
                 title="GitHub 同步设置"
@@ -157,6 +161,7 @@ export default function Navbar() {
               <div className="flex items-center gap-2 px-4 py-2 border-t border-[#f0ece4] mt-2 pt-3 flex-wrap">
                 <CommitButton />
                 <SyncIndicator />
+                <PushHistory />
                 <button
                   onClick={() => { setMobileOpen(false); setTokenOpen(true); }}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[#6b6560] hover:bg-[#f0ece4] transition-colors"

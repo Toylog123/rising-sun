@@ -14,8 +14,8 @@ export default function AddTask() {
   const faculty = advisor ? [advisor] : [];
   const studentNames = Array.from(
     new Set([...members.map((m) => m.name), ...tasks.flatMap((t) => t.assignees)])
-  ).filter((n) => n !== advisor && n !== "共同任务");
-  const common = ["共同任务"];
+  ).filter((n) => n !== advisor && n !== "多人任务");
+  const common = ["多人任务"];
 
   const [taskAdvisor, setTaskAdvisor] = useState(advisor || "");
   const [assignees, setAssignees] = useState<string[]>([]);
