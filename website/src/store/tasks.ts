@@ -22,10 +22,13 @@ export interface Task {
 
 export type StudentStatus = "在读" | "休学" | "交流中" | "已毕业" | "退学";
 
+export type MemberRole = "teacher" | "student";
+
 export interface Student {
   name: string;            // 唯一主键
-  enrolledAt: string;      // YYYY-MM 月精度
-  status: StudentStatus;
+  enrolledAt?: string;     // YYYY-MM 月精度（老师可选）
+  status?: StudentStatus;  // 学生才用，老师可选
+  role?: MemberRole;       // 默认 "student"（兼容旧数据）
   note?: string;
   advisor?: string;        // 默认继承全局 advisor
   // 学生风采展示字段（可选）
@@ -35,6 +38,7 @@ export interface Student {
   email?: string;
   homepage?: string;
   github?: string;
+  title?: string;           // 老师可填：教授/副教授/讲师 等
 }
 
 export type SyncStatus = "idle" | "pulling" | "pushing" | "error" | "ready";
@@ -165,6 +169,23 @@ const seedAdvisor = (seed.advisor as string) ?? "";
 function sortUpdates(u: TaskUpdate[]): TaskUpdate[] {
   return [...u].sort((a, b) => a.date.localeCompare(b.date));
 }
+
+/** 字段英文名 → 中文友好名（用于推送历史/日志显示） */
+const FIELD_CN: Record<string, string> = {
+  name: "姓名",
+  enrolledAt: "入校时间",
+  status: "状态",
+  role: "角色",
+  title: "职称",
+  note: "备注",
+  avatar: "头像",
+  bio: "简介",
+  researchAreas: "研究方向",
+  email: "邮箱",
+  homepage: "个人主页",
+  github: "GitHub",
+  advisor: "导师",
+};
 
 export const useTaskStore = create<TaskState>()(
   persist(
@@ -447,11 +468,13 @@ export const useTaskStore = create<TaskState>()(
         },
         updateStudent: (name, patch) => {
           set((s) => {
-            const fields = Object.keys(patch).filter((k) => k !== "name");
+            const fields = Object.keys(patch)
+              .filter((k) => k !== "name")
+              .map((k) => FIELD_CN[k] ?? k);
             return {
               members: s.members.map((x) => (x.name === name ? { ...x, ...patch } : x)),
               dirtyMembers: s.dirtyMembers.includes(name) ? s.dirtyMembers : [...s.dirtyMembers, name],
-              pendingSummary: [...s.pendingSummary, `修改学生「${name}」的 ${fields.join("、") || "信息"}`],
+              pendingSummary: [...s.pendingSummary, `修改「${name}」的 ${fields.join("、") || "信息"}`],
             };
           });
         },

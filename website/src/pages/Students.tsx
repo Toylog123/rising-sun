@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Plus, Pencil, Trash2, Users, Calendar, FlaskConical,
+  Plus, Pencil, Trash2, Users, Calendar, FlaskConical, GraduationCap,
   Mail, Github, ExternalLink, ArrowRight,
 } from "lucide-react";
 import { useTaskStore, latestStatus, statusTone, type Student } from "@/store/tasks";
@@ -16,15 +16,6 @@ const STATUS_BG: Record<string, string> = {
   gray: "bg-[#f0ece4] text-[#6b6560] border-[#e8e4db]",
   blue: "bg-blue-50 text-blue-700 border-blue-200",
 };
-
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `linear-gradient(135deg, hsl(${hue}, 60%, 65%), hsl(${(hue + 40) % 360}, 70%, 55%))`;
-}
 
 export default function Students() {
   const advisor = useTaskStore((s) => s.advisor);
@@ -127,28 +118,107 @@ export default function Students() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {sorted.map((s) => {
-              const grade = calcGrade(s.enrolledAt);
-              const tone = statusToneStudent(s.status);
-              const stat = statOf(s.name);
+          <div className="space-y-8">
+            {/* 指导老师（顶部） */}
+            {(() => {
+              const teacher = sorted.find((m) => m.role === "teacher");
+              if (!teacher) return null;
               return (
-                <article
-                  key={s.name}
-                  className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
-                >
-                  <div className="flex items-start gap-5">
-                    {/* 头像（首字） */}
-                    <div
-                      className="shrink-0 h-16 w-16 rounded-full ring-2 ring-white shadow-md flex items-center justify-center text-white text-2xl font-serif font-bold"
-                      style={{ background: avatarColor(s.name) }}
-                    >
-                      {s.name.charAt(0)}
+                <section>
+                  <h2 className="font-serif text-lg font-bold text-[#1a1a1a] mb-3 flex items-center gap-2">
+                    <GraduationCap size={18} className="text-[#c96442]" />
+                    指导老师
+                  </h2>
+                  <article
+                    key={teacher.name}
+                    className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
+                  >
+                    <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
+                          {teacher.name}
+                        </h3>
+                        {teacher.title && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs font-medium text-[#c96442]">
+                            {teacher.title}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openEdit(teacher)}
+                          title="编辑"
+                          className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleRemove(teacher)}
+                          title="移除"
+                          className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* 主体 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                    {teacher.researchAreas && teacher.researchAreas.length > 0 && (
+                      <div className="mt-3">
+                        <p className="flex items-center gap-1 text-xs font-semibold text-[#9a9590] mb-1.5">
+                          <FlaskConical size={12} />
+                          研究方向
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {teacher.researchAreas.map((r) => (
+                            <span
+                              key={r}
+                              className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs text-[#c96442]"
+                            >
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {teacher.bio && (
+                      <p className="mt-3 text-sm text-[#1a1a1a] leading-relaxed">
+                        {teacher.bio}
+                      </p>
+                    )}
+
+                    {teacher.email && (
+                      <div className="mt-3">
+                        <a
+                          href={`mailto:${teacher.email}`}
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                        >
+                          <Mail size={12} /> {teacher.email}
+                        </a>
+                      </div>
+                    )}
+                  </article>
+                </section>
+              );
+            })()}
+
+            {/* 学生（列表） */}
+            <section>
+              <h2 className="font-serif text-lg font-bold text-[#1a1a1a] mb-3 flex items-center gap-2">
+                <Users size={18} className="text-[#c96442]" />
+                在读研究生
+              </h2>
+              <div className="space-y-4">
+                {sorted.filter((m) => m.role !== "teacher").map((s) => {
+                  const grade = calcGrade(s.enrolledAt);
+                  const tone = statusToneStudent(s.status);
+                  const stat = statOf(s.name);
+                  return (
+                    <article
+                      key={s.name}
+                      className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
+                    >
+                      <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
@@ -177,8 +247,6 @@ export default function Students() {
                             </p>
                           )}
                         </div>
-
-                        {/* 编辑/删除 */}
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => openEdit(s)}
@@ -258,29 +326,28 @@ export default function Students() {
                           <span className="text-xs text-[#9a9590]">暂无联系方式</span>
                         )}
                       </div>
-                    </div>
-                  </div>
 
-                  {/* 任务统计 */}
-                  <div className="mt-4 pt-3 border-t border-[#f0ece4] flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-[#6b6560]">
-                      <span>
-                        <strong className="text-[#1a1a1a]">{stat.total}</strong> 项任务
-                      </span>
-                      <span className="text-[#c96442] font-semibold">进行中 {stat.active}</span>
-                      <span>已完成 {stat.done}</span>
-                    </div>
-                    <Link
-                      to={`/tasks?member=${encodeURIComponent(s.name)}`}
-                      className="inline-flex items-center gap-0.5 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
-                    >
-                      查看任务
-                      <ArrowRight size={11} />
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+                      <div className="mt-4 pt-3 border-t border-[#f0ece4] flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-xs text-[#6b6560]">
+                          <span>
+                            <strong className="text-[#1a1a1a]">{stat.total}</strong> 项任务
+                          </span>
+                          <span className="text-amber-800 font-semibold">进行中 {stat.active}</span>
+                          <span>已完成 {stat.done}</span>
+                        </div>
+                        <Link
+                          to={`/tasks?member=${encodeURIComponent(s.name)}`}
+                          className="inline-flex items-center gap-0.5 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                        >
+                          查看任务
+                          <ArrowRight size={11} />
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
           </div>
         )}
 

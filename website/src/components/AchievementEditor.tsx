@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { X, Plus, Pencil, AlertCircle, Calendar, FileText, Link2, Users } from "lucide-react";
-import { useAchievementStore, type Achievement, type AchievementType, ACHIEVEMENT_TYPE_OPTIONS } from "@/store/achievements";
+import {
+  X, Plus, Pencil, AlertCircle, Calendar, FileText, Link2, Users,
+  GraduationCap, BookOpen, Lightbulb, Trophy,
+} from "lucide-react";
+import {
+  useAchievementStore, type Achievement, type AchievementCategory,
+  JCR_OPTIONS, CAS_OPTIONS, PATENT_STATUS, AWARD_LEVELS,
+  type JcrZone, type CasZone, type PatentStatus,
+} from "@/store/achievements";
 import { confirmDialog } from "@/store/ui";
 
 interface AchievementEditorProps {
@@ -9,6 +16,12 @@ interface AchievementEditorProps {
   onClose: () => void;
 }
 
+const CATEGORIES: { key: AchievementCategory; label: string; icon: typeof Trophy }[] = [
+  { key: "论文", label: "论文", icon: BookOpen },
+  { key: "专利", label: "专利", icon: Lightbulb },
+  { key: "比赛", label: "比赛获奖", icon: Trophy },
+];
+
 export default function AchievementEditor({ open, initial, onClose }: AchievementEditorProps) {
   const addAchievement = useAchievementStore((s) => s.addAchievement);
   const updateAchievement = useAchievementStore((s) => s.updateAchievement);
@@ -16,34 +29,71 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
 
   const isEdit = Boolean(initial);
 
-  const [type, setType] = useState<AchievementType>("论文");
-  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState<AchievementCategory>("论文");
+  const [year, setYear] = useState(new Date().getFullYear().toString());
   const [authorsText, setAuthorsText] = useState("");
-  const [date, setDate] = useState("");
-  const [venue, setVenue] = useState("");
-  const [link, setLink] = useState("");
   const [note, setNote] = useState("");
+  const [link, setLink] = useState("");
+
+  // 论文字段
+  const [paperTitle, setPaperTitle] = useState("");
+  const [paperVenue, setPaperVenue] = useState("");
+  const [paperJcr, setPaperJcr] = useState<JcrZone | "">("");
+  const [paperCas, setPaperCas] = useState<CasZone | "">("");
+  const [paperCorrText, setPaperCorrText] = useState("");
+
+  // 专利字段
+  const [patentName, setPatentName] = useState("");
+  const [patentNo, setPatentNo] = useState("");
+  const [patentStatus, setPatentStatus] = useState<PatentStatus | "">("");
+
+  // 比赛字段
+  const [compName, setCompName] = useState("");
+  const [compAward, setCompAward] = useState("");
+  const [compAdvisorsText, setCompAdvisorsText] = useState("");
+
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
     if (initial) {
-      setType(initial.type);
-      setTitle(initial.title);
+      setCategory(initial.category);
+      setYear(initial.year);
       setAuthorsText(initial.authors.join("、"));
-      setDate(initial.date);
-      setVenue(initial.venue ?? "");
-      setLink(initial.link ?? "");
       setNote(initial.note ?? "");
+      setLink(initial.link ?? "");
+      if (initial.category === "论文") {
+        setPaperTitle(initial.title);
+        setPaperVenue(initial.venue);
+        setPaperJcr(initial.jcr ?? "");
+        setPaperCas(initial.cas ?? "");
+        setPaperCorrText(initial.correspondingAuthors?.join("、") ?? "");
+      } else if (initial.category === "专利") {
+        setPatentName(initial.name);
+        setPatentNo(initial.patentNo ?? "");
+        setPatentStatus(initial.status ?? "");
+      } else {
+        setCompName(initial.competition);
+        setCompAward(initial.award);
+        setCompAdvisorsText(initial.advisors?.join("、") ?? "");
+      }
     } else {
-      setType("论文");
-      setTitle("");
+      setCategory("论文");
+      setYear(new Date().getFullYear().toString());
       setAuthorsText("");
-      const today = new Date().toISOString().slice(0, 7);
-      setDate(today);
-      setVenue("");
-      setLink("");
       setNote("");
+      setLink("");
+      setPaperTitle("");
+      setPaperVenue("");
+      setPaperJcr("");
+      setPaperCas("");
+      setPaperCorrText("");
+      setPatentName("");
+      setPatentNo("");
+      setPatentStatus("");
+      setCompName("");
+      setCompAward("");
+      setCompAdvisorsText("");
     }
     setError("");
   }, [open, initial]);
@@ -60,31 +110,59 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   if (!open) return null;
 
   const submit = () => {
-    if (!title.trim()) {
-      setError("请填写标题");
+    if (!year) {
+      setError("请填写年份");
       return;
     }
-    if (!date) {
-      setError("请选择日期");
-      return;
-    }
-    const authors = authorsText
-      .split(/[、,，\s]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const authors = authorsText.split(/[、,，\s]+/).map((s) => s.trim()).filter(Boolean);
     if (authors.length === 0) {
-      setError("请至少填写一位作者");
+      setError("请至少填写一位作者/发明人/获奖成员");
       return;
     }
-    const data = {
-      type,
-      title: title.trim(),
-      authors,
-      date,
-      venue: venue.trim() || undefined,
-      link: link.trim() || undefined,
-      note: note.trim() || undefined,
-    };
+
+    let data: Omit<Achievement, "id">;
+    if (category === "论文") {
+      if (!paperTitle.trim()) return setError("请填写论文标题");
+      if (!paperVenue.trim()) return setError("请填写会议/期刊名");
+      data = {
+        category: "论文",
+        year,
+        authors,
+        title: paperTitle.trim(),
+        venue: paperVenue.trim(),
+        jcr: (paperJcr || undefined) as JcrZone | undefined,
+        cas: (paperCas || undefined) as CasZone | undefined,
+        correspondingAuthors: paperCorrText.split(/[、,，\s]+/).map((s) => s.trim()).filter(Boolean),
+        note: note.trim() || undefined,
+        link: link.trim() || undefined,
+      } as Omit<Achievement, "id">;
+    } else if (category === "专利") {
+      if (!patentName.trim()) return setError("请填写专利名称");
+      data = {
+        category: "专利",
+        year,
+        authors,
+        name: patentName.trim(),
+        patentNo: patentNo.trim() || undefined,
+        status: (patentStatus || undefined) as PatentStatus | undefined,
+        note: note.trim() || undefined,
+        link: link.trim() || undefined,
+      } as Omit<Achievement, "id">;
+    } else {
+      if (!compName.trim()) return setError("请填写比赛名");
+      if (!compAward.trim()) return setError("请填写奖项（如：一等奖）");
+      data = {
+        category: "比赛",
+        year,
+        authors,
+        competition: compName.trim(),
+        award: compAward.trim(),
+        advisors: compAdvisorsText.split(/[、,，\s]+/).map((s) => s.trim()).filter(Boolean),
+        note: note.trim() || undefined,
+        link: link.trim() || undefined,
+      } as Omit<Achievement, "id">;
+    }
+
     if (isEdit && initial) {
       updateAchievement(initial.id, data);
     } else {
@@ -96,8 +174,8 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   const handleDelete = async () => {
     if (!initial) return;
     const ok = await confirmDialog({
-      title: `删除成果「${initial.title}」？`,
-      description: `${initial.date} · ${initial.authors.join("、")}`,
+      title: `删除该${initial.category}？`,
+      description: `${initial.year} · ${initial.authors.join("、")}`,
       confirmText: "删除",
       cancelText: "取消",
       tone: "danger",
@@ -117,7 +195,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0ece4]">
@@ -135,73 +213,226 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>类型</label>
-              <select value={type} onChange={(e) => setType(e.target.value as AchievementType)} className={field}>
-                {ACHIEVEMENT_TYPE_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+          {/* 类别 */}
+          <div>
+            <label className={label}>类别</label>
+            <div className="grid grid-cols-3 gap-2">
+              {CATEGORIES.map((c) => {
+                const Icon = c.icon;
+                const active = category === c.key;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setCategory(c.key)}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
+                      active
+                        ? "bg-[#c96442] text-white border-[#c96442]"
+                        : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                    }`}
+                  >
+                    <Icon size={15} />
+                    {c.label}
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
                   <Calendar size={14} className="text-[#c96442]" />
-                  日期
+                  年份
                 </span>
               </label>
               <input
-                type="month"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                type="number"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                placeholder="2025"
+                min="2000"
+                max="2100"
+                className={field}
+              />
+            </div>
+            <div>
+              <label className={label}>
+                <span className="inline-flex items-center gap-1.5">
+                  <Users size={14} className="text-[#c96442]" />
+                  {category === "专利" ? "发明人" : category === "比赛" ? "获奖成员" : "作者"}
+                  （用 、 分隔）
+                </span>
+              </label>
+              <input
+                value={authorsText}
+                onChange={(e) => setAuthorsText(e.target.value)}
+                placeholder="例如：佟亚龙、刘畅"
                 className={field}
               />
             </div>
           </div>
 
-          <div>
-            <label className={label}>标题</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="例如：2024 EDA 精英挑战赛 · 全国一等奖"
-              className={field}
-              autoFocus={!isEdit}
-            />
-          </div>
+          {/* 论文字段 */}
+          {category === "论文" && (
+            <>
+              <div>
+                <label className={label}>论文标题</label>
+                <input
+                  value={paperTitle}
+                  onChange={(e) => setPaperTitle(e.target.value)}
+                  placeholder="例如：ECO 智能求解综述"
+                  className={field}
+                  autoFocus={!isEdit}
+                />
+              </div>
+              <div>
+                <label className={label}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <FileText size={14} className="text-[#c96442]" />
+                    会议 / 期刊名
+                  </span>
+                </label>
+                <input
+                  value={paperVenue}
+                  onChange={(e) => setPaperVenue(e.target.value)}
+                  placeholder="例如：DAC 2025 / 中国科学：信息科学"
+                  className={field}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>JCR 分区</label>
+                  <select
+                    value={paperJcr}
+                    onChange={(e) => setPaperJcr(e.target.value as JcrZone | "")}
+                    className={field}
+                  >
+                    <option value="">未填</option>
+                    {JCR_OPTIONS.map((q) => (
+                      <option key={q} value={q}>
+                        {q}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={label}>中科院分区</label>
+                  <select
+                    value={paperCas}
+                    onChange={(e) => setPaperCas(e.target.value as CasZone | "")}
+                    className={field}
+                  >
+                    <option value="">未填</option>
+                    {CAS_OPTIONS.map((q) => (
+                      <option key={q} value={q}>
+                        {q}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className={label}>通讯作者（可选，用 、 分隔）</label>
+                <input
+                  value={paperCorrText}
+                  onChange={(e) => setPaperCorrText(e.target.value)}
+                  placeholder="例如：刘畅"
+                  className={field}
+                />
+              </div>
+            </>
+          )}
 
-          <div>
-            <label className={label}>
-              <span className="inline-flex items-center gap-1.5">
-                <Users size={14} className="text-[#c96442]" />
-                作者（用 、 分隔）
-              </span>
-            </label>
-            <input
-              value={authorsText}
-              onChange={(e) => setAuthorsText(e.target.value)}
-              placeholder="例如：佟亚龙、刘畅"
-              className={field}
-            />
-          </div>
+          {/* 专利字段 */}
+          {category === "专利" && (
+            <>
+              <div>
+                <label className={label}>专利名称</label>
+                <input
+                  value={patentName}
+                  onChange={(e) => setPatentName(e.target.value)}
+                  placeholder="例如：一种基于强化学习的 ECO 求解方法"
+                  className={field}
+                  autoFocus={!isEdit}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>专利号（可选）</label>
+                  <input
+                    value={patentNo}
+                    onChange={(e) => setPatentNo(e.target.value)}
+                    placeholder="CN2025xxxxxx"
+                    className={field}
+                  />
+                </div>
+                <div>
+                  <label className={label}>状态</label>
+                  <select
+                    value={patentStatus}
+                    onChange={(e) => setPatentStatus(e.target.value as PatentStatus | "")}
+                    className={field}
+                  >
+                    <option value="">未填</option>
+                    {PATENT_STATUS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
-          <div>
-            <label className={label}>
-              <span className="inline-flex items-center gap-1.5">
-                <FileText size={14} className="text-[#c96442]" />
-                发表场所（可选）
-              </span>
-            </label>
-            <input
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              placeholder="例如：DAC 2024 / 中国科学：信息科学"
-              className={field}
-            />
-          </div>
+          {/* 比赛字段 */}
+          {category === "比赛" && (
+            <>
+              <div>
+                <label className={label}>比赛名</label>
+                <input
+                  value={compName}
+                  onChange={(e) => setCompName(e.target.value)}
+                  placeholder="例如：2025 EDA 精英挑战赛"
+                  className={field}
+                  autoFocus={!isEdit}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>奖项</label>
+                  <input
+                    value={compAward}
+                    onChange={(e) => setCompAward(e.target.value)}
+                    placeholder="例如：一等奖（从下拉选或自定义）"
+                    className={field}
+                    list="award-levels"
+                  />
+                  <datalist id="award-levels">
+                    {AWARD_LEVELS.map((a) => (
+                      <option key={a} value={a} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <label className={label}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <GraduationCap size={14} className="text-[#c96442]" />
+                      指导老师
+                    </span>
+                  </label>
+                  <input
+                    value={compAdvisorsText}
+                    onChange={(e) => setCompAdvisorsText(e.target.value)}
+                    placeholder="例如：刘畅（用 、 分隔）"
+                    className={field}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <div>
             <label className={label}>
@@ -223,7 +454,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="例如：导师一作 / 最佳论文奖"
+              placeholder="例如：最佳论文奖 / 导师一作"
               className={field}
             />
           </div>

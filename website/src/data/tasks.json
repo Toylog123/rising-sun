@@ -2,7 +2,18 @@
   "advisor": "刘畅",
   "members": [
     {
+      "name": "刘畅",
+      "role": "teacher",
+      "title": "副教授",
+      "enrolledAt": "2025-09",
+      "status": "在岗",
+      "bio": "国防科技大学集成电路科学与工程副教授，课题组主要研究方向为芯片设计自动化（EDA）、AI for EDA 与工程变更优化（ECO）。",
+      "researchAreas": ["芯片设计自动化", "AI for EDA", "ECO"],
+      "email": "liuchang@nudt.edu.cn"
+    },
+    {
       "name": "佟亚龙",
+      "role": "student",
       "enrolledAt": "2025-09",
       "status": "在读",
       "advisor": "刘畅",

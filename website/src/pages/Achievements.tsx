@@ -1,15 +1,241 @@
-import { useState } from "react";
-import { Plus, Pencil, Award, Trophy, BookOpen, Lightbulb, FileText, Calendar, ExternalLink, Users, Trash2 } from "lucide-react";
-import { useAchievementStore, type Achievement, type AchievementType } from "@/store/achievements";
+import { useMemo, useState } from "react";
+import {
+  Plus, Pencil, Trash2, BookOpen, Lightbulb, Trophy, Award, ExternalLink,
+  Calendar, FileText, Link2, Users, GraduationCap,
+} from "lucide-react";
+import {
+  useAchievementStore, type Achievement, type AchievementCategory,
+  type PaperAchievement, type PatentAchievement, type CompetitionAchievement,
+} from "@/store/achievements";
 import AchievementEditor from "@/components/AchievementEditor";
 
-const TYPE_META: Record<AchievementType, { icon: typeof Award; color: string; bg: string }> = {
-  论文: { icon: BookOpen, color: "text-blue-600", bg: "bg-blue-50 border-blue-200" },
-  专利: { icon: Lightbulb, color: "text-amber-600", bg: "bg-amber-50 border-amber-200" },
-  比赛: { icon: Trophy, color: "text-[#c96442]", bg: "bg-[#c96442]/10 border-[#c96442]/30" },
-  项目: { icon: FileText, color: "text-green-600", bg: "bg-green-50 border-green-200" },
-  获奖: { icon: Award, color: "text-purple-600", bg: "bg-purple-50 border-purple-200" },
+const CATEGORY_META: Record<
+  AchievementCategory,
+  { icon: typeof BookOpen; color: string; bg: string; ring: string; title: string }
+> = {
+  论文: {
+    icon: BookOpen,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    ring: "ring-blue-200",
+    title: "论文",
+  },
+  专利: {
+    icon: Lightbulb,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    ring: "ring-amber-200",
+    title: "专利",
+  },
+  比赛: {
+    icon: Trophy,
+    color: "text-[#c96442]",
+    bg: "bg-[#c96442]/10",
+    ring: "ring-[#c96442]/30",
+    title: "比赛获奖",
+  },
 };
+
+function PaperCard({ a, onEdit, onRemove }: { a: PaperAchievement; onEdit: () => void; onRemove: () => void }) {
+  const meta = CATEGORY_META.论文;
+  const Icon = meta.icon;
+  return (
+    <article className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30">
+      <div className="flex items-start gap-4">
+        <div className={`shrink-0 h-10 w-10 rounded-xl border flex items-center justify-center ${meta.bg} ${meta.color} ${meta.ring}`}>
+          <Icon size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${meta.bg} ${meta.color} ${meta.ring}`}>
+                  论文
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                  <Calendar size={11} />
+                  {a.year}
+                </span>
+                <span className="text-xs text-[#6b6560]">· {a.venue}</span>
+                {a.jcr && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-xs font-medium text-blue-700">
+                    JCR {a.jcr}
+                  </span>
+                )}
+                {a.cas && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-xs font-medium text-purple-700">
+                    中科院 {a.cas}
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-1.5 font-serif text-base font-semibold text-[#1a1a1a] leading-snug">
+                {a.title}
+              </h3>
+              <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                <Users size={11} />
+                {a.authors.join("、")}
+                {a.correspondingAuthors && a.correspondingAuthors.length > 0 && (
+                  <span className="ml-1 text-[#c96442]">（通讯：{a.correspondingAuthors.join("、")}）</span>
+                )}
+              </p>
+              {a.note && <p className="mt-1 text-xs text-[#9a9590]">{a.note}</p>}
+              {a.link && (
+                <a
+                  href={a.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                >
+                  <ExternalLink size={11} />
+                  查看链接
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button onClick={onEdit} title="编辑" className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors">
+                <Pencil size={14} />
+              </button>
+              <button onClick={onRemove} title="删除" className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function PatentCard({ a, onEdit, onRemove }: { a: PatentAchievement; onEdit: () => void; onRemove: () => void }) {
+  const meta = CATEGORY_META.专利;
+  const Icon = meta.icon;
+  return (
+    <article className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30">
+      <div className="flex items-start gap-4">
+        <div className={`shrink-0 h-10 w-10 rounded-xl border flex items-center justify-center ${meta.bg} ${meta.color} ${meta.ring}`}>
+          <Icon size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${meta.bg} ${meta.color} ${meta.ring}`}>
+                  专利
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                  <Calendar size={11} />
+                  {a.year}
+                </span>
+                {a.status && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-xs font-medium text-amber-700">
+                    {a.status}
+                  </span>
+                )}
+                {a.patentNo && (
+                  <span className="text-xs text-[#6b6560] font-mono">{a.patentNo}</span>
+                )}
+              </div>
+              <h3 className="mt-1.5 font-serif text-base font-semibold text-[#1a1a1a] leading-snug">
+                {a.name}
+              </h3>
+              <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                <Users size={11} />
+                发明人：{a.authors.join("、")}
+              </p>
+              {a.note && <p className="mt-1 text-xs text-[#9a9590]">{a.note}</p>}
+              {a.link && (
+                <a
+                  href={a.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                >
+                  <ExternalLink size={11} />
+                  查看专利
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button onClick={onEdit} title="编辑" className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors">
+                <Pencil size={14} />
+              </button>
+              <button onClick={onRemove} title="删除" className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CompetitionCard({ a, onEdit, onRemove }: { a: CompetitionAchievement; onEdit: () => void; onRemove: () => void }) {
+  const meta = CATEGORY_META.比赛;
+  const Icon = meta.icon;
+  return (
+    <article className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30">
+      <div className="flex items-start gap-4">
+        <div className={`shrink-0 h-10 w-10 rounded-xl border flex items-center justify-center ${meta.bg} ${meta.color} ${meta.ring}`}>
+          <Icon size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${meta.bg} ${meta.color} ${meta.ring}`}>
+                  比赛
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                  <Calendar size={11} />
+                  {a.year}
+                </span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442] text-white text-xs font-bold">
+                  {a.award}
+                </span>
+              </div>
+              <h3 className="mt-1.5 font-serif text-base font-semibold text-[#1a1a1a] leading-snug">
+                {a.competition}
+              </h3>
+              <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                <Users size={11} />
+                获奖成员：{a.authors.join("、")}
+              </p>
+              {a.advisors && a.advisors.length > 0 && (
+                <p className="mt-1 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                  <GraduationCap size={11} />
+                  指导老师：{a.advisors.join("、")}
+                </p>
+              )}
+              {a.note && <p className="mt-1 text-xs text-[#9a9590]">{a.note}</p>}
+              {a.link && (
+                <a
+                  href={a.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                >
+                  <ExternalLink size={11} />
+                  查看比赛
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button onClick={onEdit} title="编辑" className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors">
+                <Pencil size={14} />
+              </button>
+              <button onClick={onRemove} title="删除" className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+const CATEGORY_ORDER: AchievementCategory[] = ["论文", "专利", "比赛"];
 
 export default function Achievements() {
   const achievements = useAchievementStore((s) => s.achievements);
@@ -19,15 +245,17 @@ export default function Achievements() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Achievement | null>(null);
 
-  const sorted = [...achievements].sort((a, b) => b.date.localeCompare(a.date));
-
-  const counts = sorted.reduce(
-    (acc, a) => {
-      acc[a.type] = (acc[a.type] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  // 按类别 + 年份倒序
+  const grouped = useMemo(() => {
+    const result: Record<AchievementCategory, Achievement[]> = { 论文: [], 专利: [], 比赛: [] };
+    for (const a of achievements) {
+      result[a.category].push(a);
+    }
+    for (const cat of CATEGORY_ORDER) {
+      result[cat].sort((a, b) => b.year.localeCompare(a.year));
+    }
+    return result;
+  }, [achievements]);
 
   const openAdd = () => {
     setEditing(null);
@@ -38,9 +266,12 @@ export default function Achievements() {
     setEditorOpen(true);
   };
   const handleRemove = (a: Achievement) => {
-    if (!confirm(`确定删除「${a.title}」？`)) return;
+    if (!confirm(`确定删除该${a.category}？`)) return;
     removeAchievement(a.id);
   };
+
+  const counts = CATEGORY_ORDER.map((c) => ({ cat: c, n: grouped[c].length })).filter((x) => x.n > 0);
+  const total = achievements.length;
 
   return (
     <div className="font-sans">
@@ -56,13 +287,11 @@ export default function Achievements() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#c96442] text-white">
-                <Trophy size={20} />
+                <Award size={20} />
               </div>
               <div>
                 <h1 className="font-serif text-3xl font-bold text-[#1a1a1a]">课题组成果</h1>
-                <p className="text-sm text-[#6b6560] mt-1">
-                  论文 · 专利 · 比赛 · 项目 · 获奖 · 共 {achievements.length} 项
-                </p>
+                <p className="text-sm text-[#6b6560] mt-1">论文 · 专利 · 比赛获奖 · 共 {total} 项</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -81,22 +310,18 @@ export default function Achievements() {
               </button>
             </div>
           </div>
-          <p className="mt-4 text-[15px] text-[#4a4540] leading-relaxed max-w-2xl">
-            收录课题组自 2025 年成立以来的研究产出，包括论文、专利、科研项目与学科竞赛获奖等。
-          </p>
-          {Object.keys(counts).length > 0 && (
+          {counts.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2">
-              {Object.entries(counts).map(([type, count]) => {
-                const meta = TYPE_META[type as AchievementType];
-                if (!meta) return null;
+              {counts.map(({ cat, n }) => {
+                const meta = CATEGORY_META[cat];
                 const Icon = meta.icon;
                 return (
                   <span
-                    key={type}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${meta.bg} ${meta.color}`}
+                    key={cat}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${meta.bg} ${meta.color} ${meta.ring}`}
                   >
                     <Icon size={12} />
-                    {type} {count}
+                    {cat} {n}
                   </span>
                 );
               })}
@@ -106,9 +331,9 @@ export default function Achievements() {
       </section>
 
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {sorted.length === 0 ? (
+        {total === 0 ? (
           <div className="rounded-2xl bg-white border border-[#e8e4db] px-6 py-16 text-center">
-            <Trophy size={32} className="mx-auto text-[#9a9590]" />
+            <Award size={32} className="mx-auto text-[#9a9590]" />
             <p className="mt-3 text-sm text-[#6b6560]">还没有成果记录</p>
             <p className="mt-1 text-xs text-[#9a9590]">课题组 2025 年成立，添加新成果时点"新增成果"</p>
             <button
@@ -120,78 +345,27 @@ export default function Achievements() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {sorted.map((a) => {
-              const meta = TYPE_META[a.type];
+          <div className="space-y-10">
+            {CATEGORY_ORDER.map((cat) => {
+              const list = grouped[cat];
+              if (list.length === 0) return null;
+              const meta = CATEGORY_META[cat];
               const Icon = meta.icon;
               return (
-                <article
-                  key={a.id}
-                  className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`shrink-0 h-10 w-10 rounded-xl border flex items-center justify-center ${meta.bg} ${meta.color}`}>
-                      <Icon size={18} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${meta.bg} ${meta.color}`}>
-                              {a.type}
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-xs text-[#6b6560]">
-                              <Calendar size={11} />
-                              {a.date}
-                            </span>
-                            {a.venue && (
-                              <span className="text-xs text-[#6b6560]">· {a.venue}</span>
-                            )}
-                          </div>
-                          <h3 className="mt-1.5 font-serif text-base font-semibold text-[#1a1a1a] leading-snug">
-                            {a.title}
-                          </h3>
-                          <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-[#6b6560]">
-                            <Users size={11} />
-                            {a.authors.join("、")}
-                          </p>
-                          {a.note && (
-                            <p className="mt-1 text-xs text-[#9a9590]">{a.note}</p>
-                          )}
-                          {a.link && (
-                            <a
-                              href={a.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
-                            >
-                              <ExternalLink size={11} />
-                              查看链接
-                            </a>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => openEdit(a)}
-                            title="编辑"
-                            className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleRemove(a)}
-                            title="删除"
-                            className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                <section key={cat}>
+                  <h2 className="font-serif text-lg font-bold text-[#1a1a1a] mb-3 flex items-center gap-2">
+                    <Icon size={18} className={meta.color} />
+                    {meta.title}
+                    <span className={`text-xs font-normal ${meta.color}`}>· {list.length} 项</span>
+                  </h2>
+                  <div className="space-y-3">
+                    {list.map((a) => {
+                      if (a.category === "论文") return <PaperCard key={a.id} a={a} onEdit={() => openEdit(a)} onRemove={() => handleRemove(a)} />;
+                      if (a.category === "专利") return <PatentCard key={a.id} a={a} onEdit={() => openEdit(a)} onRemove={() => handleRemove(a)} />;
+                      return <CompetitionCard key={a.id} a={a} onEdit={() => openEdit(a)} onRemove={() => handleRemove(a)} />;
+                    })}
                   </div>
-                </article>
+                </section>
               );
             })}
           </div>
