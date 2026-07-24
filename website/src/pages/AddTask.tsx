@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, ArrowLeft, GraduationCap, User } from "lucide-react";
+import { Plus, ArrowLeft, GraduationCap, User, Sparkles } from "lucide-react";
 import { useTaskStore, todayStr, STATUS_OPTIONS } from "@/store/tasks";
+import Combobox from "@/components/Combobox";
 
 export default function AddTask() {
   const navigate = useNavigate();
@@ -11,11 +12,9 @@ export default function AddTask() {
   const tasks = useTaskStore((s) => s.tasks);
 
   const faculty = advisor ? [advisor] : [];
-
   const studentNames = Array.from(
     new Set([...members.map((m) => m.name), ...tasks.map((t) => t.assignee)])
   ).filter((n) => n !== advisor && n !== "共同任务");
-
   const common = ["共同任务"];
 
   const [taskAdvisor, setTaskAdvisor] = useState(advisor || "");
@@ -42,9 +41,9 @@ export default function AddTask() {
     navigate(`/tasks?member=${encodeURIComponent(assignee.trim())}`);
   };
 
+  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
   const field =
     "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
 
   return (
     <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -63,57 +62,47 @@ export default function AddTask() {
       </div>
 
       <div className="rounded-2xl bg-white border border-[#e8e4db] p-6 space-y-5">
+        {/* 指导老师 */}
         <div>
           <label className={label}>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1.5">
               <GraduationCap size={14} className="text-[#c96442]" />
               指导老师
             </span>
           </label>
-          <input
-            list="faculty"
+          <Combobox
             value={taskAdvisor}
-            onChange={(e) => setTaskAdvisor(e.target.value)}
+            onChange={setTaskAdvisor}
             placeholder="选择或输入老师姓名"
-            className={field}
+            groups={[{ label: "🎓 指导老师", icon: <Sparkles size={11} />, options: faculty }]}
+            allowCustom
           />
-          <datalist id="faculty">
-            {faculty.map((m) => (
-              <option key={m} value={m} />
-            ))}
-          </datalist>
-          <p className="mt-1 text-xs text-[#9a9590]">当前课题组指导老师：{advisor || "未设置"}</p>
+          <p className="mt-1.5 text-xs text-[#9a9590]">
+            当前课题组指导老师：{advisor || "未设置"}
+          </p>
         </div>
 
+        {/* 负责学生 */}
         <div>
           <label className={label}>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1.5">
               <User size={14} className="text-[#c96442]" />
               负责学生
             </span>
           </label>
-          <input
-            list="students"
+          <Combobox
             value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-            placeholder="选择或输入学生名（可新增）"
-            className={field}
+            onChange={setAssignee}
+            placeholder="点击 ▼ 查看候选，或直接输入"
+            groups={[
+              { label: "👥 组员", icon: <User size={11} />, options: studentNames },
+              { label: "📌 其他", options: common },
+            ]}
+            allowCustom
           />
-          <datalist id="students">
-            {studentNames.length > 0 && (
-              <optgroup label="👥 组员">
-                {studentNames.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </optgroup>
-            )}
-            <optgroup label="📌 其他">
-              {common.map((m) => (
-                <option key={m} value={m} />
-              ))}
-            </optgroup>
-          </datalist>
-          <p className="mt-1 text-xs text-[#9a9590]">提示：可直接输入新名字（自动加入组员列表）</p>
+          <p className="mt-1.5 text-xs text-[#9a9590]">
+            提示：可直接输入新名字（自动加入组员列表）
+          </p>
         </div>
 
         <div>
@@ -162,7 +151,11 @@ export default function AddTask() {
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         <button
           onClick={submit}
