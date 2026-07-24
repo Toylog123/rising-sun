@@ -127,7 +127,7 @@ export default function Students() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-4">
             {sorted.map((s) => {
               const grade = calcGrade(s.enrolledAt);
               const tone = statusToneStudent(s.status);
@@ -135,150 +135,148 @@ export default function Students() {
               return (
                 <article
                   key={s.name}
-                  className="rounded-2xl bg-white border border-[#e8e4db] overflow-hidden transition-all hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/30"
+                  className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
                 >
-                  <div className="h-2 bg-gradient-to-r from-[#c96442] to-[#e08a63]" />
-                  <div className="p-5">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="h-14 w-14 shrink-0 rounded-full ring-2 ring-white shadow-md flex items-center justify-center text-white text-lg font-serif font-bold"
-                        style={{ background: avatarColor(s.name) }}
-                      >
-                        {s.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-serif text-lg font-bold text-[#1a1a1a] truncate">
-                          {s.name}
-                        </h3>
-                        {s.advisor && (
-                          <p className="mt-0.5 text-xs text-[#6b6560]">
-                            导师：{s.advisor}
-                          </p>
-                        )}
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${STATUS_BG[tone] ?? STATUS_BG.gray}`}
-                          >
-                            {s.status}
-                          </span>
-                          {s.enrolledAt && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#faf9f5] border border-[#e8e4db] text-xs text-[#1a1a1a] font-medium">
-                              {grade.label}
+                  <div className="flex items-start gap-5">
+                    {/* 头像（首字） */}
+                    <div
+                      className="shrink-0 h-16 w-16 rounded-full ring-2 ring-white shadow-md flex items-center justify-center text-white text-2xl font-serif font-bold"
+                      style={{ background: avatarColor(s.name) }}
+                    >
+                      {s.name.charAt(0)}
+                    </div>
+
+                    {/* 主体 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
+                              {s.name}
+                            </h3>
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${STATUS_BG[tone] ?? STATUS_BG.gray}`}
+                            >
+                              {s.status}
                             </span>
+                            {s.enrolledAt && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#faf9f5] border border-[#e8e4db] text-xs text-[#1a1a1a] font-medium">
+                                {grade.label}
+                              </span>
+                            )}
+                            {s.advisor && (
+                              <span className="text-xs text-[#6b6560]">
+                                · 导师 {s.advisor}
+                              </span>
+                            )}
+                          </div>
+                          {s.enrolledAt && (
+                            <p className="mt-1 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                              <Calendar size={12} />
+                              {s.enrolledAt} 入校
+                            </p>
                           )}
                         </div>
-                      </div>
-                    </div>
 
-                    {s.enrolledAt && (
-                      <p className="mt-3 inline-flex items-center gap-1 text-xs text-[#6b6560]">
-                        <Calendar size={12} />
-                        {s.enrolledAt} 入校
-                      </p>
-                    )}
-
-                    {s.researchAreas && s.researchAreas.length > 0 && (
-                      <div className="mt-3">
-                        <p className="flex items-center gap-1 text-xs font-semibold text-[#9a9590] mb-1.5">
-                          <FlaskConical size={12} />
-                          研究方向
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {s.researchAreas.map((r) => (
-                            <span
-                              key={r}
-                              className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs text-[#c96442]"
-                            >
-                              {r}
-                            </span>
-                          ))}
+                        {/* 编辑/删除 */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEdit(s)}
+                            title="编辑"
+                            className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleRemove(s)}
+                            title="移除"
+                            className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
-                    )}
 
-                    {s.bio && (
-                      <p className="mt-3 text-sm text-[#4a4540] leading-relaxed line-clamp-3">{s.bio}</p>
-                    )}
+                      {s.researchAreas && s.researchAreas.length > 0 && (
+                        <div className="mt-3">
+                          <p className="flex items-center gap-1 text-xs font-semibold text-[#9a9590] mb-1.5">
+                            <FlaskConical size={12} />
+                            研究方向
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {s.researchAreas.map((r) => (
+                              <span
+                                key={r}
+                                className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs text-[#c96442]"
+                              >
+                                {r}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                    {s.note && !s.bio && (
-                      <p className="mt-3 text-sm text-[#4a4540] leading-relaxed line-clamp-2">
-                        {s.note}
-                      </p>
-                    )}
+                      {s.bio && (
+                        <p className="mt-3 text-sm text-[#1a1a1a] leading-relaxed">
+                          {s.bio}
+                        </p>
+                      )}
 
-                    {(s.email || s.homepage || s.github) && (
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {s.email && (
-                          <a
-                            href={`mailto:${s.email}`}
-                            title="邮箱"
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
-                          >
-                            <Mail size={12} /> {s.email}
-                          </a>
-                        )}
-                        {s.github && (
-                          <a
-                            href={s.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="GitHub"
-                            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
-                          >
-                            <Github size={13} />
-                          </a>
-                        )}
-                        {s.homepage && (
-                          <a
-                            href={s.homepage}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="个人主页"
-                            className="inline-flex items-center justify-center h-6 w-6 rounded-md text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
-                          >
-                            <ExternalLink size={13} />
-                          </a>
+                        {(s.email || s.homepage || s.github) ? (
+                          <>
+                            {s.email && (
+                              <a
+                                href={`mailto:${s.email}`}
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                              >
+                                <Mail size={12} /> {s.email}
+                              </a>
+                            )}
+                            {s.github && (
+                              <a
+                                href={s.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                              >
+                                <Github size={12} /> GitHub
+                              </a>
+                            )}
+                            {s.homepage && (
+                              <a
+                                href={s.homepage}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                              >
+                                <ExternalLink size={12} /> 主页
+                              </a>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-xs text-[#9a9590]">暂无联系方式</span>
                         )}
                       </div>
-                    )}
-
-                    <div className="mt-4 pt-3 border-t border-[#f0ece4] flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-xs text-[#6b6560]">
-                        <span>
-                          <strong className="text-[#1a1a1a]">{stat.total}</strong> 项任务
-                        </span>
-                        <span className="text-[#c96442] font-semibold">
-                          进行中 {stat.active}
-                        </span>
-                        <span>
-                          已完成 {stat.done}
-                        </span>
-                      </div>
-                      <Link
-                        to={`/tasks?member=${encodeURIComponent(s.name)}`}
-                        className="inline-flex items-center gap-0.5 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
-                      >
-                        任务
-                        <ArrowRight size={11} />
-                      </Link>
                     </div>
+                  </div>
 
-                    <div className="mt-3 pt-3 border-t border-[#f0ece4] flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(s)}
-                        title="编辑"
-                        className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleRemove(s)}
-                        title="移除"
-                        className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                  {/* 任务统计 */}
+                  <div className="mt-4 pt-3 border-t border-[#f0ece4] flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-xs text-[#6b6560]">
+                      <span>
+                        <strong className="text-[#1a1a1a]">{stat.total}</strong> 项任务
+                      </span>
+                      <span className="text-[#c96442] font-semibold">进行中 {stat.active}</span>
+                      <span>已完成 {stat.done}</span>
                     </div>
+                    <Link
+                      to={`/tasks?member=${encodeURIComponent(s.name)}`}
+                      className="inline-flex items-center gap-0.5 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                    >
+                      查看任务
+                      <ArrowRight size={11} />
+                    </Link>
                   </div>
                 </article>
               );

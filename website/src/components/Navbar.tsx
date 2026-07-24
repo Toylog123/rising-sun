@@ -10,6 +10,7 @@ const navLinks = [
   { to: "/", label: "首页" },
   { to: "/tasks", label: "任务" },
   { to: "/students", label: "成员" },
+  { to: "/achievements", label: "成果" },
   { to: "/meetings", label: "组会" },
 ];
 
@@ -98,13 +99,13 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db]">
+      <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <Link to="/" className="text-lg font-serif font-bold text-[#1a1a1a] tracking-wide hover:text-[#c96442] transition-colors duration-200">
               Rising Sun
             </Link>
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (

@@ -1,5 +1,6 @@
 import type { Task, Student } from "@/store/tasks";
 import type { Meeting } from "@/store/meetings";
+import type { Achievement } from "@/store/achievements";
 
 // GitHub 仓库配置（与 vite.config.ts 的 base 一致）
 const OWNER = "Toylog123";
@@ -7,6 +8,7 @@ const REPO = "rising-sun";
 const BRANCH = "main";
 const TASKS_PATH = "website/src/data/tasks.json";
 const MEETINGS_PATH = "website/src/data/meetings.json";
+const ACHIEVEMENTS_PATH = "website/src/data/achievements.json";
 
 export interface RemoteData {
   advisor: string;
@@ -16,6 +18,10 @@ export interface RemoteData {
 
 export interface RemoteMeetingsData {
   meetings: Meeting[];
+}
+
+export interface RemoteAchievementsData {
+  achievements: Achievement[];
 }
 
 export interface FetchResult<T> {
@@ -138,6 +144,28 @@ export async function pushMeetings(
 ): Promise<string> {
   return ghPut(
     `https://api.github.com/repos/${OWNER}/${REPO}/contents/${MEETINGS_PATH}`,
+    data,
+    sha,
+    token,
+    message
+  );
+}
+
+/** 从 GitHub 拉取 achievements.json */
+export async function fetchAchievements(): Promise<FetchResult<RemoteAchievementsData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ACHIEVEMENTS_PATH}`);
+  return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
+}
+
+/** 提交 achievements.json */
+export async function pushAchievements(
+  data: RemoteAchievementsData,
+  sha: string,
+  token: string,
+  message: string
+): Promise<string> {
+  return ghPut(
+    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${ACHIEVEMENTS_PATH}`,
     data,
     sha,
     token,
