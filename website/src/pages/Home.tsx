@@ -8,7 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 export default function Home() {
   const allTasks = useTaskStore((s) => s.tasks);
   const tasks = allTasks.filter((t) => !t.archived);
-  const seedMembers = useTaskStore((s) => s.members);
+  const storeMembers = useTaskStore((s) => s.members);
   const advisor = useTaskStore((s) => s.advisor);
   const syncStatus = useTaskStore((s) => s.syncStatus);
   const syncError = useTaskStore((s) => s.syncError);
@@ -24,9 +24,10 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // members 现在是 Student[]，展平成名字集合
   const members = Array.from(
     new Set([
-      ...seedMembers,
+      ...storeMembers.map((m) => m.name),
       ...tasks.map((t) => t.assignee).filter((a) => a !== "共同任务"),
     ])
   );

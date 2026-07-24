@@ -1,4 +1,4 @@
-import type { Task } from "@/store/tasks";
+import type { Task, Student } from "@/store/tasks";
 
 // GitHub 仓库配置（与 vite.config.ts 的 base 一致）
 const OWNER = "Toylog123";
@@ -8,7 +8,7 @@ const BRANCH = "main";
 
 export interface RemoteData {
   advisor: string;
-  members: string[];
+  members: Student[];
   tasks: Task[];
 }
 

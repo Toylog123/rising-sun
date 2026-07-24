@@ -17,7 +17,7 @@ export default function TaskCard({ task }: { task: Task }) {
   const [note, setNote] = useState("");
 
   const addUpdate = useTaskStore((s) => s.addUpdate);
-  const removeTask = useTaskStore((s) => s.removeTask);
+  const softRemoveTask = useTaskStore((s) => s.softRemoveTask);
   const setArchived = useTaskStore((s) => s.setArchived);
   const cur = latestStatus(task);
   const timeline = [...task.updates].reverse();
@@ -28,6 +28,11 @@ export default function TaskCard({ task }: { task: Task }) {
     setNote("");
     setAdding(false);
     setOpen(true);
+  };
+
+  const handleSoftRemove = () => {
+    if (!confirm(`确定删除「${task.title}」？\n\n删除后会归档，可在「归档」页面恢复。`)) return;
+    softRemoveTask(task.id);
   };
 
   return (
@@ -89,7 +94,7 @@ export default function TaskCard({ task }: { task: Task }) {
           </button>
         )}
         <button
-          onClick={() => removeTask(task.id)}
+          onClick={handleSoftRemove}
           className="inline-flex items-center gap-1 text-xs text-[#9a9590] hover:text-red-500 transition-colors"
         >
           <Trash2 size={13} />

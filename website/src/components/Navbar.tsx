@@ -7,7 +7,8 @@ import TokenSetup from "./TokenSetup";
 
 const navLinks = [
   { to: "/", label: "首页" },
-  { to: "/tasks", label: "任务看板" },
+  { to: "/tasks", label: "任务列表" },
+  { to: "/students", label: "学生" },
   { to: "/archive", label: "归档" },
   { to: "/new", label: "新建任务" },
 ];

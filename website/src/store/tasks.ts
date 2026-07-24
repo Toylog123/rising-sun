@@ -11,25 +11,37 @@ export interface TaskUpdate {
 
 export interface Task {
   id: string;
-  assignee: string; // 成员名 或 "共同任务"
+  advisor?: string;       // 所属指导老师（默认 = 全局 advisor）
+  assignee: string;       // 成员名 或 "共同任务"
   title: string;
-  createdAt: string; // 创建 / 首次布置时间
+  createdAt: string;       // 创建 / 首次布置时间
   updates: TaskUpdate[];
-  archived?: boolean; // 是否已归档
+  archived?: boolean;     // 是否已归档
+  removedAt?: string;     // 手动删除时间（YYYY-MM-DD）；与 archived 区分"已完成归档"和"手动删除归档"
+}
+
+export type StudentStatus = "在读" | "休学" | "交流中" | "已毕业" | "退学";
+
+export interface Student {
+  name: string;            // 唯一主键
+  enrolledAt: string;      // YYYY-MM 月精度
+  status: StudentStatus;
+  note?: string;
+  advisor?: string;        // 默认继承全局 advisor
 }
 
 export type SyncStatus = "idle" | "pulling" | "pushing" | "error" | "ready";
 
 export interface PushPayload {
   tasks: Task[];
-  members: string[];
+  members: Student[];
   advisor: string;
 }
 
 interface TaskState {
   // 业务数据
   tasks: Task[];
-  members: string[];
+  members: Student[];
   advisor: string;
 
   // 同步状态
@@ -40,13 +52,26 @@ interface TaskState {
   syncError: string | null;
 
   // 业务 mutator
-  addTask: (t: { assignee: string; title: string; createdAt: string; status: string; note?: string }) => void;
+  addTask: (t: {
+    advisor?: string;
+    assignee: string;
+    title: string;
+    createdAt: string;
+    status: string;
+    note?: string;
+  }) => void;
   addUpdate: (id: string, u: TaskUpdate) => void;
-  removeTask: (id: string) => void;
+  removeTask: (id: string) => void;             // 永久删除（硬删）
+  softRemoveTask: (id: string) => void;         // 软删除：archived=true + removedAt=今天
   removeUpdate: (id: string, index: number) => void;
   setArchived: (id: string, archived: boolean) => void;
   archiveCompleted: () => void;
   resetSeed: () => void;
+
+  // 学生 mutator
+  addStudent: (s: Omit<Student, "name"> & { name?: string }) => void;
+  updateStudent: (name: string, patch: Partial<Omit<Student, "name">>) => void;
+  removeStudent: (name: string) => void;
 
   // 同步 mutator
   setToken: (token: string) => void;
@@ -55,8 +80,44 @@ interface TaskState {
   pushNow: () => Promise<void>;
 }
 
-const seedTasks = seed.tasks as Task[];
-const seedMembers = seed.members as string[];
+/** 把任意形态的 members 数组标准化成 Student[]，兼容老版本 string[] */
+function normalizeMembers(raw: unknown): Student[] {
+  if (!Array.isArray(raw)) return [];
+  if (raw.length === 0) return [];
+  if (typeof raw[0] === "string") {
+    return (raw as string[]).map((name) => ({
+      name,
+      enrolledAt: "",
+      status: "在读" as StudentStatus,
+    }));
+  }
+  // 假定已经是对象数组：补默认值
+  return (raw as Array<Partial<Student>>).map((s) => ({
+    name: s.name ?? "",
+    enrolledAt: s.enrolledAt ?? "",
+    status: (s.status ?? "在读") as StudentStatus,
+    note: s.note,
+    advisor: s.advisor,
+  }));
+}
+
+/** 把任意形态的 tasks 数组标准化，缺 advisor 时默认填充全局 advisor */
+function normalizeTasks(raw: unknown, defaultAdvisor: string): Task[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as Array<Partial<Task>>).map((t) => ({
+    id: t.id ?? `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    advisor: t.advisor ?? defaultAdvisor,
+    assignee: t.assignee ?? "共同任务",
+    title: t.title ?? "",
+    createdAt: t.createdAt ?? new Date().toISOString().slice(0, 10),
+    updates: Array.isArray(t.updates) ? (t.updates as TaskUpdate[]) : [],
+    archived: t.archived,
+    removedAt: t.removedAt,
+  }));
+}
+
+const seedTasks = normalizeTasks(seed.tasks, (seed.advisor as string) ?? "");
+const seedMembers = normalizeMembers(seed.members);
 const seedAdvisor = (seed.advisor as string) ?? "";
 
 function sortUpdates(u: TaskUpdate[]): TaskUpdate[] {
@@ -110,11 +171,10 @@ export const useTaskStore = create<TaskState>()(
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
-                // 冲突：拉取远端最新重试
                 const fresh = await fetchTasks();
                 set({
-                  tasks: fresh.data.tasks,
-                  members: fresh.data.members,
+                  tasks: normalizeTasks(fresh.data.tasks, fresh.data.advisor),
+                  members: normalizeMembers(fresh.data.members),
                   advisor: fresh.data.advisor,
                   remoteSha: fresh.sha,
                 });
@@ -149,8 +209,8 @@ export const useTaskStore = create<TaskState>()(
           set({ syncStatus: "pulling", syncError: null });
           const { data, sha } = await fetchTasks();
           set({
-            tasks: data.tasks,
-            members: data.members,
+            tasks: normalizeTasks(data.tasks, data.advisor),
+            members: normalizeMembers(data.members),
             advisor: data.advisor,
             remoteSha: sha,
             syncStatus: "ready",
@@ -174,10 +234,12 @@ export const useTaskStore = create<TaskState>()(
         syncError: null,
 
         addTask: (t) => {
+          const advisor = t.advisor || get().advisor;
           set((s) => ({
             tasks: [
               {
                 id: `t-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                advisor,
                 assignee: t.assignee,
                 title: t.title,
                 createdAt: t.createdAt,
@@ -185,10 +247,6 @@ export const useTaskStore = create<TaskState>()(
               },
               ...s.tasks,
             ],
-            members:
-              s.members.includes(t.assignee) || t.assignee === "共同任务"
-                ? s.members
-                : [...s.members, t.assignee],
           }));
           schedulePush(`add: ${t.title}`);
         },
@@ -203,6 +261,14 @@ export const useTaskStore = create<TaskState>()(
         removeTask: (id) => {
           set((s) => ({ tasks: s.tasks.filter((x) => x.id !== id) }));
           schedulePush(`remove: ${id}`);
+        },
+        softRemoveTask: (id) => {
+          set((s) => ({
+            tasks: s.tasks.map((x) =>
+              x.id === id ? { ...x, archived: true, removedAt: todayStr() } : x
+            ),
+          }));
+          schedulePush(`soft-remove: ${id}`);
         },
         removeUpdate: (id, index) => {
           set((s) => ({
@@ -233,6 +299,27 @@ export const useTaskStore = create<TaskState>()(
           schedulePush(`reset: reseed`);
         },
 
+        // 学生管理
+        addStudent: (s) => {
+          const name = s.name?.trim() || "";
+          if (!name) return;
+          set((cur) => ({
+            members: [...cur.members, { ...s, name }],
+          }));
+          schedulePush(`add-student: ${name}`);
+        },
+        updateStudent: (name, patch) => {
+          set((s) => ({
+            members: s.members.map((x) => (x.name === name ? { ...x, ...patch } : x)),
+          }));
+          schedulePush(`update-student: ${name}`);
+        },
+        removeStudent: (name) => {
+          set((s) => ({ members: s.members.filter((x) => x.name !== name) }));
+          schedulePush(`remove-student: ${name}`);
+        },
+
+        // 同步
         setToken: (token) => set({ ghToken: token.trim() }),
         clearToken: () => set({ ghToken: "", remoteSha: "", syncStatus: "idle", syncError: null }),
         pull: () => pullInner(),
@@ -240,8 +327,7 @@ export const useTaskStore = create<TaskState>()(
       };
     },
     {
-      name: "rising-sun-tasks-v5",
-      // 只持久化业务数据 + token + sha；运行时状态（syncStatus 等）每次刷新重新初始化
+      name: "rising-sun-tasks-v6",
       partialize: (state) => ({
         tasks: state.tasks,
         members: state.members,
