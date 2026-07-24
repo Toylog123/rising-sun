@@ -37,11 +37,17 @@ export default function Combobox({
   const [highlight, setHighlight] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // 标记：是否正在执行 ▼ 按钮的 toggle，避免 input.onFocus 立即重开
+  const togglingRef = useRef(false);
+  // 镜像最新 open 值（避免闭包陷阱，确保 toggle 用到的是最新状态）
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   useEffect(() => setQuery(value), [value]);
 
   useEffect(() => {
-    if (!open) return;
     const onDocClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -49,7 +55,7 @@ export default function Combobox({
     };
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
-  }, [open]);
+  }, []);
 
   const all: FlatItem[] = (() => {
     if (groups) {
@@ -117,9 +123,11 @@ export default function Combobox({
             setQuery(e.target.value);
             onChange(e.target.value);
             setHighlight(0);
-            if (!open) setOpen(true);
+            if (!openRef.current) setOpen(true);
           }}
           onFocus={() => {
+            // 如果正在 toggle，忽略这次 focus（避免 ▼ 点击关闭后又被强制打开）
+            if (togglingRef.current) return;
             setOpen(true);
             setHighlight(0);
           }}
@@ -130,10 +138,22 @@ export default function Combobox({
         <button
           type="button"
           onMouseDown={(e) => {
-            // 阻止 button 获取焦点，避免 input.onFocus 强制重开
+            // 阻止 button 获取焦点，避免焦点跳走触发其他事件链
             e.preventDefault();
           }}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => {
+            // 标记正在 toggle（覆盖 200ms 内的任何 focus 重开）
+            togglingRef.current = true;
+            const wasOpen = openRef.current;
+            setOpen(!wasOpen);
+            // 关闭时主动让 input 失焦，避免任何残留 focus 事件链
+            if (wasOpen) {
+              setTimeout(() => inputRef.current?.blur(), 0);
+            }
+            setTimeout(() => {
+              togglingRef.current = false;
+            }, 200);
+          }}
           className="px-3 py-2.5 text-[#6b6560] hover:text-[#c96442] transition-colors"
           tabIndex={-1}
           title={open ? "收起候选" : "展开候选"}
