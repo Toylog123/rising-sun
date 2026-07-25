@@ -177,8 +177,8 @@ export default function Navbar() {
               })}
             </div>
 
-            {/* 右：工具区 */}
-            <div className="flex items-center gap-1 shrink-0">
+            {/* 右：工具区（推至最右） */}
+            <div className="flex items-center gap-1 shrink-0 ml-auto">
               <CommitButton />
               <div className="hidden md:block w-px h-6 bg-[#e8e4db] mx-1" />
               <SyncIndicator />
