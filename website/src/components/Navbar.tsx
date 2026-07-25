@@ -157,8 +157,8 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* 中：栏目导航（绝对居中） */}
-            <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            {/* 中：栏目导航（flex-1 占满 + 内容居中） */}
+            <div className="hidden md:flex flex-1 items-center justify-center gap-1">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (
