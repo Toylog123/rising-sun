@@ -142,15 +142,15 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-14 gap-6">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-8">
             {/* 左：品牌 */}
             <Link
               to="/"
-              className="flex items-center gap-2 shrink-0 group"
+              className="flex items-center gap-2.5 shrink-0 group"
             >
-              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-[#c96442] to-[#e08a63] flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                <span className="text-white font-serif font-bold text-sm">R</span>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#c96442] to-[#e08a63] flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                <span className="text-white font-serif font-bold text-base">R</span>
               </div>
               <span className="hidden sm:inline text-base font-serif font-bold text-[#1a1a1a] tracking-wide group-hover:text-[#c96442] transition-colors">
                 Rising Sun
