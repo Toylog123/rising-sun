@@ -143,7 +143,7 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative w-full">
         <div className="w-full px-6 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-8">
+          <div className="flex items-center h-16 gap-6">
             {/* 左：品牌 */}
             <Link
               to="/"
@@ -157,8 +157,8 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* 中：栏目导航 */}
-            <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {/* 中：栏目导航（绝对居中） */}
+            <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (
