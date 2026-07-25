@@ -141,8 +141,8 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+      <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative w-full">
+        <div className="w-full px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-8">
             {/* 左：品牌 */}
             <Link

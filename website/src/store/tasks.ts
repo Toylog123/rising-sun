@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import seed from "@/data/tasks.json";
 import { fetchTasks, pushTasks, GitHubApiError, type RemoteData } from "@/lib/github";
+import { showToast } from "@/store/ui";
 
 export interface TaskUpdate {
   date: string; // YYYY-MM-DD (组会日期)
@@ -254,6 +255,11 @@ export const useTaskStore = create<TaskState>()(
                 pendingSummary: [],
                 pushHistory: [record, ...state.pushHistory].slice(0, 20),
               });
+              showToast({
+                kind: "success",
+                message: `已推送到 GitHub`,
+                description: `本次更新 ${record.count} 项：${record.message}`,
+              });
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
@@ -273,6 +279,7 @@ export const useTaskStore = create<TaskState>()(
         } catch (err) {
           const msg = err instanceof Error ? err.message : "推送失败";
           set({ syncStatus: "error", syncError: msg, isPushing: false });
+          showToast({ kind: "error", message: "推送失败", description: msg });
         } finally {
           pushing = false;
           if (pending) {
