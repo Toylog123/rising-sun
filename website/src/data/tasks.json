@@ -3,25 +3,25 @@
   "members": [
     {
       "name": "刘畅",
-      "role": "teacher",
-      "title": "副教授",
       "enrolledAt": "2025-09",
       "status": "在岗",
+      "role": "teacher",
       "bio": "国防科技大学集成电路科学与工程副教授，课题组主要研究方向为芯片设计自动化（EDA）、AI for EDA 与工程变更优化（ECO）。",
       "researchAreas": [
         "芯片设计自动化",
         "AI for EDA",
         "ECO"
       ],
-      "email": "liuchang@nudt.edu.cn"
+      "email": "liuchang@nudt.edu.cn",
+      "title": "副教授"
     },
     {
       "name": "佟亚龙",
-      "role": "student",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "advisor": "刘畅",
+      "role": "student",
       "note": "AI+EDA 方向",
+      "advisor": "刘畅",
       "bio": "国防科技大学集成电路科学与工程硕士，主要研究方向为 AI for EDA，具体聚焦于 ECO（工程变更命令）智能化求解。曾获国家级科技竞赛奖励 3 项（含全国一等奖 1 项、全国三等奖 2 项）。",
       "researchAreas": [
         "AI for EDA",
@@ -32,33 +32,43 @@
     },
     {
       "name": "周雨时",
-      "role": "student",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "advisor": "刘畅",
+      "role": "student",
       "note": "AI+EDA 方向",
+      "advisor": "刘畅",
       "bio": "国防科技大学集成电路科学与工程硕士，研究方向为 AI for EDA，关注 AI 驱动的物理设计与可制造性优化。",
-      "researchAreas": ["AI for EDA", "物理设计"]
+      "researchAreas": [
+        "AI for EDA",
+        "物理设计"
+      ]
     },
     {
       "name": "谢俊杰",
-      "role": "student",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "advisor": "刘畅",
+      "role": "student",
       "note": "容错 / 可靠性方向",
+      "advisor": "刘畅",
       "bio": "国防科技大学集成电路科学与工程硕士，研究方向为芯片可靠性与 ECO（工程变更命令）智能化求解，关注容错设计与可制造性优化。",
-      "researchAreas": ["ECO", "可靠性设计", "容错计算"]
+      "researchAreas": [
+        "ECO",
+        "可靠性设计",
+        "容错计算"
+      ]
     },
     {
       "name": "肖睿颿",
-      "role": "student",
       "enrolledAt": "2025-09",
       "status": "在读",
-      "advisor": "刘畅",
+      "role": "student",
       "note": "AI+EDA 方向",
+      "advisor": "刘畅",
       "bio": "国防科技大学集成电路科学与工程硕士（2025 级新生），研究方向为 AI for EDA，关注 AI 驱动的物理设计与可制造性优化。",
-      "researchAreas": ["AI for EDA", "物理设计"]
+      "researchAreas": [
+        "AI for EDA",
+        "物理设计"
+      ]
     }
   ],
   "tasks": [
