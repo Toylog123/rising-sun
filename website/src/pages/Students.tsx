@@ -100,7 +100,7 @@ export default function Students() {
               添加成员
             </button>
           </div>
-          <p className="mt-4 text-[15px] text-[#4a4540] leading-relaxed max-w-2xl">
+          <p className="mt-4 text-[15px] text-[#4a4540] leading-relaxed max-w-3xl">
             课题组由 1 位指导老师与 {active} 位在读研究生组成，研究方向涵盖芯片设计自动化、AI for EDA 与工程变更优化（ECO）。
           </p>
         </div>
