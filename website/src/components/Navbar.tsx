@@ -177,26 +177,6 @@ export default function Navbar() {
               })}
             </div>
 
-            {/* 中：栏目导航（flex-1 占满 + 内容居中） */}
-            <div className="hidden md:flex flex-1 items-center justify-center gap-1">
-              {navLinks.map((link) => {
-                const isActive = location.pathname === link.to;
-                return (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? "bg-[#c96442] text-white shadow-sm"
-                        : "text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4]"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-
             {/* 右：工具区（推至最右） */}
             <div className="flex items-center gap-1 shrink-0 ml-auto">
               <CommitButton />
