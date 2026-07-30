@@ -143,7 +143,7 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative w-full">
         <div className="w-full px-6 sm:px-8 lg:px-12">
-          <div className="flex items-center h-16">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16 gap-6">
             {/* 左：品牌（贴左） */}
             <Link
               to="/"
@@ -157,8 +157,8 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* 中：栏目导航（mx-auto = 整个 nav 水平正中央） */}
-            <div className="hidden md:flex items-center gap-1 mx-auto">
+            {/* 中：栏目导航（grid 第 2 列 = 整个 nav 水平正中央） */}
+            <div className="hidden md:flex items-center justify-center gap-1">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (
@@ -178,7 +178,7 @@ export default function Navbar() {
             </div>
 
             {/* 右：工具区（推至最右） */}
-            <div className="flex items-center gap-1 shrink-0 ml-auto">
+            <div className="flex items-center justify-end gap-1">
               <CommitButton />
               <div className="hidden md:block w-px h-6 bg-[#e8e4db] mx-1" />
               <SyncIndicator />
