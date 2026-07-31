@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText } from "lucide-react";
+import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
+import { downloadJson, timestamp } from "@/lib/download";
 
 export default function Meetings() {
   const meetings = useMeetingStore((s) => s.meetings);
@@ -39,6 +40,16 @@ export default function Meetings() {
             className="rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 transition-colors"
           >
             刷新
+          </button>
+          <button
+            onClick={() =>
+              downloadJson(`meetings-${timestamp()}.json`, { meetings })
+            }
+            title="导出全部组会记录为 JSON"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+          >
+            <Download size={14} />
+            导出
           </button>
           <button
             onClick={openAdd}

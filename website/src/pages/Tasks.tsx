@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, ListTodo, Users, Plus, Archive } from "lucide-react";
+import { Search, ListTodo, Users, Plus, Archive, Download } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
+import { downloadJson, timestamp } from "@/lib/download";
 
 const STATUS_OPTIONS = ["全部", "进行中", "挂起", "已完成", "未开始"];
 
@@ -10,6 +11,7 @@ export default function Tasks() {
   const allTasks = useTaskStore((s) => s.tasks);
   const tasks = allTasks.filter((t) => !t.archived);
   const members = useTaskStore((s) => s.members);
+  const advisor = useTaskStore((s) => s.advisor);
   const [params] = useSearchParams();
   const [member, setMember] = useState(params.get("member") || "全部");
   const [statusFilter, setStatusFilter] = useState("全部");
@@ -59,6 +61,20 @@ export default function Tasks() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              downloadJson(`tasks-${timestamp()}.json`, {
+                advisor,
+                members,
+                tasks: allTasks,
+              })
+            }
+            title="导出全部任务 + 成员为 JSON"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+          >
+            <Download size={14} />
+            导出
+          </button>
           <Link
             to="/archive"
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#1a1a1a] transition-colors"
