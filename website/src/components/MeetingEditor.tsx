@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { X, Plus, Pencil, AlertCircle, Calendar, User, FileText, CheckCircle2 } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
+import { useTaskStore } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
+import Combobox from "./Combobox";
 
 interface MeetingEditorProps {
   open: boolean;
@@ -15,6 +17,11 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
   const removeMeeting = useMeetingStore((s) => s.removeMeeting);
 
   const isEdit = Boolean(initial);
+
+  const members = useTaskStore((s) => s.members);
+  const memberNames = Array.from(
+    new Set(members.filter((m) => m.role !== "teacher").map((m) => m.name))
+  ).sort((a, b) => a.localeCompare(b, "zh-CN"));
 
   const [date, setDate] = useState("");
   const [speaker, setSpeaker] = useState("");
@@ -154,12 +161,12 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
                   主讲人
                 </span>
               </label>
-              <input
+              <Combobox
                 value={speaker}
-                onChange={(e) => setSpeaker(e.target.value)}
-                placeholder="例如：周雨时"
-                className={field}
-                autoFocus={!isEdit}
+                onChange={setSpeaker}
+                placeholder="选择主讲学生"
+                groups={[{ label: "👥 主讲学生", icon: <User size={11} />, options: memberNames }]}
+                allowCustom={false}
               />
             </div>
           </div>
