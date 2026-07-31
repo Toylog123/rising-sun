@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Search, ListTodo, Users, Plus, Archive, Download } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
-import { downloadJson, timestamp } from "@/lib/download";
+import { downloadText, timestamp, tasksToMarkdown } from "@/lib/download";
 
 const STATUS_OPTIONS = ["全部", "进行中", "挂起", "已完成", "未开始"];
 
@@ -63,13 +63,16 @@ export default function Tasks() {
         <div className="flex items-center gap-2">
           <button
             onClick={() =>
-              downloadJson(`tasks-${timestamp()}.json`, {
-                advisor,
-                members,
-                tasks: allTasks,
-              })
+              downloadText(
+                `tasks-${timestamp()}.md`,
+                tasksToMarkdown({
+                  advisor,
+                  members,
+                  tasks: allTasks,
+                })
+              )
             }
-            title="导出全部任务 + 成员为 JSON"
+            title="导出全部任务 + 成员为 Markdown（可直接阅读）"
             className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
           >
             <Download size={14} />
