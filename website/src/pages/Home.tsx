@@ -105,12 +105,6 @@ export default function Home() {
         }} />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="max-w-3xl">
-            {/* Hero 顶部大 logo 图 */}
-            <img
-              src={import.meta.env.BASE_URL + "logo.png"}
-              alt="Rising Sun 课题组"
-              className="w-full max-w-xl mx-auto mb-8 rounded-xl shadow-lg"
-            />
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-[#e8e4db] px-3 py-1 text-xs text-[#6b6560] shadow-sm">
                 <FlaskConical size={12} className="text-[#c96442]" />
