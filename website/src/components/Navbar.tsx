@@ -155,7 +155,7 @@ export default function Navbar() {
               <img
                 src={import.meta.env.BASE_URL + "logo.png"}
                 alt="Rising Sun"
-                className="h-11 w-auto rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
+                className="h-14 w-auto rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
               />
             </Link>
 
