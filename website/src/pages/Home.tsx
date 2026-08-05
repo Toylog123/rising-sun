@@ -121,12 +121,12 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tight">
-              Rising Sun
-              <span className="block mt-2 text-xl sm:text-2xl font-light text-[#6b6560] tracking-widest">
-                芯片设计自动化课题组
-              </span>
-            </h1>
+            {/* 标题区：直接用放大的 Rising Sun logo 图，替代文字标题 */}
+            <img
+              src={import.meta.env.BASE_URL + "logo.png"}
+              alt="Rising Sun"
+              className="w-full rounded-xl shadow-lg"
+            />
             <p className="mt-6 text-base sm:text-lg text-[#4a4540] leading-relaxed max-w-2xl">
               我们是一个年轻的课题组，成立于 2025 年，专注于<strong className="text-[#1a1a1a] font-semibold">芯片设计自动化（EDA）</strong>方向。
               围绕物理设计、布局布线、工程变更优化（ECO）等关键环节，结合机器学习与运筹优化方法，
