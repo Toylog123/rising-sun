@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="185" height="175" viewBox="0 0 185 175"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Sunrise circuit logo</title>
+  <desc id="desc">A clean vector reconstruction of an orange sunrise above circuit traces, with a transparent background.</desc>
+  <g fill="#EF6B3F" stroke="#EF6B3F" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Sun rays -->
+    <path d="M99 35.5V51" fill="none" stroke-width="3.2"/>
+    <path d="M68.8 43.6L76.8 57" fill="none" stroke-width="3.2"/>
+    <path d="M45.5 66.7L59.1 74.2" fill="none" stroke-width="3.2"/>
+    <path d="M129.4 43.7L121.8 57" fill="none" stroke-width="3.2"/>
+    <path d="M152.6 66.6L139.2 74.1" fill="none" stroke-width="3.2"/>
+
+    <!-- Rising sun -->
+    <path d="M67.8 90.1A31.6 29.1 0 0 1 131 90.1Z" stroke="none"/>
+
+    <!-- Split horizon / top circuit trace -->
+    <path d="M31.5 97.4H80.6L96 101.5" fill="none" stroke-width="3.4"/>
+    <path d="M102.5 101.5L119.4 97.4H166.5" fill="none" stroke-width="3.4"/>
+
+    <!-- Small upper-left branch -->
+    <circle cx="33" cy="107.5" r="3.6" stroke="none"/>
+    <path d="M43 107.5H59.2" fill="none" stroke-width="3.3"/>
+
+    <!-- Small upper-right branch -->
+    <path d="M141.2 107.5H160.7" fill="none" stroke-width="3.3"/>
+    <circle cx="165" cy="107.5" r="3.4" fill="none" stroke-width="2.8"/>
+
+    <!-- Left circuit branch -->
+    <circle cx="57.2" cy="117.2" r="4.3" fill="none" stroke-width="3"/>
+    <path d="M61.5 117.2H84.7" fill="none" stroke-width="3.4"/>
+    <path d="M80.1 105.2V130.1" fill="none" stroke-width="3.4"/>
+    <circle cx="80.1" cy="132.1" r="4.4" stroke="none"/>
+
+    <!-- Center traces -->
+    <path d="M96.5 106.2V128.8" fill="none" stroke-width="3.4"/>
+    <circle cx="96.5" cy="133.1" r="4.2" fill="none" stroke-width="3"/>
+    <path d="M104.3 106.2V125.5" fill="none" stroke-width="3.4"/>
+
+    <!-- Right circuit branch -->
+    <path d="M119.1 105.2V130.1" fill="none" stroke-width="3.4"/>
+    <circle cx="119.1" cy="132.1" r="4.4" stroke="none"/>
+    <path d="M114.4 117.2H137.8" fill="none" stroke-width="3.4"/>
+    <circle cx="142.1" cy="117.2" r="4.3" fill="none" stroke-width="3"/>
+  </g>
+</svg>

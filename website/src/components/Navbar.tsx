@@ -153,7 +153,7 @@ export default function Navbar() {
             >
               {/* BASE_URL 兼容 GitHub Pages 子路径部署（/rising-sun/） */}
               <img
-                src={import.meta.env.BASE_URL + "logo.png"}
+                src={import.meta.env.BASE_URL + "logo.svg"}
                 alt="Rising Sun"
                 className="h-11 w-auto rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
               />
