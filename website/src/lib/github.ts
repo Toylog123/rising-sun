@@ -80,14 +80,18 @@ function base64ToUtf8(base64: string): string {
 }
 
 async function ghFetch(url: string, token?: string): Promise<{ content: string; sha: string }> {
-  const res = await fetch(url, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      // 带 PAT 拉取可把配额从 60 次/小时/IP 提升到 5000 次/小时
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+  const baseHeaders = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  // 带 PAT 拉取可把配额从 60 次/小时/IP 提升到 5000 次/小时
+  let res = await fetch(url, {
+    headers: { ...baseHeaders, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   });
+  // PAT 过期/无效时 GitHub 返回 401：降级为匿名拉取，保证浏览等只读功能不受影响
+  if (res.status === 401 && token) {
+    res = await fetch(url, { headers: baseHeaders });
+  }
   if (!res.ok) {
     const { message, resetAt } = await parseGitHubError(res);
     let msg = message;

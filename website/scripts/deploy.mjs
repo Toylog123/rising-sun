@@ -41,6 +41,10 @@ const rootIndexPath = path.join(rootDir, "index.html");
 let html = fs.readFileSync(rootIndexPath, "utf8");
 html = html.replace(/\/rising-sun\/assets\/index-[\w-]+\.js/, `/rising-sun/assets/${js}`);
 html = html.replace(/\/rising-sun\/assets\/index-[\w-]+\.css/, `/rising-sun/assets/${css}`);
+if (!html.includes(`/rising-sun/assets/${js}`) || !html.includes(`/rising-sun/assets/${css}`)) {
+  console.error("✗ index.html 中未找到旧的资产引用，请检查该文件是否被改动过");
+  process.exit(1);
+}
 fs.writeFileSync(rootIndexPath, html);
 
 // 4. 同步 assets/：删除旧产物（含 .map），复制新 js/css（不部署 sourcemap）
