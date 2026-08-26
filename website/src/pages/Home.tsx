@@ -64,9 +64,6 @@ export default function Home() {
     .sort((a, b) => (b.u!.date).localeCompare(a.u!.date))
     .slice(0, 6);
 
-  const totalTasks = tasks.length;
-  const doneTasks = tasks.filter((t) => statusTone(latestStatus(t)) === "green").length;
-
   return (
     <div className="font-sans">
       {/* 同步状态横幅 */}

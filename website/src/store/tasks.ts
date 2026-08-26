@@ -263,7 +263,7 @@ export const useTaskStore = create<TaskState>()(
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
-                const fresh = await fetchTasks();
+                const fresh = await fetchTasks(get().ghToken);
                 set({
                   tasks: normalizeTasks(fresh.data.tasks, fresh.data.advisor),
                   members: normalizeMembers(fresh.data.members),
@@ -308,7 +308,7 @@ export const useTaskStore = create<TaskState>()(
         pulling = true;
         try {
           set({ syncStatus: "pulling", syncError: null, rateLimitResetAt: null });
-          const { data, sha } = await fetchTasks();
+          const { data, sha } = await fetchTasks(get().ghToken);
           set({
             tasks: normalizeTasks(data.tasks, data.advisor),
             members: normalizeMembers(data.members),

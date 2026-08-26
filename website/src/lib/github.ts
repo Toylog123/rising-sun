@@ -79,11 +79,13 @@ function base64ToUtf8(base64: string): string {
   return new TextDecoder("utf-8").decode(bytes);
 }
 
-async function ghFetch(url: string): Promise<{ content: string; sha: string }> {
+async function ghFetch(url: string, token?: string): Promise<{ content: string; sha: string }> {
   const res = await fetch(url, {
     headers: {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
+      // 带 PAT 拉取可把配额从 60 次/小时/IP 提升到 5000 次/小时
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
   if (!res.ok) {
@@ -133,9 +135,9 @@ async function ghPut(
   return json.content.sha as string;
 }
 
-/** 从 GitHub 拉取 tasks.json */
-export async function fetchTasks(): Promise<FetchResult<RemoteData>> {
-  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${TASKS_PATH}`);
+/** 从 GitHub 拉取 tasks.json（带 token 时使用认证配额） */
+export async function fetchTasks(token?: string): Promise<FetchResult<RemoteData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${TASKS_PATH}`, token);
   return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
 }
 
@@ -155,9 +157,9 @@ export async function pushTasks(
   );
 }
 
-/** 从 GitHub 拉取 meetings.json */
-export async function fetchMeetings(): Promise<FetchResult<RemoteMeetingsData>> {
-  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${MEETINGS_PATH}`);
+/** 从 GitHub 拉取 meetings.json（带 token 时使用认证配额） */
+export async function fetchMeetings(token?: string): Promise<FetchResult<RemoteMeetingsData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${MEETINGS_PATH}`, token);
   return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
 }
 
@@ -177,9 +179,9 @@ export async function pushMeetings(
   );
 }
 
-/** 从 GitHub 拉取 achievements.json */
-export async function fetchAchievements(): Promise<FetchResult<RemoteAchievementsData>> {
-  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ACHIEVEMENTS_PATH}`);
+/** 从 GitHub 拉取 achievements.json（带 token 时使用认证配额） */
+export async function fetchAchievements(token?: string): Promise<FetchResult<RemoteAchievementsData>> {
+  const { content, sha } = await ghFetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${ACHIEVEMENTS_PATH}`, token);
   return { data: JSON.parse(base64ToUtf8(content.replace(/\n/g, ""))), sha };
 }
 

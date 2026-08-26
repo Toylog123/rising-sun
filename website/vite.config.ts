@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   base: "/rising-sun/",
   build: {
-    sourcemap: 'hidden',
+    sourcemap: false, // 不生成 .map：避免 sourcemap 进入仓库和线上
   },
   plugins: [
     react(),

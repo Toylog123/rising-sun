@@ -56,25 +56,28 @@ Rising Sun 是一个 2025 年新成立的课题组，专注**芯片设计自动�
 ```
 rising-sun/
 ├── index.html                      # GitHub Pages 入口（含 404 SPA 重定向脚本）
-├── assets/                          # 部署的 build 产物（commit 上去的）
+├── assets/                          # 部署的 build 产物（commit 上去的，由 deploy 脚本同步）
 │   ├── index-XXXXX.js
-│   ├── index-XXXXX.css
-│   └── *.map
+│   └── index-XXXXX.css
+├── logo.svg                         # favicon / 站点图标
 ├── website/                         # 源码
+│   ├── scripts/
+│   │   └── deploy.mjs              # 一键部署脚本（npm run deploy）
 │   ├── src/
 │   │   ├── components/             # React 组件
 │   │   │   ├── Navbar.tsx
 │   │   │   ├── Footer.tsx
+│   │   │   ├── Layout.tsx           # 页面骨架（Navbar + Outlet + Footer）
 │   │   │   ├── TaskCard.tsx
 │   │   │   ├── TaskEditor.tsx
 │   │   │   ├── StudentEditor.tsx
 │   │   │   ├── MeetingEditor.tsx
 │   │   │   ├── AchievementEditor.tsx
+│   │   │   ├── StatusBadge.tsx      # 任务状态徽标
 │   │   │   ├── Confirm.tsx          # 自定义确认弹窗
 │   │   │   ├── Toast.tsx            # 右上角通知
 │   │   │   ├── Combobox.tsx         # 多选下拉
 │   │   │   ├── PushHistory.tsx      # 推送历史
-│   │   │   ├── ClearCacheButton.tsx
 │   │   │   └── TokenSetup.tsx
 │   │   ├── pages/                   # 路由页面
 │   │   │   ├── Home.tsx
@@ -89,8 +92,11 @@ rising-sun/
 │   │   │   ├── meetings.ts          # 组会（自动同步）
 │   │   │   ├── achievements.ts     # 成果（自动同步）
 │   │   │   └── ui.ts                # Confirm + Toast 全局状态
+│   │   ├── hooks/
+│   │   │   └── useScrollReveal.ts  # 滚动渐入动画
 │   │   ├── lib/
 │   │   │   ├── github.ts            # GitHub Contents API 封装
+│   │   │   ├── download.ts          # 导出 Markdown / JSON 工具
 │   │   │   └── students.ts          # calcGrade 工具函数
 │   │   ├── data/                    # 种子数据（build 进 bundle）
 │   │   │   ├── tasks.json
@@ -150,15 +156,16 @@ npm run dev
 
 ### 部署流程
 
-1. 修改源码 → `cd website && npm run build`
-2. 复制 build 产物到根目录：
-   ```bash
-   cp dist/assets/index-*.js ../assets/
-   cp dist/assets/index-*.css ../assets/
-   ```
-3. 更新 `index.html` 里的资产 hash
-4. `git add -A && git commit && git push`
-5. GitHub Pages 自动部署（约 1-2 分钟）
+一条命令完成「构建 + 同步产物 + 更新 index.html 的资产 hash」：
+
+```bash
+cd website
+npm run deploy        # = npm run build + scripts/deploy.mjs 同步产物到根目录
+git add -A && git commit && git push
+# GitHub Pages 自动部署（约 1-2 分钟）
+```
+
+> 脚本只替换 `index.html` 里的资产 hash（保留手动注入的 SPA 重定向脚本），且不会把 sourcemap 部署上去。
 
 ### 添加新协作者
 
@@ -252,7 +259,7 @@ npm run dev
 |------|------|
 | 看到旧的导航 / 旧 UI | 硬刷新 `Ctrl + Shift + R`（绕过缓存） |
 | 同步一直 404 | 检查 PAT 是否过期，重新生成 |
-| 同步限速 403 | 等 1-2 分钟，GitHub 公共 API 60 次/小时 |
+| 同步限速 403 | 配置 PAT 后拉取/推送均走认证配额（5000 次/小时）；未配 PAT 时仅 60 次/小时/IP，多人同一网络易触发，等 1-2 分钟或尽早配置 PAT |
 | 数据不对（老的） | 右上角 🔄 清缓存 + 重新拉取 |
 | 老师显示成学生 | 检查 tasks.json 里 member.role 字段（远端已包含） |
 | 看到乱码 | 检查浏览器编码 = UTF-8 |

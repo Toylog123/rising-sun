@@ -37,7 +37,6 @@ export default function Students() {
   );
 
   const students = members.filter((m) => m.role !== "teacher");
-  const teachers = members.filter((m) => m.role === "teacher");
   const total = students.length;
   const active = students.filter((m) => m.status === "在读").length;
   const alumni = students.filter((m) => m.status === "已毕业").length;

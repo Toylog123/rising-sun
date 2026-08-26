@@ -57,7 +57,7 @@ export function tasksToMarkdown(opts: {
   const lines: string[] = [];
   lines.push("# Rising Sun 课题组任务管理");
   lines.push("");
-  lines.push(`> 导出时间：${ts}　·　指导老师：${advisor || "（未设置）"}`);
+  lines.push(`> 导出时间：${ts}\u3000·\u3000指导老师：${advisor || "（未设置）"}`);
   lines.push("");
 
   // 成员
@@ -125,7 +125,7 @@ export function meetingsToMarkdown(opts: {
   const lines: string[] = [];
   lines.push("# Rising Sun 课题组组会记录");
   lines.push("");
-  lines.push(`> 导出时间：${ts}　·　共 ${sorted.length} 次组会`);
+  lines.push(`> 导出时间：${ts}\u3000·\u3000共 ${sorted.length} 次组会`);
   lines.push("");
   lines.push("---");
   lines.push("");
@@ -136,7 +136,7 @@ export function meetingsToMarkdown(opts: {
   }
 
   for (const m of sorted) {
-    lines.push(`## 📅 ${m.date}　·　${m.speaker}`);
+    lines.push(`## 📅 ${m.date}\u3000·\u3000${m.speaker}`);
     lines.push("");
     lines.push(`### 议题`);
     lines.push(m.topic || "_（无）_");

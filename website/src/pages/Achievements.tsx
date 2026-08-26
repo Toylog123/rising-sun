@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Plus, Pencil, Trash2, BookOpen, Lightbulb, Trophy, Award, ExternalLink,
-  Calendar, FileText, Link2, Users, GraduationCap,
+  Calendar, Users, GraduationCap,
 } from "lucide-react";
 import {
   useAchievementStore, type Achievement, type AchievementCategory,

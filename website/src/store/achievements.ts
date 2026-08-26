@@ -78,9 +78,34 @@ interface AchievementState {
 
 const seedAchievements = (seed.achievements as Achievement[]) ?? [];
 
+/** 远端 JSON 里任意形态的成果对象（兼容旧数据缺字段） */
+type RawAchievement = {
+  id?: string;
+  category?: string;
+  year?: string;
+  date?: string;
+  authors?: string[];
+  note?: string;
+  link?: string;
+  // 论文
+  title?: string;
+  venue?: string;
+  jcr?: JcrZone;
+  cas?: CasZone;
+  correspondingAuthors?: string[];
+  // 专利
+  name?: string;
+  patentNo?: string;
+  status?: PatentStatus;
+  // 比赛
+  competition?: string;
+  award?: string;
+  advisors?: string[];
+};
+
 function normalizeAchievements(raw: unknown): Achievement[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((a: any) => {
+  return raw.map((a: RawAchievement) => {
     const base = {
       id: a.id ?? `ach-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       year: a.year ?? a.date?.slice(0, 4) ?? new Date().getFullYear().toString(),
@@ -145,7 +170,7 @@ export const useAchievementStore = create<AchievementState>()(
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
-                const fresh = await fetchAchievements();
+                const fresh = await fetchAchievements(get().ghToken);
                 set({ achievements: normalizeAchievements(fresh.data.achievements), remoteSha: fresh.sha });
                 sha = fresh.sha;
                 continue;
@@ -172,7 +197,7 @@ export const useAchievementStore = create<AchievementState>()(
       const pullInner = async () => {
         try {
           set({ syncStatus: "pulling", syncError: null });
-          const { data, sha } = await fetchAchievements();
+          const { data, sha } = await fetchAchievements(get().ghToken);
           set({
             achievements: normalizeAchievements(data.achievements),
             remoteSha: sha,

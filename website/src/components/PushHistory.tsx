@@ -3,12 +3,6 @@ import { History, ChevronDown, X, GitCommit } from "lucide-react";
 import { useTaskStore } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-
 export default function PushHistory() {
   const history = useTaskStore((s) => s.pushHistory);
   const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);

@@ -80,7 +80,7 @@ export const useMeetingStore = create<MeetingState>()(
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
-                const fresh = await fetchMeetings();
+                const fresh = await fetchMeetings(get().ghToken);
                 set({ meetings: normalizeMeetings(fresh.data.meetings), remoteSha: fresh.sha });
                 sha = fresh.sha;
                 continue;
@@ -107,7 +107,7 @@ export const useMeetingStore = create<MeetingState>()(
       const pullInner = async () => {
         try {
           set({ syncStatus: "pulling", syncError: null });
-          const { data, sha } = await fetchMeetings();
+          const { data, sha } = await fetchMeetings(get().ghToken);
           set({
             meetings: normalizeMeetings(data.meetings),
             remoteSha: sha,

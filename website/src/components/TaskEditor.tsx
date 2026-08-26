@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Plus, Pencil, AlertCircle, GraduationCap, Users, Sparkles, Check } from "lucide-react";
+import { X, Pencil, AlertCircle, GraduationCap, Users, Sparkles, Check } from "lucide-react";
 import { useTaskStore, type Task } from "@/store/tasks";
 import Combobox from "./Combobox";
 
