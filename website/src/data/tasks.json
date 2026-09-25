@@ -349,7 +349,7 @@
       "assignees": [
         "肖睿颿"
       ],
-      "title": "AI+EDA 方向论文阅读",
+      "title": "AI+布局布线 方向论文阅读",
       "createdAt": "2026-07-20",
       "updates": [
         {
@@ -386,7 +386,8 @@
           "date": "2026-07-20",
           "status": "进行中"
         }
-      ]
+      ],
+      "archived": true
     }
   ]
 }
