@@ -166,13 +166,8 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
 
             <Combobox
               value={pendingPick}
-              onChange={(v) => {
-                if (pendingPick && v !== pendingPick && !assignees.includes(v)) {
-                  addAssignee(v);
-                } else {
-                  setPendingPick(v);
-                }
-              }}
+              onChange={setPendingPick}
+              onSelect={addAssignee}
               placeholder="点击 ▼ 查看候选，或输入名字添加"
               groups={[
                 ...(remainingStudents.length > 0

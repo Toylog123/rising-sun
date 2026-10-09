@@ -139,7 +139,9 @@ export default function Tasks() {
                   <h2 className="font-serif text-xl font-bold text-[#1a1a1a]">{name}</h2>
                   <span className="rounded-full bg-[#f0ece4] px-2 py-0.5 text-xs text-[#6b6560]">{list.length} 项</span>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* items-start：网格默认会把卡片拉伸到整行高度，
+                    一张展开时间线会把同行的另一张也拉高，看着像一起展开了 */}
+                <div className="grid gap-4 md:grid-cols-2 items-start">
                   {list.map((t) => (
                     <TaskCard key={t.id} task={t} />
                   ))}

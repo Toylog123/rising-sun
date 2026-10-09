@@ -131,15 +131,8 @@ export default function AddTask() {
 
           <Combobox
             value={pendingPick}
-            onChange={(v) => {
-              // Combobox onChange 在用户选中某项时会把 value 设为该选项
-              // 用 ref 模式更稳，但这里用一个轻量检测：value 非空 + pendingPick 旧值 → 自动加入
-              if (pendingPick && v !== pendingPick && !assignees.includes(v)) {
-                addAssignee(v);
-              } else {
-                setPendingPick(v);
-              }
-            }}
+            onChange={setPendingPick}
+            onSelect={addAssignee}
             placeholder="点击 ▼ 查看候选，或输入名字添加"
             groups={[
               ...(remainingStudents.length > 0

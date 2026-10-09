@@ -128,7 +128,8 @@ export default function Archive() {
                   <h2 className="font-serif text-xl font-bold text-[#1a1a1a]">{name}</h2>
                   <span className="rounded-full bg-[#f0ece4] px-2 py-0.5 text-xs text-[#6b6560]">{list.length} 项</span>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* items-start：避免内容少的一张被拉伸到同行最高的高度 */}
+                <div className="grid gap-4 md:grid-cols-2 items-start">
                   {list.map((t) => (
                     <div key={t.id} className="relative">
                       {t.removedAt && (

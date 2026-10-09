@@ -9,7 +9,15 @@ export interface ComboboxGroup {
 
 interface ComboboxProps {
   value: string;
+  /** 输入框内容变化时触发（逐字符），父组件通常用它维护受控值 */
   onChange: (v: string) => void;
+  /**
+   * 仅在用户「真正选中某一项」时触发（点候选、或在候选上回车），
+   * 不含逐字符输入。父组件需要区分"在打字"和"选定了"时必须用它——
+   * 只靠 onChange 猜测会导致点 ▼ 后直接点候选时静默失败。
+   * 不传则退化为旧行为：选中时等同于 onChange + 保留输入内容。
+   */
+  onSelect?: (v: string) => void;
   placeholder?: string;
   groups?: ComboboxGroup[];
   options?: string[];
@@ -26,6 +34,7 @@ interface FlatItem {
 export default function Combobox({
   value,
   onChange,
+  onSelect,
   placeholder,
   groups,
   options,
@@ -89,11 +98,7 @@ export default function Combobox({
       if (!open) return;
       const items = canCreate ? [...filtered, { value: query.trim(), groupLabel: "__new__" }] : filtered;
       const pick = items[highlight];
-      if (pick) {
-        onChange(pick.value);
-        setQuery(pick.value);
-        setOpen(false);
-      }
+      if (pick) choose(pick.value);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
@@ -101,7 +106,10 @@ export default function Combobox({
 
   const choose = (v: string) => {
     onChange(v);
-    setQuery(v);
+    onSelect?.(v);
+    // 传了 onSelect 说明父组件会自行处理这个值（例如收进 chip 列表），
+    // 此时输入框应清空等待下一次输入；否则保持把选中项显示在框里。
+    setQuery(onSelect ? "" : v);
     setOpen(false);
     inputRef.current?.focus();
   };

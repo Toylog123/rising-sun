@@ -70,6 +70,8 @@ interface TaskState {
   lastSyncedAt: number | null;
   syncError: string | null;
   rateLimitResetAt: number | null;  // 限速恢复时间（epoch ms）
+  /** 拉取时若合并了本地未提交改动，这里给出说明（不持久化，push 成功后清空） */
+  pullNotice: string | null;
 
   // 手动同步：未提交的改动
   dirtyTaskIds: string[];        // 已改但未推送的任务 ID
@@ -248,11 +250,16 @@ export const useTaskStore = create<TaskState>()(
                 syncStatus: "ready",
                 lastSyncedAt: Date.now(),
                 syncError: null,
-                dirtyTaskIds: [],
-                dirtyMembers: [],
-                dirtyAdvisor: false,
+                // 只清掉"本次推送带过去"的那些 dirty 标记。
+                // 推送往返这段时间里新产生的改动不在 data 快照里，
+                // 无条件清空会让它们变成永远推不上去的幽灵改动。
+                dirtyTaskIds: get().dirtyTaskIds.filter((id) => !state.dirtyTaskIds.includes(id)),
+                dirtyMembers: get().dirtyMembers.filter((n) => !state.dirtyMembers.includes(n)),
+                // 快照里没标脏 advisor，就说明本次没推 advisor，保持原样
+                dirtyAdvisor: state.dirtyAdvisor ? get().dirtyAdvisor : false,
                 isPushing: false,
-                pendingSummary: [],
+                pendingSummary: get().pendingSummary.slice(items.length),
+                pullNotice: null,
                 pushHistory: [record, ...state.pushHistory].slice(0, 20),
               });
               showToast({
@@ -264,12 +271,18 @@ export const useTaskStore = create<TaskState>()(
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
                 const fresh = await fetchTasks(get().ghToken);
+                // 同样走合并，保住本地未推送的改动；并且要用合并后的快照重试，
+                // 否则重试推的还是第一次那份旧快照，会把协作者的修改覆盖掉。
+                const merged = mergeRemote(fresh.data);
                 set({
-                  tasks: normalizeTasks(fresh.data.tasks, fresh.data.advisor),
-                  members: normalizeMembers(fresh.data.members),
-                  advisor: fresh.data.advisor,
+                  tasks: merged.tasks,
+                  members: merged.members,
+                  advisor: merged.advisor,
                   remoteSha: fresh.sha,
                 });
+                data.tasks = merged.tasks;
+                data.members = merged.members;
+                data.advisor = merged.advisor;
                 sha = fresh.sha;
                 continue;
               }
@@ -300,6 +313,46 @@ export const useTaskStore = create<TaskState>()(
       let pullTimer: ReturnType<typeof setTimeout> | null = null;
       let pulling = false;
 
+      /**
+       * 把远端数据落到本地，但**绝不丢弃本地未推送的改动**。
+       * 等价于 git rebase：远端新增/他人改动正常进入，
+       * 本地标脏的条目重新盖回远端结果之上（含远端还没有的本地新建条目）。
+       * 返回是否发生了合并，供调用方决定要不要提示 / 补推送。
+       */
+      const mergeRemote = (raw: RemoteData) => {
+        const remoteTasks = normalizeTasks(raw.tasks, raw.advisor);
+        const remoteMembers = normalizeMembers(raw.members);
+
+        const before = get();
+        const dirtyIds = new Set(before.dirtyTaskIds);
+        const dirtyNames = new Set(before.dirtyMembers);
+        const dirtyCount = dirtyIds.size + dirtyNames.size + (before.dirtyAdvisor ? 1 : 0);
+        if (dirtyCount === 0) {
+          return { tasks: remoteTasks, members: remoteMembers, advisor: raw.advisor, mergedCount: 0 };
+        }
+
+        const localTaskById = new Map(before.tasks.map((t) => [t.id, t]));
+        const remoteTaskIds = new Set(remoteTasks.map((t) => t.id));
+        const tasks = [
+          ...remoteTasks.map((t) => (dirtyIds.has(t.id) ? localTaskById.get(t.id) ?? t : t)),
+          ...before.tasks.filter((t) => dirtyIds.has(t.id) && !remoteTaskIds.has(t.id)),
+        ];
+
+        const localMemberByName = new Map(before.members.map((m) => [m.name, m]));
+        const remoteMemberNames = new Set(remoteMembers.map((m) => m.name));
+        const members = [
+          ...remoteMembers.map((m) => (dirtyNames.has(m.name) ? localMemberByName.get(m.name) ?? m : m)),
+          ...before.members.filter((m) => dirtyNames.has(m.name) && !remoteMemberNames.has(m.name)),
+        ];
+
+        return {
+          tasks,
+          members,
+          advisor: before.dirtyAdvisor ? before.advisor : raw.advisor,
+          mergedCount: dirtyCount,
+        };
+      };
+
       const pullInner = async () => {
         if (pulling) {
           // 已经在拉取中，直接返回（避免重复请求）
@@ -309,16 +362,30 @@ export const useTaskStore = create<TaskState>()(
         try {
           set({ syncStatus: "pulling", syncError: null, rateLimitResetAt: null });
           const { data, sha } = await fetchTasks(get().ghToken);
+
+          // 关键：本地有未推送改动时也走合并，而不是拿远端直接覆盖。
+          // 否则「编辑后没点提交 → 刷新 → 500ms 后自动 pull」会把改动静默抹掉。
+          const merged = mergeRemote(data);
+
           set({
-            tasks: normalizeTasks(data.tasks, data.advisor),
-            members: normalizeMembers(data.members),
-            advisor: data.advisor,
+            tasks: merged.tasks,
+            members: merged.members,
+            advisor: merged.advisor,
             remoteSha: sha,
             syncStatus: "ready",
             lastSyncedAt: Date.now(),
             syncError: null,
             rateLimitResetAt: null,
+            pullNotice:
+              merged.mergedCount > 0
+                ? `已保留 ${merged.mergedCount} 项未提交的本地改动，未被远端覆盖`
+                : null,
           });
+
+          // 合并后顺手把本地改动推上去（仅在有 PAT 时；否则留给"提交 N 项"按钮）
+          if (merged.mergedCount > 0 && get().ghToken) {
+            schedulePush("合并本地未提交改动");
+          }
         } catch (err) {
           const msg = err instanceof Error ? err.message : "拉取失败";
           const resetAt =
@@ -354,6 +421,7 @@ export const useTaskStore = create<TaskState>()(
         lastSyncedAt: null,
         syncError: null,
         rateLimitResetAt: null,
+        pullNotice: null,
         dirtyTaskIds: [],
         dirtyMembers: [],
         dirtyAdvisor: false,

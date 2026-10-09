@@ -81,6 +81,7 @@ function SyncIndicator() {
   const syncStatus = useTaskStore((s) => s.syncStatus);
   const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);
   const syncError = useTaskStore((s) => s.syncError);
+  const pullNotice = useTaskStore((s) => s.pullNotice);
   const ghToken = useTaskStore((s) => s.ghToken);
   const rateLimitResetAt = useTaskStore((s) => s.rateLimitResetAt);
   const pullNow = useTaskStore((s) => s.pullNow);
@@ -106,7 +107,14 @@ function SyncIndicator() {
       return { color: "bg-[#9a9590]", icon: CloudOff, label: "未配置", title: "未配置 PAT（只读），点击设置" };
     }
     if (dirtyCount > 0) {
-      return { color: "bg-amber-500", icon: Upload, label: `未提交 ${dirtyCount}`, title: `${dirtyCount} 项本地改动未同步到 GitHub` };
+      return {
+        color: "bg-amber-500",
+        icon: Upload,
+        label: `未提交 ${dirtyCount}`,
+        title: pullNotice
+          ? `${pullNotice}。点击可立即提交。`
+          : `${dirtyCount} 项本地改动未同步到 GitHub`,
+      };
     }
     if (syncStatus === "pulling") {
       return { color: "bg-amber-500 animate-pulse", icon: CloudDownload, label: "拉取", title: "拉取中…" };
