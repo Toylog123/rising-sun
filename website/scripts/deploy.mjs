@@ -47,13 +47,43 @@ if (!html.includes(`/rising-sun/assets/${js}`) || !html.includes(`/rising-sun/as
 }
 fs.writeFileSync(rootIndexPath, html);
 
-// 4. 同步 assets/：删除旧产物（含 .map），复制新 js/css（不部署 sourcemap）
+// 4. 同步 assets/：保留最近几份旧产物
+//
+// GitHub Pages 对 index.html 只缓存约 10 分钟，期间浏览器仍会用「旧 HTML」去请求旧产物。
+// 如果部署时把旧产物删掉，旧 HTML 拿到的就是 404 → JS 加载失败 → 整页白屏。
+// 所以这里保留最近 KEEP_REVISIONS - 1 份旧产物，让「旧 HTML + 旧包」这个组合始终可用，
+// 缓存过期后浏览器自然切到新版本。失败模式从「白屏」降级为「短暂显示旧版本」。
+const KEEP_REVISIONS = 3;
+
 const rootAssets = path.join(rootDir, "assets");
+const ASSET_RE = /^index-[\w-]+\.(js|css)$/;
+const MAP_RE = /^index-[\w-]+\.js\.map$/;
+
+// sourcemap 永不部署
 for (const f of fs.readdirSync(rootAssets)) {
-  if (/^index-[\w-]+\.(js|css|js\.map)$/.test(f)) fs.rmSync(path.join(rootAssets, f));
+  if (MAP_RE.test(f)) fs.rmSync(path.join(rootAssets, f));
 }
+
+// 按修改时间倒序排出旧产物（新的在前）
+const oldAssets = fs
+  .readdirSync(rootAssets)
+  .filter((f) => ASSET_RE.test(f) && f !== js && f !== css)
+  .map((f) => ({ f, t: fs.statSync(path.join(rootAssets, f)).mtimeMs }))
+  .sort((a, b) => b.t - a.t);
+
 fs.copyFileSync(path.join(distAssets, js), path.join(rootAssets, js));
 fs.copyFileSync(path.join(distAssets, css), path.join(rootAssets, css));
+
+// 只清理超出保留窗口的旧产物
+const expired = oldAssets.slice(KEEP_REVISIONS - 1);
+for (const { f } of expired) {
+  fs.rmSync(path.join(rootAssets, f));
+  console.log(`  清理过期产物 assets/${f}`);
+}
+const kept = oldAssets.length - expired.length;
+if (oldAssets.length > 0) {
+  console.log(`  保留旧产物 ${kept} 份（覆盖浏览器 HTML 缓存窗口）`);
+}
 
 // 5. logo.svg（public/logo.svg → dist/logo.svg → 根目录 favicon 用）
 const distLogo = path.join(websiteDir, "dist", "logo.svg");
