@@ -101,6 +101,25 @@ export default function Home() {
           backgroundImage: "radial-gradient(circle, #c96442 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }} />
+        {/* 背景水印：直接复用左上角那个 logo.svg，不再另画图形。
+            该 SVG 是透明底 + 实色描边，正好可以当 CSS mask 用，
+            于是颜色完全由 CSS 渐变控制，不必改动 logo.svg 本体，
+            品牌图形本身也永远不会和导航栏里的那张走偏。 */}
+        <div
+          className="pointer-events-none absolute -right-[10%] top-1/2 h-[400px] w-[430px] -translate-y-1/2 opacity-[0.20] hidden xl:block"
+          aria-hidden="true"
+          style={{
+            WebkitMaskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
+            maskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+            background: "linear-gradient(170deg, #FDE68A 0%, #FBBF24 42%, #F97316 100%)",
+          }}
+        />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2 mb-6">
