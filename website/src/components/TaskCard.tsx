@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { Pencil, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import {
   useTaskStore,
@@ -29,6 +29,16 @@ export default function TaskCard({ task }: { task: Task }) {
   const now = useDayTick();
   const stale = stalenessOf(task, now);
 
+  const toggleOpen = () => setOpen((v) => !v);
+
+  // 卡片主体可直接点开/收起进展；同时保留键盘可达性（卡片是 div，得自己补 role 和按键处理）
+  const onCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleOpen();
+    }
+  };
+
   const submit = () => {
     if (!date) return;
     addUpdate(task.id, { date, status, note: note.trim() || undefined });
@@ -57,7 +67,16 @@ export default function TaskCard({ task }: { task: Task }) {
       : task.assignees.join("、");
 
   return (
-    <div className={`rounded-2xl bg-white border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20 ${task.archived ? "border-dashed border-[#d5d0c8] opacity-90" : "border-[#e8e4db]"}`}>
+    <div
+      onClick={toggleOpen}
+      onKeyDown={onCardKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      aria-label={`${task.title}，${open ? "收起" : "查看"}进展`}
+      title={open ? "点击收起进展" : "点击展开进展"}
+      className={`rounded-2xl bg-white border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c96442]/40 ${task.archived ? "border-dashed border-[#d5d0c8] opacity-90" : "border-[#e8e4db]"}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-serif text-base font-semibold leading-snug text-[#1a1a1a]">
           {task.title}
@@ -66,7 +85,11 @@ export default function TaskCard({ task }: { task: Task }) {
           <StatusBadge status={cur} />
           {!task.archived && (
             <button
-              onClick={() => setEditing(true)}
+              onClick={(e) => {
+                // 卡片整体可点，按钮必须挡住冒泡，否则编辑会被当成展开/收起
+                e.stopPropagation();
+                setEditing(true);
+              }}
               title="编辑"
               className="p-1 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
             >
@@ -100,9 +123,13 @@ export default function TaskCard({ task }: { task: Task }) {
         )}
       </div>
 
-      <div className="mt-3 flex items-center gap-3 border-t border-[#f0ece4] pt-3">
+      {/* 操作栏：整栏挡住冒泡，点了归档/删除/添加进展不会顺带收起卡片 */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="mt-3 flex items-center gap-3 border-t border-[#f0ece4] pt-3"
+      >
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={toggleOpen}
           className="inline-flex items-center gap-1 text-xs font-medium text-[#c96442] hover:text-[#b5573a] transition-colors"
         >
           <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
@@ -144,7 +171,10 @@ export default function TaskCard({ task }: { task: Task }) {
       </div>
 
       {adding && !task.archived && (
-        <div className="mt-3 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-3">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="mt-3 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-3"
+        >
           <div className="flex flex-wrap gap-2">
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg border border-[#e8e4db] bg-white px-2.5 py-1.5 text-xs text-[#1a1a1a] outline-none focus:border-[#c96442]/40" />
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-[#e8e4db] bg-white px-2.5 py-1.5 text-xs text-[#1a1a1a] outline-none focus:border-[#c96442]/40">
@@ -157,6 +187,8 @@ export default function TaskCard({ task }: { task: Task }) {
       )}
 
       {open && (
+        // 这里不加 stopPropagation：卡片展开后中心落在时间线上，
+        // 拦掉的话"再点一次收起"就会失灵。整块都算卡片，点哪都能切。
         <div className="mt-3 pl-1">
           <div className="relative border-l border-[#e8e4db] pl-4 space-y-3">
             {timeline.map((u, i) => (
@@ -173,7 +205,11 @@ export default function TaskCard({ task }: { task: Task }) {
         </div>
       )}
 
-      <TaskEditor open={editing} task={task} onClose={() => setEditing(false)} />
+      {/* TaskEditor 在卡片 DOM 内部，而 React 事件沿组件树冒泡，
+          所以弹窗里点任何东西都会触发卡片的展开/收起，这里挡一下 */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <TaskEditor open={editing} task={task} onClose={() => setEditing(false)} />
+      </div>
     </div>
   );
 }
