@@ -48,17 +48,16 @@ export function stalenessOf(t: Task, now = new Date()): Staleness | null {
   return { days, lastDate, level };
 }
 
-/** 徽章文案：30/60/120 天用更口语的说法，其余直接报天数 */
-export function staleLabel(days: number): string {
-  if (days >= 365) return "超过一年没动";
-  if (days >= 180) return "半年没动了";
-  if (days >= 90) return "三个月没动了";
-  return `${days} 天没更新`;
+/** 「最近更新 N 天前」：统一口径，所有任务一律显示真实天数，不再按 30/90 换说法 */
+export function updatedAgoLabel(days: number): string {
+  if (days <= 0) return "今天更新";
+  if (days === 1) return "昨天更新";
+  return `${days} 天前更新`;
 }
 
-/** 徽章配色 */
+/** 提醒配色：越久越刺眼（阈值只影响颜色，不影响显示口径） */
 export const STALE_TONE: Record<StaleLevel, string> = {
-  fresh: "",
-  warn: "bg-amber-50 text-amber-800 border-amber-200",
-  stale: "bg-red-50 text-red-700 border-red-200",
+  fresh: "text-[#6b6560]",
+  warn: "text-amber-700",
+  stale: "text-red-600 font-semibold",
 };
