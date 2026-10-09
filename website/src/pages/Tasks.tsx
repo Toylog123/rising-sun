@@ -1,11 +1,19 @@
 import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, ListTodo, Users, Plus, Archive, Download } from "lucide-react";
+import { Search, ListTodo, Users, Plus, Archive, Download, AlarmClock } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
 import TaskCard from "@/components/TaskCard";
 import { downloadText, timestamp, tasksToMarkdown } from "@/lib/download";
+import { stalenessOf, STALE_WARN_DAYS, STALE_STALE_DAYS } from "@/lib/staleness";
 
 const STATUS_OPTIONS = ["全部", "进行中", "挂起", "已完成", "未开始"];
+
+/** 「多久没更新」筛选项：阈值取自 lib/staleness，保证与卡片徽章一致 */
+const UPDATE_FILTERS = [
+  { key: "全部", label: "全部", min: 0 },
+  { key: "warn", label: `${STALE_WARN_DAYS}天+`, min: STALE_WARN_DAYS },
+  { key: "stale", label: `${STALE_STALE_DAYS}天+`, min: STALE_STALE_DAYS },
+] as const;
 
 export default function Tasks() {
   const allTasks = useTaskStore((s) => s.tasks);
@@ -16,6 +24,19 @@ export default function Tasks() {
   const [member, setMember] = useState(params.get("member") || "全部");
   const [statusFilter, setStatusFilter] = useState("全部");
   const [q, setQ] = useState("");
+  const [updateFilter, setUpdateFilter] = useState<"全部" | "warn" | "stale">("全部");
+
+  // 停滞统计：只看未归档、未完成的任务
+  const staleStats = useMemo(() => {
+    const list = tasks
+      .map((t) => stalenessOf(t))
+      .filter((s): s is NonNullable<typeof s> => s !== null);
+    return {
+      warn: list.filter((s) => s.days >= STALE_WARN_DAYS).length,
+      stale: list.filter((s) => s.days >= STALE_STALE_DAYS).length,
+      oldest: list.reduce((max, s) => Math.max(max, s.days), 0),
+    };
+  }, [tasks]);
 
   const groups = useMemo(() => {
     // 排除老师（role=teacher）：只让学生出现在成员筛选里
@@ -32,10 +53,19 @@ export default function Tasks() {
     t.title.toLowerCase().includes(q.toLowerCase()) ||
     t.assignees.some((a) => a.includes(q));
 
+  const updateMin =
+    UPDATE_FILTERS.find((f) => f.key === updateFilter)?.min ?? 0;
+  const matchUpdate = (t: (typeof tasks)[number]) => {
+    if (updateMin === 0) return true;
+    const s = stalenessOf(t);
+    return s !== null && s.days >= updateMin;
+  };
+
   const visible = tasks.filter(
     (t) =>
       (member === "全部" || t.assignees.includes(member)) &&
       (statusFilter === "全部" || latestStatus(t) === statusFilter) &&
+      matchUpdate(t) &&
       matchQ(t)
   );
 
@@ -95,6 +125,25 @@ export default function Tasks() {
         </div>
       </div>
 
+      {staleStats.warn > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+          <AlarmClock size={18} className="shrink-0 text-amber-600" />
+          <p className="flex-1 min-w-[220px] text-sm text-amber-900">
+            有 <strong>{staleStats.warn}</strong> 项任务超过 {STALE_WARN_DAYS} 天没更新
+            {staleStats.stale > 0 && (
+              <>，其中 <strong>{staleStats.stale}</strong> 项超过 {STALE_STALE_DAYS} 天</>
+            )}
+            ，最久的一项已经 <strong>{staleStats.oldest}</strong> 天没动静，记得补充进展。
+          </p>
+          <button
+            onClick={() => setUpdateFilter("warn")}
+            className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-amber-700"
+          >
+            只看这些
+          </button>
+        </div>
+      )}
+
       <div className="mb-8 rounded-2xl bg-white border border-[#e8e4db] p-4 shadow-sm space-y-3">
         <div className="relative">
           <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9a9590]" />
@@ -117,6 +166,20 @@ export default function Tasks() {
           <span className="w-10 shrink-0 text-xs font-semibold text-[#9a9590]">成员</span>
           {memberChips.map((c) => (
             <button key={c} onClick={() => setMember(c)} className={chipCls(member === c)}>{c}</button>
+          ))}
+        </div>
+        <div className="h-px bg-[#f0ece4]" />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="w-10 shrink-0 text-xs font-semibold text-[#9a9590]">更新</span>
+          {UPDATE_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setUpdateFilter(f.key)}
+              title={f.min === 0 ? "不按更新时间筛选" : `只看超过 ${f.min} 天没更新的任务`}
+              className={chipCls(updateFilter === f.key)}
+            >
+              {f.label}
+            </button>
           ))}
         </div>
       </div>

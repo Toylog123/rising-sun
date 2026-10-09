@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore } from "lucide-react";
+import { Pencil, CalendarClock, History, ChevronDown, Plus, Trash2, Archive, ArchiveRestore, AlarmClock } from "lucide-react";
 import {
   useTaskStore,
   latestStatus,
@@ -8,6 +8,7 @@ import {
   type Task,
 } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
+import { stalenessOf, staleLabel, STALE_TONE } from "@/lib/staleness";
 import StatusBadge from "./StatusBadge";
 import TaskEditor from "./TaskEditor";
 
@@ -24,6 +25,7 @@ export default function TaskCard({ task }: { task: Task }) {
   const setArchived = useTaskStore((s) => s.setArchived);
   const cur = latestStatus(task);
   const timeline = [...task.updates].reverse();
+  const stale = stalenessOf(task);
 
   const submit = () => {
     if (!date) return;
@@ -85,6 +87,15 @@ export default function TaskCard({ task }: { task: Task }) {
           <History size={13} />
           {task.updates.length} 次进展
         </span>
+        {stale && stale.level !== "fresh" && (
+          <span
+            title={`上次更新：${stale.lastDate}，已经 ${stale.days} 天没动静了，记得补充进展`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${STALE_TONE[stale.level]}`}
+          >
+            <AlarmClock size={12} />
+            {staleLabel(stale.days)}
+          </span>
+        )}
       </div>
 
       <div className="mt-3 flex items-center gap-3 border-t border-[#f0ece4] pt-3">
