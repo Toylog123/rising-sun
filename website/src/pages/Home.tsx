@@ -54,9 +54,10 @@ export default function Home() {
     const done = list.filter((t) => statusTone(latestStatus(t)) === "green").length;
     const hold = list.filter((t) => statusTone(latestStatus(t)) === "red").length;
     const active = list.filter((t) => statusTone(latestStatus(t)) === "amber").length;
-    const pct = list.length ? Math.round((done / list.length) * 100) : 0;
-    return { total: list.length, done, hold, active, pct };
+    return { total: list.length, done, hold, active };
   };
+
+  const pctOf = (n: number, total: number) => (total > 0 ? (n / total) * 100 : 0);
 
   const feed = tasks
     .map((t) => ({ t, u: latestUpdate(t) }))
@@ -212,16 +213,39 @@ export default function Home() {
                   <span className="font-serif text-lg font-semibold text-[#1a1a1a]">{m}</span>
                   <span className="text-xs text-[#6b6560]">{s.total} 项任务</span>
                 </div>
-                <div className="mt-3 h-2 w-full rounded-full bg-[#f0ece4] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#c96442] to-[#e08a63] transition-all"
-                    style={{ width: `${s.pct}%` }}
-                  />
+                {/* 堆叠色带：按 进行中/挂起/已完成 各占比例分段。
+                    原来的"已完成 / 总数"进度条在所有任务都是进行中时会恒为 0，
+                    一条永远空着的进度条比没有更糟。 */}
+                <div
+                  className="mt-3 flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-[#f0ece4]"
+                  role="img"
+                  aria-label={
+                    s.total > 0
+                      ? `共 ${s.total} 项：已完成 ${s.done}、进行中 ${s.active}、挂起 ${s.hold}`
+                      : "暂无任务"
+                  }
+                >
+                  {s.done > 0 && (
+                    <div className="h-full bg-green-400" style={{ width: `${pctOf(s.done, s.total)}%` }} />
+                  )}
+                  {s.active > 0 && (
+                    <div className="h-full bg-amber-400" style={{ width: `${pctOf(s.active, s.total)}%` }} />
+                  )}
+                  {s.hold > 0 && (
+                    <div className="h-full bg-red-400" style={{ width: `${pctOf(s.hold, s.total)}%` }} />
+                  )}
                 </div>
-                <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6b6560]">
-                  <span className="text-[#c96442] font-semibold">进行中 {s.active}</span>
-                  <span>挂起 {s.hold}</span>
-                  <span>已完成 {s.done}</span>
+                {/* 计数只渲染非零项——"挂起 0 / 已完成 0"这类冗余零只会稀释信息 */}
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  {s.total === 0 ? (
+                    <span className="text-[#9a9590]">暂无任务</span>
+                  ) : (
+                    <>
+                      {s.active > 0 && <span className="text-amber-600 font-semibold">进行中 {s.active}</span>}
+                      {s.hold > 0 && <span className="text-red-500 font-semibold">挂起 {s.hold}</span>}
+                      {s.done > 0 && <span className="text-green-600 font-semibold">已完成 {s.done}</span>}
+                    </>
+                  )}
                 </div>
               </Link>
             );

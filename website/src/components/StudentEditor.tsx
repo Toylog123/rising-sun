@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Plus, Pencil, AlertCircle, GraduationCap, User, Calendar } from "lucide-react";
 import { useTaskStore, type Student, type StudentStatus, type MemberRole } from "@/store/tasks";
 import { STUDENT_STATUS_OPTIONS } from "@/lib/students";
+import Avatar from "./Avatar";
 
 interface StudentEditorProps {
   open: boolean;
@@ -19,6 +20,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
 
   const [role, setRole] = useState<MemberRole>("student");
   const [name, setName] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [title, setTitle] = useState("");
   const [enrolledAt, setEnrolledAt] = useState("");
   const [status, setStatus] = useState<StudentStatus>("在读");
@@ -32,6 +34,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
     if (initial) {
       setRole(initial.role ?? "student");
       setName(initial.name);
+      setAvatar(initial.avatar ?? "");
       setTitle(initial.title ?? "");
       setEnrolledAt(initial.enrolledAt ?? "");
       setStatus(initial.status ?? "在读");
@@ -41,6 +44,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
     } else {
       setRole("student");
       setName("");
+      setAvatar("");
       setTitle("");
       setEnrolledAt("");
       setStatus("在读");
@@ -84,6 +88,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
     }
     const baseData = {
       name: n,
+      avatar: avatar.trim() || undefined,
       role,
       enrolledAt: enrolledAt || undefined,
       status: role === "teacher" ? undefined : status,
@@ -177,6 +182,22 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
             {isEdit && (
               <p className="mt-1 text-xs text-[#9a9590]">姓名为唯一标识，不支持修改</p>
             )}
+          </div>
+
+          <div>
+            <label className={label}>头像（可选）</label>
+            <div className="flex items-center gap-3">
+              <Avatar name={name.trim() || "成员"} src={avatar.trim() || undefined} size={44} />
+              <input
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+                placeholder="图片 URL，或 public/ 下的相对路径"
+                className={field}
+              />
+            </div>
+            <p className="mt-1 text-xs text-[#9a9590]">
+              留空则自动显示姓名首字；填入有效地址会显示照片，加载失败会回退。
+            </p>
           </div>
 
           {role === "teacher" ? (

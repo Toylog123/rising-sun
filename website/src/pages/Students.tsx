@@ -8,6 +8,7 @@ import { useTaskStore, latestStatus, statusTone, type Student } from "@/store/ta
 import { calcGrade, statusToneStudent } from "@/lib/students";
 import { confirmDialog } from "@/store/ui";
 import StudentEditor from "@/components/StudentEditor";
+import Avatar from "@/components/Avatar";
 
 const STATUS_BG: Record<string, string> = {
   green: "bg-green-50 text-green-700 border-green-200",
@@ -135,7 +136,8 @@ export default function Students() {
                     className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
                   >
                     <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Avatar name={teacher.name} src={teacher.avatar} size={52} />
                         <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
                           {teacher.name}
                         </h3>
@@ -221,7 +223,8 @@ export default function Students() {
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                         <div>
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <Avatar name={s.name} src={s.avatar} size={48} />
                             <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
                               {s.name}
                             </h3>
