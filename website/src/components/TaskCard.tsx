@@ -9,6 +9,7 @@ import {
 } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
 import { stalenessOf, updatedAgoLabel, STALE_TONE } from "@/lib/staleness";
+import { useDayTick } from "@/lib/useDayTick";
 import StatusBadge from "./StatusBadge";
 import TaskEditor from "./TaskEditor";
 
@@ -25,7 +26,8 @@ export default function TaskCard({ task }: { task: Task }) {
   const setArchived = useTaskStore((s) => s.setArchived);
   const cur = latestStatus(task);
   const timeline = [...task.updates].reverse();
-  const stale = stalenessOf(task);
+  const now = useDayTick();
+  const stale = stalenessOf(task, now);
 
   const submit = () => {
     if (!date) return;
