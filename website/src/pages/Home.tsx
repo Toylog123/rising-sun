@@ -205,7 +205,7 @@ export default function Home() {
             return (
               <Link
                 key={m}
-                to="/gallery"
+                to={`/tasks?member=${encodeURIComponent(m)}`}
                 className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20"
               >
                 <div className="flex items-center justify-between">
