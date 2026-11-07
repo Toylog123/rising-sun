@@ -65,7 +65,10 @@ rising-sun/
 │       └── README.md               # 目录说明 + 命名规则
 ├── website/                         # 源码
 │   ├── scripts/
-│   │   └── deploy.mjs              # 一键部署脚本（npm run deploy）
+│   │   ├── deploy.mjs              # 一键部署脚本（npm run deploy）
+│   │   ├── publish.mjs             # 绕开 git push 的发布通道（npm run publish）
+│   │   ├── alias-hook.mjs          # Node 跑 .ts 测试时的 @/ 路径别名
+│   │   └── alias-loader.mjs
 │   ├── src/
 │   │   ├── components/             # React 组件
 │   │   │   ├── Navbar.tsx
@@ -75,6 +78,7 @@ rising-sun/
 │   │   │   ├── TaskEditor.tsx
 │   │   │   ├── StudentEditor.tsx
 │   │   │   ├── MeetingEditor.tsx
+│   │   │   ├── PdfPreview.tsx        # PDF 预览弹窗（Pages 内嵌 + raw 下载）
 │   │   │   ├── AchievementEditor.tsx
 │   │   │   ├── StatusBadge.tsx      # 任务状态徽标
 │   │   │   ├── Confirm.tsx          # 自定义确认弹窗
@@ -102,6 +106,8 @@ rising-sun/
 │   │   │   ├── uploads.ts           # 附件上传 / Pages & raw 链接生成
 │   │   │   ├── auth.ts              # 全站共享 PAT（单一数据源）
 │   │   │   ├── merge.ts             # 组会记录合并规则（多人协作防覆盖）
+│   │   │   ├── merge.test.mjs       # 合并规则自检
+│   │   │   ├── uploads.test.mjs     # 上传/链接生成自检
 │   │   │   ├── download.ts          # 导出 Markdown / JSON 工具
 │   │   │   └── students.ts          # calcGrade 工具函数
 │   │   ├── data/                    # 种子数据（build 进 bundle）
@@ -159,7 +165,7 @@ npm install
 npm run dev
 # 浏览器打开 http://localhost:5173
 
-npm test            # 组会合并规则自检（merge.ts）
+npm test            # 组会合并规则 + 附件上传的自检（merge.ts / uploads.ts）
 ```
 
 ### 部署流程
