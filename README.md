@@ -307,6 +307,14 @@ npm run publish -- --prune      # 顺便删掉远端已废弃的旧产物
 > `application/octet-stream` 且带 `X-Frame-Options: deny`，浏览器只会下载不会内嵌。
 > GitHub Pages 直链才是 `application/pdf`，所以预览走 Pages、下载走 raw。
 
+> **写文件用哪条 API**：优先走 Contents API 的 `PUT /contents/{path}`。GitHub
+> 实际会**自动创建缺失的中间目录**（官方文档没写死，但 gh CLI / Octokit /
+> go-github / PyGithub 全都直接 PUT 嵌套路径、不预建目录），所以不存在
+> 「目录不存在」这种 404。两个例外会走兜底通道 **Git Data API**（blob →
+> 自底向上建树 → commit → update ref）：仓库是空的（409
+> "Git Repository is empty"）、或权限/分支不对（404，classic PAT 缺
+> `repo` scope 时就是这个码）。
+
 **限制与注意**
 
 - 只接受 PDF，单个文件 ≤ 20 MB（`MAX_ATTACHMENT_BYTES`）
@@ -355,7 +363,8 @@ cd website && npm test
 | 老师显示成学生 | 检查 tasks.json 里 member.role 字段（远端已包含） |
 | 看到乱码 | 检查浏览器编码 = UTF-8 |
 | 上传附件报「未配置 PAT」 | 右上角 ⚙ 设置里填 PAT（只需填一次，三个模块共用） |
-| 上传报 404 | 站点会自动改用 Git Data API 建目录重试；若仍失败请刷新页面 |
+| 上传报 404 | **不是目录不存在**（Contents API 会自动建中间目录）。多半是 PAT 权限不对：classic PAT 需要仓库 Contents 读写（repo scope），且分支存在。站点会自动改走 Git Data API 重试 |
+| 上传报 409 | 仓库是空的（"Git Repository is empty"），站点会自动改走 Git Data API 建目录重试 |
 | 上传报「文件太大」 | GitHub 请求体上限约 50 MB（base64 再涨 1/3），我们限制 20 MB；请压缩 PDF 后重试 |
 | 上传报 422 | 同上（GitHub 用 422 而非 413 拒绝超大请求体） |
 | 附件预览显示「Pages 还没发布出来」 | 等待 1-2 分钟，点「重新检查」；或直接点「下载」 |

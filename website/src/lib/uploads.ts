@@ -105,35 +105,17 @@ export function buildUploadPath(file: File, date?: string): string {
 }
 
 /**
- * 确保 `uploads/meetings/` 目录在远端存在。
- *
- * Contents API 一般会自动建中间目录，但这一点官方文档没有写死，
- * 所以这里做一层兜底：PUT 时若返回 404，就先用占位文件把目录建出来再重试。
- */
-async function ensureUploadDir(token: string): Promise<void> {
-  const dirs = UPLOAD_DIR.split("/");
-  const body = btoa("# 占位文件，用于让 GitHub 仓库里存在该目录\n");
-  for (let i = 1; i <= dirs.length; i++) {
-    const dir = dirs.slice(0, i).join("/");
-    const placeholder = `${dir}/.gitkeep`;
-    try {
-      await pushBinary(placeholder, body, token, `chore: 创建目录 ${dir}`);
-    } catch (err) {
-      // 409 = 文件已存在（目录早就建好了），忽略；其它错误也不致命，继续往下建
-      if (err instanceof GitHubApiError && err.status === 409) continue;
-    }
-  }
-}
-
-/**
  * 上传一个附件到 GitHub 仓库，返回可存进 meetings.json 的元数据。
  *
  * 一次上传 = 一次独立 commit。文件名带随机后缀，所以不会和别人的同名文件
  * 互相覆盖，也不需要先查远端 sha。
  *
- * 写入顺序：先走 Contents API（简单、快）；如果它返回 404（多半是
- * `uploads/meetings/` 目录还没建出来），改走 Git Data API —— 它会连同
- * 中间目录一起建好。
+ * 写入顺序：先走 Contents API（简单、快）。它虽然**实际会**自动创建缺失的
+ * 中间目录（官方文档没写，但所有主流客户端都依赖这个行为），但有两个例外
+ * 需要兜底：
+ * - 仓库是空的 → Contents API 返 409 "Git Repository is empty"；
+ * - 权限不对 → 返 404（classic PAT 缺 repo scope 时就是 404）。
+ * 这两种情况都改走 Git Data API，它会自底向上把中间目录连同文件一起建好。
  */
 export async function uploadAttachment(
   file: File,
@@ -153,15 +135,17 @@ export async function uploadAttachment(
   try {
     ({ sha, size } = await pushBinary(path, base64, token, message));
   } catch (err) {
-    if (!(err instanceof GitHubApiError) || err.status !== 404) throw err;
+    const status = err instanceof GitHubApiError ? err.status : 0;
+    // 404 = 权限/仓库/分支不对；409 = 仓库为空。这两种都需要换通道
+    if (status !== 404 && status !== 409) throw err;
 
-    // 目录不存在：换一条必定能建目录的路径
     try {
       ({ sha, size } = await pushBinaryViaGitData(path, base64, token, message));
-    } catch {
-      // 还是不行的话，先用占位文件把目录建出来，再走 Contents API
-      await ensureUploadDir(token);
-      ({ sha, size } = await pushBinary(path, base64, token, message));
+    } catch (gitErr) {
+      // 两条通道都失败：把 Git Data 的错误透出去（它已经把 GitHub 原文
+      // 翻译成人话了），但如果它比第一条更含糊，就保留第一条的错误
+      if (gitErr instanceof GitHubApiError && gitErr.status === status) throw gitErr;
+      throw err;
     }
   }
 

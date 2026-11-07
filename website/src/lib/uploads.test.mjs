@@ -138,6 +138,18 @@ ok(
   "422 但不是超大问题时保留原文",
   friendlyBinaryError(422, "sha does not match") === "sha does not match"
 );
+// 404 不是「目录不存在」——Contents API 的 PUT 会自动建中间目录，
+// 404 说明的是权限/仓库/分支不对
+ok(
+  "404 翻译成权限/仓库说明，而不是「目录不存在」",
+  friendlyBinaryError(404, "Not Found").includes("repo scope"),
+  friendlyBinaryError(404, "Not Found")
+);
+ok(
+  "403 非限速时提示 PAT 权限不足",
+  friendlyBinaryError(403, "Resource not accessible by integration").includes("权限不足"),
+  friendlyBinaryError(403, "Resource not accessible by integration")
+);
 
 console.log(failed === 0 ? "\n全部通过" : `\n${failed} 项失败`);
 process.exit(failed === 0 ? 0 : 1);

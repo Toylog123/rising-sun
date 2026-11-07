@@ -230,11 +230,25 @@ function contentsUrl(path: string): string {
 export function friendlyBinaryError(status: number, message: string): string {
   // 401 一定是 token 的问题，统一说人话（GitHub 默认返回 "Bad credentials"）
   if (status === 401) return "PAT 无效或已过期，请重新配置";
-  if (status === 403 && (message.toLowerCase().includes("rate limit") || !message)) {
-    return "GitHub API 速率受限，请稍后再试";
+  if (status === 403) {
+    if (message.toLowerCase().includes("rate limit")) {
+      return "GitHub API 速率受限，请稍后再试";
+    }
+    // GitHub App 权限不足时是 403；classic PAT 权限不足则报 404（见下）
+    return "PAT 权限不足：写文件需要仓库的 Contents 读写权限（repo scope）";
   }
-  if (status === 404 && !message) return "仓库或文件不存在";
-  if (status === 409 && !message) return "冲突：远端有更新，请重试";
+  // 404 不是「目录不存在」——Contents API 的 PUT 会自动创建缺失的中间目录。
+  // 真正的原因是仓库/分支/权限不对（classic PAT 缺 repo scope 时就是 404）。
+  if (status === 404) {
+    return "仓库、分支或权限有问题：请确认 PAT 有 Contents 读写权限（repo scope），且分支存在";
+  }
+  if (status === 409) {
+    // 空仓库时 Contents API 会报 "Git Repository is empty"
+    if (message.toLowerCase().includes("empty")) {
+      return "仓库是空的，无法用 Contents API 写入（已改走 Git Data API 建目录）";
+    }
+    if (!message) return "冲突：远端有更新，请重试";
+  }
   if (status === 422) {
     if (!message) return "校验失败：文件过大或内容非法";
     // GitHub 拒绝超大请求体时的原文（Contents API / Blobs API 各一句）：
@@ -341,7 +355,7 @@ export async function deleteFile(
   }
 }
 
-/* ---------- Git Data API（附件目录兜底创建） ---------- */
+/* ---------- Git Data API（Git Data 兜底通道） ---------- */
 
 async function gitDataRequest<T>(
   endpoint: string,
@@ -368,13 +382,35 @@ async function gitDataRequest<T>(
   return (await res.json()) as T;
 }
 
+/** 在一个 tree 里按名字找某个条目 */
+async function findTreeEntry(
+  treeSha: string,
+  name: string,
+  token: string
+): Promise<{ sha: string; type: string } | null> {
+  const tree = await gitDataRequest<{ tree?: Array<{ path: string; sha: string; type: string }> }>(
+    `git/trees/${treeSha}`,
+    token,
+    { method: "GET" }
+  );
+  const hit = (tree.tree ?? []).find((e) => e.path === name);
+  return hit ? { sha: hit.sha, type: hit.type } : null;
+}
+
 /**
- * 用 Git Data API 写一个文件（自动创建中间目录）。
+ * 用 Git Data API 写一个文件，并且**保证**中间目录被建出来。
  *
- * 为什么需要这条路径：Contents API 的 PUT 在「父目录不存在」时的行为官方
- * 没有写清楚（社区讨论页也抓不到）。Git Trees API 的官方说明则明确写着
- * "The tree creation API accepts nested entries"，所以把它作为兜底：
- * Contents API 报 404 时改走这里，一次 commit 既建目录又写文件。
+ * 为什么需要这条路径：
+ * - Contents API 的 PUT 虽然实际上会自动创建缺失的中间目录（官方没写，但
+ *   所有主流客户端都依赖这个行为），但它对**空仓库**会返回 409
+ *   （"Git Repository is empty"），这时必须走 Git Data API。
+ * - Git Trees API 的 `path` 字段官方只写成 "The file referenced in the tree"，
+ *   **没有承诺**带斜杠的路径会自动建出中间树。所以这里用官方安全的
+ *   **自底向上**配方：先建最深的目录（放文件），再逐级用 `040000` 的 tree
+ *   条目把上一级包上去，最后包进根树。每一次建树都带上这一层目录**原有
+ *   的 tree sha 作为 base_tree**，这样同目录下的其它文件不会被这次提交删掉。
+ *
+ * 参数 path 例："uploads/meetings/2026-11-07_xxx_汇报.pdf"
  */
 export async function pushBinaryViaGitData(
   path: string,
@@ -382,12 +418,16 @@ export async function pushBinaryViaGitData(
   token: string,
   message: string
 ): Promise<{ sha: string; size: number }> {
-  // 1) 造 blob
+  // 1) 造 blob（二进制只能走 blob，tree 的 content 字段是纯文本）
   const blob = await gitDataRequest<{ sha: string; size: number }>(
     "git/blobs",
     token,
     { method: "POST", body: { content: base64, encoding: "base64" } }
   );
+
+  const segments = path.split("/").filter(Boolean);
+  const fileName = segments.pop() as string;
+  const dirs = segments;
 
   // 2) 读当前分支头 → 建树 → 提交 → 推进分支指针（不用 force）
   //
@@ -406,16 +446,95 @@ export async function pushBinaryViaGitData(
       token,
       { method: "GET" }
     );
-    const tree = await gitDataRequest<{ sha: string }>("git/trees", token, {
-      method: "POST",
-      body: {
-        base_tree: headCommit.tree.sha,
-        tree: [{ path, mode: "100644", type: "blob", sha: blob.sha }],
-      },
-    });
+
+    /**
+     * 顺着 head 的树往下走 count 层，返回第 count 层目录所在的 tree sha。
+     * 走不通（目录不存在 / 不是 tree）就返回 undefined。
+     */
+    const walkToTree = async (count: number): Promise<string | undefined> => {
+      let cur = headCommit.tree.sha;
+      for (let i = 0; i < count; i++) {
+        const entry = await findTreeEntry(cur, dirs[i], token);
+        if (!entry || entry.type !== "tree") return undefined;
+        cur = entry.sha;
+      }
+      return cur;
+    };
+
+    /**
+     * 建出 dirs[0..depth] 这个**目录本身**的 tree（含它下面的内容）。
+     * base_tree 用这一层目录原有的 tree sha，保住同目录的其它文件。
+     */
+    const buildDirTree = async (depth: number): Promise<string> => {
+      // 这一层目录里放什么
+      const entries =
+        depth === dirs.length - 1
+          ? // 最深一层：放文件
+            [{ path: fileName, mode: "100644", type: "blob", sha: blob.sha }]
+          : // 上面几层：放下一层目录（040000 = subdirectory）
+            [
+              {
+                path: dirs[depth + 1],
+                mode: "040000",
+                type: "tree",
+                sha: await buildDirTree(depth + 1),
+              },
+            ];
+
+      // 这一层目录原有的 tree（用来当 base_tree）
+      let baseTree: string | undefined;
+      if (depth > 0) {
+        const parentTree = await walkToTree(depth);
+        if (parentTree) {
+          const self = await findTreeEntry(parentTree, dirs[depth], token);
+          if (self && self.type === "tree") baseTree = self.sha;
+        }
+      } else {
+        baseTree = headCommit.tree.sha;
+      }
+
+      const tree = await gitDataRequest<{ sha: string }>("git/trees", token, {
+        method: "POST",
+        body: {
+          ...(baseTree ? { base_tree: baseTree } : {}),
+          tree: entries,
+        },
+      });
+      return tree.sha;
+    };
+
+    // 根树：文件在根目录就直接放文件，否则放最外层目录
+    const rootTreeSha =
+      dirs.length === 0
+        ? (
+            await gitDataRequest<{ sha: string }>("git/trees", token, {
+              method: "POST",
+              body: {
+                base_tree: headCommit.tree.sha,
+                tree: [{ path: fileName, mode: "100644", type: "blob", sha: blob.sha }],
+              },
+            })
+          ).sha
+        : (
+            await gitDataRequest<{ sha: string }>("git/trees", token, {
+              method: "POST",
+              body: {
+                base_tree: headCommit.tree.sha,
+                tree: [
+                  {
+                    path: dirs[0],
+                    mode: "040000",
+                    type: "tree",
+                    sha: await buildDirTree(0),
+                  },
+                ],
+              },
+            })
+          ).sha;
+
     const commit = await gitDataRequest<{ sha: string }>("git/commits", token, {
       method: "POST",
-      body: { message, tree: tree.sha, parents: [headSha] },
+      body: { message, tree: rootTreeSha, parents: [headSha] },
     });
     try {
       await gitDataRequest(`git/refs/heads/${BRANCH}`, token, {
