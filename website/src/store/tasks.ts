@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import seed from "@/data/tasks.json";
 import { fetchTasks, pushTasks, GitHubApiError, type RemoteData } from "@/lib/github";
 import { showToast } from "@/store/ui";
+import { registerTokenStore, seedSharedToken } from "@/lib/auth";
 
 export interface TaskUpdate {
   date: string; // YYYY-MM-DD (组会日期)
@@ -631,9 +632,20 @@ export const useTaskStore = create<TaskState>()(
         dirtyAdvisor: state.dirtyAdvisor,
         pushHistory: state.pushHistory,
       }),
+      onRehydrateStorage: () => (state) => {
+        // tasks store 是历史上唯一存过 token 的地方：把它提升为共享 token，
+        // 顺便让 meetings / achievements 两个 store 也用上。
+        if (state) {
+          const t = seedSharedToken(state.ghToken);
+          if (t && t !== state.ghToken) state.setToken(t);
+        }
+      },
     }
   )
 );
+
+// 让共享 PAT 能同步到这个 store
+registerTokenStore(useTaskStore);
 
 export function latestUpdate(t: Task): TaskUpdate | undefined {
   return t.updates[t.updates.length - 1];

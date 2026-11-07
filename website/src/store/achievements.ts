@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import seed from "@/data/achievements.json";
 import { fetchAchievements, pushAchievements, GitHubApiError } from "@/lib/github";
+import { registerTokenStore, resolveInitialToken } from "@/lib/auth";
 
 /** 成果类型分三类：论文 / 专利 / 比赛获奖 */
 export type AchievementCategory = "论文" | "专利" | "比赛";
@@ -156,15 +157,18 @@ export const useAchievementStore = create<AchievementState>()(
             set({ syncStatus: "error", syncError: "未配置 PAT" });
             return;
           }
-          if (!state.remoteSha) {
-            set({ syncStatus: "error", syncError: "缺少文件 SHA，请先拉取一次远端" });
-            return;
-          }
           set({ syncStatus: "pushing", syncError: null });
           let sha = state.remoteSha;
           const maxAttempts = 3;
           for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
+              // 没有 remoteSha（首次使用、还没拉过远端）时，先取一次远端拿到 sha，
+              // 避免用户第一次保存就报「缺少文件 SHA」
+              if (!sha) {
+                const fresh = await fetchAchievements(get().ghToken);
+                sha = fresh.sha;
+                set({ remoteSha: fresh.sha });
+              }
               const newSha = await pushAchievements({ achievements: state.achievements }, sha, state.ghToken, message);
               set({ remoteSha: newSha, syncStatus: "ready", lastSyncedAt: Date.now(), syncError: null });
               return;
@@ -247,6 +251,16 @@ export const useAchievementStore = create<AchievementState>()(
         ghToken: state.ghToken,
         remoteSha: state.remoteSha,
       }),
+      onRehydrateStorage: () => (state) => {
+        // 老用户的 token 可能只存在于 tasks store，这里补齐
+        if (state) {
+          const t = resolveInitialToken(state.ghToken);
+          if (t && t !== state.ghToken) state.setToken(t);
+        }
+      },
     }
   )
 );
+
+// 让共享 PAT 能同步到这个 store
+registerTokenStore(useAchievementStore);

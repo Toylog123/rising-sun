@@ -1,8 +1,12 @@
-import { useState } from "react";
-import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download, Paperclip, Eye } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
+import PdfPreview from "@/components/PdfPreview";
 import { downloadText, timestamp, meetingsToMarkdown } from "@/lib/download";
+import { formatBytes, type MeetingAttachment } from "@/lib/uploads";
+
+
 
 export default function Meetings() {
   const meetings = useMeetingStore((s) => s.meetings);
@@ -10,8 +14,28 @@ export default function Meetings() {
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Meeting | null>(null);
+  const [preview, setPreview] = useState<MeetingAttachment | null>(null);
+  const [speakerFilter, setSpeakerFilter] = useState<string | null>(null);
 
-  const sorted = [...meetings].sort((a, b) => b.date.localeCompare(a.date));
+  const sorted = useMemo(
+    () => [...meetings].sort((a, b) => b.date.localeCompare(a.date)),
+    [meetings]
+  );
+
+  // 所有主讲人 + 各自汇报次数，方便「看谁每次汇报了啥」
+  const speakerStats = useMemo(() => {
+    const map = new Map<string, { count: number; files: number; last: string }>();
+    for (const m of sorted) {
+      const cur = map.get(m.speaker) ?? { count: 0, files: 0, last: m.date };
+      cur.count += 1;
+      cur.files += m.attachments?.length ?? 0;
+      if (m.date > cur.last) cur.last = m.date;
+      map.set(m.speaker, cur);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1].count - a[1].count);
+  }, [sorted]);
+
+  const visible = speakerFilter ? sorted.filter((m) => m.speaker === speakerFilter) : sorted;
 
   const openAdd = () => {
     setEditing(null);
@@ -31,7 +55,9 @@ export default function Meetings() {
           </div>
           <div>
             <h1 className="font-serif text-2xl font-bold text-[#1a1a1a]">组会记录</h1>
-            <p className="text-sm text-[#6b6560] mt-1">每周组会的简要纪要 · 共 {meetings.length} 期</p>
+            <p className="text-sm text-[#6b6560] mt-1">
+              每周组会的简要纪要与汇报材料 · 共 {meetings.length} 期
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -64,10 +90,46 @@ export default function Meetings() {
         </div>
       </div>
 
-      {sorted.length === 0 ? (
+      {/* 按主讲人筛选：一眼看清谁汇报过几次、传了几份材料 */}
+      {speakerStats.length > 0 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[#9a9590] mr-1">按主讲人：</span>
+          <button
+            onClick={() => setSpeakerFilter(null)}
+            className={`rounded-full px-3 py-1 text-xs transition-colors ${
+              speakerFilter === null
+                ? "bg-[#c96442] text-white"
+                : "border border-[#e8e4db] bg-white text-[#6b6560] hover:border-[#c96442]/40"
+            }`}
+          >
+            全部 {sorted.length}
+          </button>
+          {speakerStats.map(([name, st]) => (
+            <button
+              key={name}
+              onClick={() => setSpeakerFilter(speakerFilter === name ? null : name)}
+              title={`最近一次：${st.last}`}
+              className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                speakerFilter === name
+                  ? "bg-[#c96442] text-white"
+                  : "border border-[#e8e4db] bg-white text-[#6b6560] hover:border-[#c96442]/40"
+              }`}
+            >
+              {name} {st.count}
+              {st.files > 0 && (
+                <span className="ml-1 opacity-70">· {st.files} 份材料</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {visible.length === 0 ? (
         <div className="rounded-2xl bg-white border border-[#e8e4db] px-6 py-16 text-center">
           <Users size={32} className="mx-auto text-[#9a9590]" />
-          <p className="mt-3 text-sm text-[#6b6560]">还没有组会记录</p>
+          <p className="mt-3 text-sm text-[#6b6560]">
+            {speakerFilter ? `「${speakerFilter}」还没有组会记录` : "还没有组会记录"}
+          </p>
           <button
             onClick={openAdd}
             className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white"
@@ -78,7 +140,7 @@ export default function Meetings() {
         </div>
       ) : (
         <div className="space-y-4">
-          {sorted.map((m) => (
+          {visible.map((m) => (
             <article
               key={m.id}
               className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
@@ -127,6 +189,30 @@ export default function Meetings() {
                   <p className="text-sm text-[#4a4540] whitespace-pre-wrap leading-relaxed">{m.decisions}</p>
                 </div>
               )}
+
+              {m.attachments && m.attachments.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-[#f0ece4]">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#9a9590] mb-2">
+                    <Paperclip size={12} />
+                    汇报材料
+                  </div>
+                  <ul className="flex flex-wrap gap-2">
+                    {m.attachments.map((a) => (
+                      <li key={a.path}>
+                        <button
+                          onClick={() => setPreview(a)}
+                          title="点击预览 PDF"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4db] bg-[#faf9f5] px-2.5 py-1.5 text-xs text-[#4a4540] hover:border-[#c96442]/50 hover:text-[#c96442] transition-colors max-w-[260px]"
+                        >
+                          <Eye size={12} className="shrink-0 text-[#c96442]" />
+                          <span className="truncate">{a.name}</span>
+                          <span className="shrink-0 text-[#9a9590]">{formatBytes(a.size)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -137,6 +223,8 @@ export default function Meetings() {
         initial={editing}
         onClose={() => setEditorOpen(false)}
       />
+
+      <PdfPreview attachment={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

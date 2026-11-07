@@ -34,6 +34,7 @@ export function timestamp(): string {
 
 import type { Task } from "@/store/tasks";
 import type { Meeting } from "@/store/meetings";
+import { rawUrl, formatBytes } from "@/lib/uploads";
 
 function fmtMembers(members: { name: string; role?: string; title?: string }[]): string {
   if (members.length === 0) return "_（暂无）_";
@@ -151,6 +152,16 @@ export function meetingsToMarkdown(opts: {
       lines.push("### 决议");
       lines.push("");
       lines.push(m.decisions);
+      lines.push("");
+    }
+    if (m.attachments && m.attachments.length > 0) {
+      lines.push("### 汇报材料");
+      lines.push("");
+      for (const a of m.attachments) {
+        lines.push(
+          `- [${a.name}](${rawUrl(a.path)}) · ${formatBytes(a.size)}`
+        );
+      }
       lines.push("");
     }
     lines.push("---");

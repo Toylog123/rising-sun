@@ -1,7 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import seed from "@/data/meetings.json";
-import { fetchMeetings, pushMeetings, GitHubApiError } from "@/lib/github";
+import { fetchMeetings, pushMeetings, GitHubApiError, deleteFile, fetchFileSha } from "@/lib/github";
+import { registerTokenStore, resolveInitialToken } from "@/lib/auth";
+import { mergeMeetings as mergeMeetingsRaw } from "@/lib/merge";
+import type { MeetingAttachment } from "@/lib/uploads";
 
 export interface Meeting {
   id: string;          // 如 "m-2026-07-20"
@@ -10,6 +13,8 @@ export interface Meeting {
   topic: string;       // 议题/标题
   notes?: string;      // 纪要
   decisions?: string;  // 决议
+  attachments?: MeetingAttachment[];  // 汇报材料（PDF 等）
+  updatedAt?: string;  // ISO 时间戳，冲突合并时判断谁更新
 }
 
 export type SyncStatus = "idle" | "pulling" | "pushing" | "error" | "ready";
@@ -31,6 +36,10 @@ interface MeetingState {
   pull: () => Promise<void>;
   setToken: (token: string) => void;
   clearToken: () => void;
+  /** 删除一条组会时，顺带清掉它在仓库里的附件文件 */
+  removeMeetingFiles: (id: string) => Promise<void>;
+  /** 删除若干附件在仓库里的实体文件（记录里的引用已去掉后调用） */
+  deleteAttachmentFiles: (files: MeetingAttachment[]) => Promise<void>;
 }
 
 const seedMeetings = (seed.meetings as Meeting[]) ?? [];
@@ -44,8 +53,28 @@ function normalizeMeetings(raw: unknown): Meeting[] {
     topic: m.topic ?? "",
     notes: m.notes,
     decisions: m.decisions,
+    attachments: Array.isArray(m.attachments)
+      ? m.attachments
+          .filter((a) => a && typeof a.path === "string" && a.path)
+          .map((a) => ({
+            name: a.name ?? "附件",
+            path: a.path,
+            size: a.size ?? 0,
+            sha: a.sha,
+            uploadedAt: a.uploadedAt ?? new Date().toISOString(),
+          }))
+      : undefined,
+    updatedAt: m.updatedAt,
   }));
 }
+
+/**
+ * 合并本地与远端的组会记录。
+ *
+ * 组会 JSON 是多人共用的，朴素的「拉取即覆盖」会把别人刚提交的记录冲掉，
+ * 也会把本机刚传好附件、还没推送成功的改动弄丢。规则见 lib/merge.ts。
+ */
+const mergeMeetings = mergeMeetingsRaw;
 
 export const useMeetingStore = create<MeetingState>()(
   persist(
@@ -66,22 +95,30 @@ export const useMeetingStore = create<MeetingState>()(
             set({ syncStatus: "error", syncError: "未配置 PAT" });
             return;
           }
-          if (!state.remoteSha) {
-            set({ syncStatus: "error", syncError: "缺少文件 SHA，请先拉取一次远端" });
-            return;
-          }
           set({ syncStatus: "pushing", syncError: null });
           let sha = state.remoteSha;
+          let snapshot = state.meetings;
           const maxAttempts = 3;
           for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-              const newSha = await pushMeetings({ meetings: state.meetings }, sha, state.ghToken, message);
+              // 没有 remoteSha（首次使用、还没拉过远端）时，先取一次远端
+              // 拿到 sha，合并后再推，避免用户第一次保存就报「缺少文件 SHA」
+              if (!sha) {
+                const fresh = await fetchMeetings(get().ghToken);
+                snapshot = mergeMeetings(snapshot, normalizeMeetings(fresh.data.meetings));
+                sha = fresh.sha;
+                set({ meetings: snapshot, remoteSha: fresh.sha });
+              }
+              const newSha = await pushMeetings({ meetings: snapshot }, sha, state.ghToken, message);
               set({ remoteSha: newSha, syncStatus: "ready", lastSyncedAt: Date.now(), syncError: null });
               return;
             } catch (err) {
               if (err instanceof GitHubApiError && err.status === 409 && attempt < maxAttempts) {
+                // 远端已有人提交：先合并再重推，不能直接用远端覆盖本地
                 const fresh = await fetchMeetings(get().ghToken);
-                set({ meetings: normalizeMeetings(fresh.data.meetings), remoteSha: fresh.sha });
+                snapshot = mergeMeetings(snapshot, normalizeMeetings(fresh.data.meetings));
+                set({ meetings: snapshot, remoteSha: fresh.sha });
+                // 用合并后的快照重试，否则重推的还是旧快照，会把协作者的修改覆盖掉
                 sha = fresh.sha;
                 continue;
               }
@@ -108,8 +145,10 @@ export const useMeetingStore = create<MeetingState>()(
         try {
           set({ syncStatus: "pulling", syncError: null });
           const { data, sha } = await fetchMeetings(get().ghToken);
+          // 合并而不是覆盖：本地还没推送成功的改动不能被拉取冲掉
+          const merged = mergeMeetings(get().meetings, normalizeMeetings(data.meetings));
           set({
-            meetings: normalizeMeetings(data.meetings),
+            meetings: merged,
             remoteSha: sha,
             syncStatus: "ready",
             lastSyncedAt: Date.now(),
@@ -131,12 +170,16 @@ export const useMeetingStore = create<MeetingState>()(
 
         addMeeting: (m) => {
           const id = `m-${m.date}-${Math.floor(Math.random() * 1000)}`;
-          set((s) => ({ meetings: [{ ...m, id }, ...s.meetings] }));
+          set((s) => ({
+            meetings: [{ ...m, id, updatedAt: new Date().toISOString() }, ...s.meetings],
+          }));
           schedulePush(`add-meeting: ${m.topic || m.date}`);
         },
         updateMeeting: (id, patch) => {
           set((s) => ({
-            meetings: s.meetings.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+            meetings: s.meetings.map((x) =>
+              x.id === id ? { ...x, ...patch, updatedAt: new Date().toISOString() } : x
+            ),
           }));
           schedulePush(`update-meeting: ${id}`);
         },
@@ -148,6 +191,25 @@ export const useMeetingStore = create<MeetingState>()(
         pull: () => pullInner(),
         setToken: (token) => set({ ghToken: token.trim() }),
         clearToken: () => set({ ghToken: "", remoteSha: "", syncStatus: "idle", syncError: null }),
+        removeMeetingFiles: async (id) => {
+          const m = get().meetings.find((x) => x.id === id);
+          if (!m?.attachments?.length) return;
+          await get().deleteAttachmentFiles(m.attachments);
+        },
+        deleteAttachmentFiles: async (files) => {
+          const token = get().ghToken;
+          if (!token || !files.length) return;
+          for (const a of files) {
+            try {
+              // 老记录可能没存 sha（早期上传时没回写），这时现查一次
+              const sha = a.sha ?? (await fetchFileSha(a.path, token));
+              if (!sha) continue;
+              await deleteFile(a.path, sha, token, `chore: 删除组会附件 ${a.name}`);
+            } catch {
+              // 附件删除失败不影响主流程（数据记录已经更新）
+            }
+          }
+        },
       };
     },
     {
@@ -157,6 +219,16 @@ export const useMeetingStore = create<MeetingState>()(
         ghToken: state.ghToken,
         remoteSha: state.remoteSha,
       }),
+      onRehydrateStorage: () => (state) => {
+        // 老用户的 token 可能只存在于 tasks store，这里补齐
+        if (state) {
+          const t = resolveInitialToken(state.ghToken);
+          if (t && t !== state.ghToken) state.setToken(t);
+        }
+      },
     }
   )
 );
+
+// 让共享 PAT 能同步到这个 store
+registerTokenStore(useMeetingStore);

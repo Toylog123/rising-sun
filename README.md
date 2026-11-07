@@ -27,7 +27,7 @@ Rising Sun 是一个 2025 年新成立的课题组，专注**芯片设计自动�
 | **任务列表** | `/tasks` | 按成员分组的所有任务（含新增进展、归档、永久删除） |
 | **成员** | `/members` | 课题组所有成员（老师 + 学生），可编辑（简介/职称/研究方向） |
 | **成果** | `/achievements` | 论文 / 专利 / 比赛获奖 三类，分类显示 |
-| **组会** | `/meetings` | 每周组会纪要（日期 / 主讲人 / 议题 / 纪要 / 决议） |
+| **组会** | `/meetings` | 每周组会纪要（日期 / 主讲人 / 议题 / 纪要 / 决议）+ **汇报材料 PDF 上传** + 按主讲人筛选 |
 | **新建任务** | `/new` | 表单：指导老师 + 协同成员（多选） + 标题 + 创建时间 + 状态 |
 | **归档** | `/archive` | 已完成任务 / 已删除任务（Tab 区分："全部 / 已完成 / 已删除"） |
 
@@ -60,6 +60,9 @@ rising-sun/
 │   ├── index-XXXXX.js
 │   └── index-XXXXX.css
 ├── logo.svg                         # favicon / 站点图标
+├── uploads/                        # 组会汇报材料（PDF，网站前端直接上传到这里）
+│   └── meetings/
+│       └── README.md               # 目录说明 + 命名规则
 ├── website/                         # 源码
 │   ├── scripts/
 │   │   └── deploy.mjs              # 一键部署脚本（npm run deploy）
@@ -95,7 +98,10 @@ rising-sun/
 │   │   ├── hooks/
 │   │   │   └── useScrollReveal.ts  # 滚动渐入动画
 │   │   ├── lib/
-│   │   │   ├── github.ts            # GitHub Contents API 封装
+│   │   │   ├── github.ts            # GitHub Contents API 封装（含二进制上传）
+│   │   │   ├── uploads.ts           # 附件上传 / Pages & raw 链接生成
+│   │   │   ├── auth.ts              # 全站共享 PAT（单一数据源）
+│   │   │   ├── merge.ts             # 组会记录合并规则（多人协作防覆盖）
 │   │   │   ├── download.ts          # 导出 Markdown / JSON 工具
 │   │   │   └── students.ts          # calcGrade 工具函数
 │   │   ├── data/                    # 种子数据（build 进 bundle）
@@ -124,7 +130,7 @@ rising-sun/
 | 文件 | 内容 | 自动同步？ |
 |------|------|----------|
 | `website/src/data/tasks.json` | 任务 + 成员（课组信息） | ✅ 手动提交 |
-| `website/src/data/meetings.json` | 组会纪要 | ✅ 实时自动推送 |
+| `website/src/data/meetings.json` | 组会纪要 + 汇报材料元数据 | ✅ 实时自动推送 |
 | `website/src/data/achievements.json` | 论文/专利/比赛 | ✅ 实时自动推送 |
 
 ### 实时同步 vs 手动提交
@@ -152,6 +158,8 @@ cd website
 npm install
 npm run dev
 # 浏览器打开 http://localhost:5173
+
+npm test            # 组会合并规则自检（merge.ts）
 ```
 
 ### 部署流程
@@ -237,7 +245,61 @@ git add -A && git commit && git push
 ### `Meeting`（组会）
 
 ```ts
-{ id, date: "YYYY-MM-DD", speaker, topic, notes?, decisions? }
+{
+  id, date: "YYYY-MM-DD", speaker, topic, notes?, decisions?,
+  attachments?: {                  // 汇报材料（PPT 导出的 PDF）
+    name: string;                  // 原始文件名（展示用）
+    path: string;                  // 仓库路径，如 "uploads/meetings/2026-11-07_a1b2c3_汇报.pdf"
+    size: number;                  // 字节数
+    sha?: string;                  // blob sha（删除文件时用）
+    uploadedAt: string;            // ISO 时间戳
+  }[];
+  updatedAt?: string;              // ISO 时间戳，冲突合并时判断谁更新
+}
+```
+
+---
+
+## 📎 组会汇报材料（PDF 上传）
+
+每次组会可以直接把 PPT 导出的 PDF 传上去，组会页按主讲人筛选，一眼看清谁汇报过什么。
+
+**怎么用**
+
+1. 组会页点「新增组会」（或点已有记录旁的铅笔图标编辑）
+2. 「汇报材料（PPT 导出的 PDF，可选）」区块 → 「选择 PDF 文件」（可多选）
+3. 点「保存」——文件先上传到仓库，再连同记录一起推送
+4. 上传成功后卡片上出现附件胶囊，点开即可在网页里预览 PDF
+
+**存储与访问**
+
+| 环节 | 走哪条路 | 原因 |
+|------|----------|------|
+| 存文件 | `uploads/meetings/`（仓库根，Contents API PUT = 一次 commit） | 文件名带日期 + 随机后缀，不会同名互相覆盖 |
+| 元数据 | `website/src/data/meetings.json` 的 `attachments` 字段 | 随组会记录一起推送 |
+| 在线预览 | `https://Toylog123.github.io/rising-sun/uploads/...` | Pages 直链返回 `application/pdf`，能被 iframe 内嵌渲染 |
+| 下载 | `https://raw.githubusercontent.com/...` | raw 直链始终最新，不受 Pages 构建缓存影响 |
+
+> **为什么不能直接用 raw 链接预览**：raw.githubusercontent.com 对 PDF 返回
+> `application/octet-stream` 且带 `X-Frame-Options: deny`，浏览器只会下载不会内嵌。
+> GitHub Pages 直链才是 `application/pdf`，所以预览走 Pages、下载走 raw。
+
+**限制与注意**
+
+- 只接受 PDF，单个文件 ≤ 20 MB（`MAX_ATTACHMENT_BYTES`）
+- 需要先配置 PAT（右上角 ⚙ 设置），否则无法上传
+- 删除组会记录或移除附件时，会顺带删掉仓库里的 PDF 文件
+- `uploads/` 随 GitHub Pages 一起发布，**等同公开可访问**，请勿放敏感材料
+- 刚上传完可能预览不到：Pages 重新构建要 1-2 分钟，预览弹窗里有「重新检查」按钮
+
+**多人协作**
+
+组会 JSON 是多人共用的，拉取时不是简单覆盖，而是按 `updatedAt` 合并
+（见 `website/src/lib/merge.ts`）：别人新增的记录不会被你冲掉，你本机刚传好
+附件还没推送成功的改动也不会丢。合并规则有自检脚本：
+
+```bash
+cd website && npm test
 ```
 
 ### `Achievement`（成果）
@@ -263,6 +325,10 @@ git add -A && git commit && git push
 | 数据不对（老的） | 右上角 🔄 清缓存 + 重新拉取 |
 | 老师显示成学生 | 检查 tasks.json 里 member.role 字段（远端已包含） |
 | 看到乱码 | 检查浏览器编码 = UTF-8 |
+| 上传附件报「未配置 PAT」 | 右上角 ⚙ 设置里填 PAT（只需填一次，三个模块共用） |
+| 上传报 404 | 站点会自动改用 Git Data API 建目录重试；若仍失败请刷新页面 |
+| 附件预览显示「Pages 还没发布出来」 | 等待 1-2 分钟，点「重新检查」；或直接点「下载」 |
+| 多人同时编辑导致记录丢失 | 已按 `updatedAt` 合并（`lib/merge.ts`），若仍异常请先「刷新」再改 |
 
 ---
 

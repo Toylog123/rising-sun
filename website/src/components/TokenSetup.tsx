@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Eye, EyeOff, CheckCircle2, AlertCircle, KeyRound, ExternalLink, Shield } from "lucide-react";
 import { useTaskStore } from "@/store/tasks";
 import { testToken } from "@/lib/github";
+import { getSharedToken, setSharedToken, clearSharedToken } from "@/lib/auth";
 
 interface TokenSetupProps {
   open: boolean;
@@ -10,8 +11,6 @@ interface TokenSetupProps {
 
 export default function TokenSetup({ open, onClose }: TokenSetupProps) {
   const storedToken = useTaskStore((s) => s.ghToken);
-  const setToken = useTaskStore((s) => s.setToken);
-  const clearToken = useTaskStore((s) => s.clearToken);
   const pull = useTaskStore((s) => s.pull);
 
   const [value, setValue] = useState("");
@@ -24,7 +23,7 @@ export default function TokenSetup({ open, onClose }: TokenSetupProps) {
   // 打开时初始化输入框
   useEffect(() => {
     if (open) {
-      setValue(storedToken);
+      setValue(getSharedToken() || storedToken);
       setTestResult(null);
       setError("");
       setSaved(false);
@@ -49,7 +48,8 @@ export default function TokenSetup({ open, onClose }: TokenSetupProps) {
       return;
     }
     setError("");
-    setToken(value);
+    // 写入共享 PAT，tasks / meetings / achievements 三个 store 都会收到
+    setSharedToken(value);
     setSaved(true);
     // 保存后自动拉取一次
     setTimeout(() => pull(), 100);
@@ -76,7 +76,7 @@ export default function TokenSetup({ open, onClose }: TokenSetupProps) {
 
   const handleClear = () => {
     if (!confirm("确定清除 PAT？清除后只能只读浏览，无法推送。")) return;
-    clearToken();
+    clearSharedToken();
     setValue("");
     setTestResult(null);
     setSaved(false);
