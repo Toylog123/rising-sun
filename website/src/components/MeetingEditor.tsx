@@ -83,18 +83,19 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
   const handlePickFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const accepted: File[] = [];
+    const rejected: string[] = [];
     for (const f of Array.from(files)) {
       const check = checkFile(f);
       if (check.ok) {
         accepted.push(f);
       } else {
-        setError(check.reason ?? `「${f.name}」无法上传`);
+        rejected.push(check.reason ?? `「${f.name}」无法上传`);
       }
     }
-    if (accepted.length > 0) {
-      setPending((prev) => [...prev, ...accepted]);
-      setError("");
-    }
+    if (accepted.length > 0) setPending((prev) => [...prev, ...accepted]);
+    // 有文件被拒时保留提示文案，别被 setError("") 抹掉
+    if (rejected.length > 0) setError(rejected.join("；"));
+    else setError("");
     // 允许重复选同一个文件
     if (fileInputRef.current) fileInputRef.current.value = "";
   };

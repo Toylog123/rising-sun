@@ -39,6 +39,37 @@ if (!js || !css) {
 // 3. 更新根 index.html 的资产引用（只换 hash，保留手动注入的 SPA 重定向脚本）
 const rootIndexPath = path.join(rootDir, "index.html");
 let html = fs.readFileSync(rootIndexPath, "utf8");
+
+// 记住「当前线上 HTML 引用的那一对产物」。Pages 对 index.html 只缓存约 10 分钟，
+// 期间用户的浏览器还拿着旧 HTML 去请求旧产物 —— 这一对绝对不能被清掉，
+// 否则旧 HTML 拿到 404 → 白屏。
+//
+// 注意：本地 index.html 可能已经比线上更新（还没 push），所以要同时看
+// 「本地这份」、「最近一次提交的那份」和「远端 main 的那份」——
+// 最后一份才是用户此刻真正在用的（HEAD 可能还没推上去）。
+const liveRefs = new Set(
+  [...html.matchAll(/\/rising-sun\/assets\/index-[\w-]+\.(?:js|css)/g)].map((m) =>
+    path.basename(m[0])
+  )
+);
+for (const rev of ["HEAD", "origin/main"]) {
+  try {
+    const committed = spawnSync("git", ["show", `${rev}:index.html`], {
+      cwd: rootDir,
+      encoding: "utf8",
+      shell: process.platform === "win32",
+    });
+    if (committed.status !== 0 || !committed.stdout) continue;
+    for (const m of committed.stdout.matchAll(
+      /\/rising-sun\/assets\/index-[\w-]+\.(?:js|css)/g
+    )) {
+      liveRefs.add(path.basename(m[0]));
+    }
+  } catch {
+    // 拿不到这个版本就跳过，不影响部署
+  }
+}
+
 html = html.replace(/\/rising-sun\/assets\/index-[\w-]+\.js/, `/rising-sun/assets/${js}`);
 html = html.replace(/\/rising-sun\/assets\/index-[\w-]+\.css/, `/rising-sun/assets/${css}`);
 if (!html.includes(`/rising-sun/assets/${js}`) || !html.includes(`/rising-sun/assets/${css}`)) {
@@ -74,9 +105,13 @@ const oldAssets = fs
 fs.copyFileSync(path.join(distAssets, js), path.join(rootAssets, js));
 fs.copyFileSync(path.join(distAssets, css), path.join(rootAssets, css));
 
-// 只清理超出保留窗口的旧产物
+// 只清理超出保留窗口的旧产物，但线上 HTML 正在引用的那一对永远保留
 const expired = oldAssets.slice(KEEP_REVISIONS - 1);
 for (const { f } of expired) {
+  if (liveRefs.has(f)) {
+    console.log(`  保留线上在用的产物 assets/${f}（旧 HTML 缓存窗口）`);
+    continue;
+  }
   fs.rmSync(path.join(rootAssets, f));
   console.log(`  清理过期产物 assets/${f}`);
 }
