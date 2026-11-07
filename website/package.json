@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "node --experimental-strip-types --no-warnings --import ./scripts/alias-loader.mjs src/lib/merge.test.mjs && node --experimental-strip-types --no-warnings --import ./scripts/alias-loader.mjs src/lib/uploads.test.mjs",
-    "deploy": "node scripts/deploy.mjs"
+    "deploy": "node scripts/deploy.mjs",
+    "publish": "node scripts/publish.mjs",
+    "release": "npm run deploy && npm run publish"
   },
   "dependencies": {
     "clsx": "^2.1.1",

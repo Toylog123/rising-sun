@@ -175,6 +175,23 @@ git add -A && git commit && git push
 
 > 脚本只替换 `index.html` 里的资产 hash（保留手动注入的 SPA 重定向脚本），且不会把 sourcemap 部署上去。
 
+**git push 推不上去时的备用通道**
+
+有些网络环境里 git 传输通道连不上 github.com（`fatal: unable to access ... Connection was reset`），
+但 REST API 是通的。这种情况下可以用 Contents API 直接把产物写回仓库：
+
+```bash
+cd website
+npm run publish -- --dry-run    # 先看看会发布哪些文件
+npm run publish                 # 真发布（PAT 来自 GITHUB_PAT / .publish-pat / 交互输入）
+npm run publish -- --prune      # 顺便删掉远端已废弃的旧产物
+```
+
+- PAT 需要 `Contents: Read and write` 权限（和上面「生成 PAT」一节一样）
+- `.publish-pat` 文件已被 `.gitignore` 忽略，不会误提交
+- 发布顺序是「先 assets/ 后 index.html」，避免出现新 HTML 指向还没上传的 JS 的白屏窗口
+- 每个文件都会先比对 git blob sha，没变化就跳过，不会产生无意义的 commit
+
 ### 添加新协作者
 
 1. 仓库所有者：`Settings` → `Collaborators` → `Add people` → 输入组员 GitHub 用户名 → 角色 `Write`

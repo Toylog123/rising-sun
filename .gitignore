@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .vite
 
+# 发布用的 PAT（绝不能进仓库）
+.publish-pat
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
