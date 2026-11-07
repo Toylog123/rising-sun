@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import seed from "@/data/meetings.json";
 import { fetchMeetings, pushMeetings, GitHubApiError, deleteFile, fetchFileSha } from "@/lib/github";
+import { sleep } from "@/lib/uploads";
 import { registerTokenStore, resolveInitialToken } from "@/lib/auth";
 import { mergeMeetings as mergeMeetingsRaw } from "@/lib/merge";
 import type { MeetingAttachment } from "@/lib/uploads";
@@ -208,6 +209,8 @@ export const useMeetingStore = create<MeetingState>()(
             } catch {
               // 附件删除失败不影响主流程（数据记录已经更新）
             }
+            // 官方建议相邻两次 mutative 请求之间至少隔 1 秒，避免二级限速
+            await sleep(1000);
           }
         },
       };

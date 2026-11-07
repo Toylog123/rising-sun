@@ -8,6 +8,7 @@ import {
   uploadAttachment,
   checkFile,
   formatBytes,
+  sleep,
   MAX_ATTACHMENT_BYTES,
   type MeetingAttachment,
 } from "@/lib/uploads";
@@ -129,6 +130,8 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       try {
         for (const f of pending) {
           uploaded.push(await uploadAttachment(f, ghToken, date));
+          // 官方建议相邻两次 mutative 请求之间至少隔 1 秒，避免二级限速
+          if (pending.length > 1) await sleep(1000);
         }
         finalAttachments = [...attachments, ...uploaded];
       } catch (err) {

@@ -6,7 +6,7 @@
  *
  * 运行：node --experimental-strip-types --no-warnings src/lib/uploads.test.mjs
  */
-import { pushBinary, fetchFileSha, pushBinaryViaGitData, GitHubApiError } from "./github.ts";
+import { pushBinary, fetchFileSha, pushBinaryViaGitData, friendlyBinaryError, GitHubApiError } from "./github.ts";
 import {
   pagesUrl,
   rawUrl,
@@ -119,6 +119,25 @@ ok("正常 PDF 通过", checkFile(fakeFile).ok === true);
 ok("formatBytes KB", formatBytes(2048) === "2.0 KB");
 ok("formatBytes MB", formatBytes(5 * 1024 * 1024) === "5.0 MB");
 ok("formatBytes B", formatBytes(500) === "500 B");
+
+console.log("\n错误文案翻译");
+
+// 10) GitHub 的超大请求体错误要翻译成人话
+ok(
+  "Contents API 超大文件 422 被翻译",
+  friendlyBinaryError(422, "Sorry, the file is too large to be processed. Consider creating/updating the file in a local clone and pushing it to GitHub.").includes("压缩 PDF"),
+  friendlyBinaryError(422, "Sorry, the file is too large to be processed.")
+);
+ok(
+  "Blobs API 超大输入 422 被翻译",
+  friendlyBinaryError(422, "Sorry, your input was too large to process. Consider creating the blob in a local clone of the repository and then pushing it to GitHub.").includes("压缩 PDF")
+);
+ok("401 翻译成 PAT 文案", friendlyBinaryError(401, "Bad credentials").includes("PAT"));
+ok("403 限速翻译成中文", friendlyBinaryError(403, "API rate limit exceeded").includes("速率"));
+ok(
+  "422 但不是超大问题时保留原文",
+  friendlyBinaryError(422, "sha does not match") === "sha does not match"
+);
 
 console.log(failed === 0 ? "\n全部通过" : `\n${failed} 项失败`);
 process.exit(failed === 0 ? 0 : 1);

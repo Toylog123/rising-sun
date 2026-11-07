@@ -22,6 +22,15 @@ export const UPLOAD_DIR = "uploads/meetings";
 /** 单个附件上限 20 MB（base64 后约 27 MB，Contents API 可以接受） */
 export const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 
+/**
+ * GitHub 对「写操作」有二级速率限制：短时间大量 mutative 请求会被临时挡下。
+ * 官方最佳实践是「串行发请求，相邻两次之间至少隔一秒」，所以批量上传 /
+ * 批量删除时统一走这个等待。
+ */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export interface MeetingAttachment {
   /** 原始文件名（展示用） */
   name: string;

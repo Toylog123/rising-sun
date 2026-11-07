@@ -224,6 +224,32 @@ function contentsUrl(path: string): string {
 }
 
 /**
+ * 把 GitHub 的原始错误翻译成用户能看懂的话。
+ *
+ * 单独抽出来是为了能直接跑单元测试（见 uploads.test.mjs）。
+ */
+export function friendlyBinaryError(status: number, message: string): string {
+  // 401 一定是 token 的问题，统一说人话（GitHub 默认返回 "Bad credentials"）
+  if (status === 401) return "PAT 无效或已过期，请重新配置";
+  if (status === 403 && (message.toLowerCase().includes("rate limit") || !message)) {
+    return "GitHub API 速率受限，请稍后再试";
+  }
+  if (status === 404 && !message) return "仓库或文件不存在";
+  if (status === 409 && !message) return "冲突：远端有更新，请重试";
+  if (status === 422) {
+    if (!message) return "校验失败：文件过大或内容非法";
+    // GitHub 拒绝超大请求体时的原文（Contents API / Blobs API 各一句）：
+    //   "Sorry, the file is too large to be processed..."
+    //   "Sorry, your input was too large to process..."
+    // 官方没公布具体上限，实测在 ~50 MB 请求体附近（base64 会把体积放大 1/3）。
+    if (message.toLowerCase().includes("too large")) {
+      return "文件太大，GitHub 拒绝了这次上传（单次请求体上限约 50 MB，base64 后体积再涨 1/3）。请压缩 PDF 后重试。";
+    }
+  }
+  return message;
+}
+
+/**
  * 上传一个二进制文件到仓库（Contents API）。
  *
  * 与 ghPut 的区别：ghPut 只接受 JSON 对象（内部 JSON.stringify），
@@ -253,16 +279,7 @@ export async function pushBinary(
   });
   if (!res.ok) {
     const { message: m, resetAt } = await parseGitHubError(res);
-    let msg = m;
-    // 401 一定是 token 的问题，统一说人话（GitHub 默认返回 "Bad credentials"）
-    if (res.status === 401) msg = "PAT 无效或已过期，请重新配置";
-    if (res.status === 403 && (m.toLowerCase().includes("rate limit") || !m)) {
-      msg = "GitHub API 速率受限，请稍后再试";
-    }
-    if (res.status === 404 && !m) msg = "仓库或文件不存在";
-    if (res.status === 409 && !m) msg = "冲突：远端有更新，请重试";
-    if (res.status === 422 && !m) msg = "校验失败：文件过大或内容非法";
-    throw new GitHubApiError(msg, res.status, resetAt);
+    throw new GitHubApiError(friendlyBinaryError(res.status, m), res.status, resetAt);
   }
   const json = await res.json();
   // 大于 1 MB 的文件，响应里的 content 可能不带 sha（只有 raw/object media type 完整）。
@@ -340,7 +357,10 @@ async function gitDataRequest<T>(
   });
   if (!res.ok) {
     const { message, resetAt } = await parseGitHubError(res);
-    throw new GitHubApiError(message || `Git Data API 请求失败 (${res.status})`, res.status, resetAt);
+    // Blobs API 拒绝超大请求体时的原文：'Sorry, your input was too large to
+    // process...'（和 Contents API 的 422 是同一个 ~50 MB 请求体上限）
+    const msg = friendlyBinaryError(res.status, message || `Git Data API 请求失败 (${res.status})`);
+    throw new GitHubApiError(msg, res.status, resetAt);
   }
   return (await res.json()) as T;
 }
@@ -366,75 +386,48 @@ export async function pushBinaryViaGitData(
     { method: "POST", body: { content: base64, encoding: "base64" } }
   );
 
-  // 2) 读当前分支头提交（拿 base_tree）
-  const ref = await gitDataRequest<{ object: { sha: string } }>(
-    `git/ref/heads/${BRANCH}`,
-    token,
-    { method: "GET" }
-  );
-  const headSha = ref.object.sha;
-  const headCommit = await gitDataRequest<{ tree: { sha: string } }>(
-    `git/commits/${headSha}`,
-    token,
-    { method: "GET" }
-  );
-
-  // 3) 在当前树基础上加一个嵌套路径（目录会被自动建出来）
-  const tree = await gitDataRequest<{ sha: string }>("git/trees", token, {
-    method: "POST",
-    body: {
-      base_tree: headCommit.tree.sha,
-      tree: [{ path, mode: "100644", type: "blob", sha: blob.sha }],
-    },
-  });
-
-  // 4) 提交
-  const commit = await gitDataRequest<{ sha: string }>("git/commits", token, {
-    method: "POST",
-    body: { message, tree: tree.sha, parents: [headSha] },
-  });
-
-  // 5) 推进分支指针（不用 force，避免覆盖别人的提交）
-  try {
-    await gitDataRequest(`git/refs/heads/${BRANCH}`, token, {
-      method: "PATCH",
-      body: { sha: commit.sha, force: false },
+  // 2) 读当前分支头 → 建树 → 提交 → 推进分支指针（不用 force）
+  //
+  // 这几步之间不是原子的：期间别人推了新提交的话，这次更新就不是
+  // fast-forward，GitHub 会拒绝（422 "Reference update failed" / 409）。
+  // 这时重读一次 head，重做树和提交再来一遍。
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const ref = await gitDataRequest<{ object: { sha: string } }>(
+      `git/ref/heads/${BRANCH}`,
+      token,
+      { method: "GET" }
+    );
+    const headSha = ref.object.sha;
+    const headCommit = await gitDataRequest<{ tree: { sha: string } }>(
+      `git/commits/${headSha}`,
+      token,
+      { method: "GET" }
+    );
+    const tree = await gitDataRequest<{ sha: string }>("git/trees", token, {
+      method: "POST",
+      body: {
+        base_tree: headCommit.tree.sha,
+        tree: [{ path, mode: "100644", type: "blob", sha: blob.sha }],
+      },
     });
-  } catch (err) {
-    // 422 = 期间有人推了新提交，重读一次 head 再来
-    if (err instanceof GitHubApiError && err.status === 422) {
-      const ref2 = await gitDataRequest<{ object: { sha: string } }>(
-        `git/ref/heads/${BRANCH}`,
-        token,
-        { method: "GET" }
-      );
-      const headSha2 = ref2.object.sha;
-      const headCommit2 = await gitDataRequest<{ tree: { sha: string } }>(
-        `git/commits/${headSha2}`,
-        token,
-        { method: "GET" }
-      );
-      const tree2 = await gitDataRequest<{ sha: string }>("git/trees", token, {
-        method: "POST",
-        body: {
-          base_tree: headCommit2.tree.sha,
-          tree: [{ path, mode: "100644", type: "blob", sha: blob.sha }],
-        },
-      });
-      const commit2 = await gitDataRequest<{ sha: string }>("git/commits", token, {
-        method: "POST",
-        body: { message, tree: tree2.sha, parents: [headSha2] },
-      });
+    const commit = await gitDataRequest<{ sha: string }>("git/commits", token, {
+      method: "POST",
+      body: { message, tree: tree.sha, parents: [headSha] },
+    });
+    try {
       await gitDataRequest(`git/refs/heads/${BRANCH}`, token, {
         method: "PATCH",
-        body: { sha: commit2.sha, force: false },
+        body: { sha: commit.sha, force: false },
       });
-    } else {
-      throw err;
+      return { sha: blob.sha, size: blob.size };
+    } catch (err) {
+      // 422/409 = 期间有人推了新提交 → 重读 head 再来一次
+      const conflict =
+        err instanceof GitHubApiError && (err.status === 422 || err.status === 409);
+      if (!conflict || attempt === 2) throw err;
     }
   }
-
-  return { sha: blob.sha, size: blob.size };
+  throw new GitHubApiError("更新分支失败：远端持续有新提交，请稍后重试", 409);
 }
 
 /** 仅测试 token 是否有效（拉取一次） */
