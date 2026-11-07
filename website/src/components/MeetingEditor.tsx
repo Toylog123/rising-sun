@@ -125,13 +125,15 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
         return;
       }
       setUploading(true);
+      const uploaded: MeetingAttachment[] = [];
       try {
-        const uploaded: MeetingAttachment[] = [];
         for (const f of pending) {
           uploaded.push(await uploadAttachment(f, ghToken, date));
         }
         finalAttachments = [...attachments, ...uploaded];
       } catch (err) {
+        // 中途失败：已传成功的文件没进记录，会变成仓库里的孤儿文件 → 顺手删掉
+        if (uploaded.length > 0) void deleteAttachmentFiles(uploaded);
         setError(err instanceof Error ? err.message : "附件上传失败");
         setUploading(false);
         return;
