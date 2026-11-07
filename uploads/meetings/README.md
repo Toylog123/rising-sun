@@ -9,5 +9,8 @@
 - 在线预览走 GitHub Pages 直链（本目录位于站点根下），
   下载走 raw 直链。
 - 删除组会记录时，网站会顺带删除这里对应的 PDF 文件。
+- 上传走 Contents API 的 `PUT /repos/{owner}/{repo}/contents/{path}`，GitHub 会
+  自动创建缺失的中间目录，所以不需要手工建目录；只有仓库为空或 PAT 权限
+  不对时才会自动改走 Git Data API（自底向上建树）。
 
 本目录下的文件会随 GitHub Pages 一起发布，等同于公开可访问，请勿放置敏感材料。
