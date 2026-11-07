@@ -125,15 +125,14 @@ async function ghPut(
   });
   if (!res.ok) {
     const { message, resetAt } = await parseGitHubError(res);
-    let msg = message;
-    // 401 一定是 token 的问题，统一说人话（GitHub 默认返回 "Bad credentials"）
-    if (res.status === 401) msg = "PAT 无效或已过期，请重新配置";
-    if (res.status === 403 && (message.toLowerCase().includes("rate limit") || (!message || message === `请求失败 (${res.status})`))) {
-      msg = "GitHub API 速率受限，请稍后再试";
-    }
-    if (res.status === 404 && !message) msg = "仓库或文件不存在";
-    if (res.status === 409 && !message) msg = "冲突：远端有更新，将自动重试";
-    if (res.status === 422 && !message) msg = "sha 不匹配，请刷新后重试";
+    // GitHub 有时返回非 JSON 错误体，这时 message 是占位符，按「没有消息」处理
+    const isPlaceholder = !message || message === `请求失败 (${res.status})`;
+    // 401/403 的翻译逻辑与二进制上传共用（GitHub 默认返回 "Bad credentials"）
+    let msg = friendlyBinaryError(res.status, isPlaceholder ? "" : message);
+    // JSON 写入特有的几种情况（sha 不匹配等）说更具体的话
+    if (res.status === 404 && isPlaceholder) msg = "仓库或文件不存在";
+    if (res.status === 409 && isPlaceholder) msg = "冲突：远端有更新，将自动重试";
+    if (res.status === 422 && isPlaceholder) msg = "sha 不匹配，请刷新后重试";
     throw new GitHubApiError(msg, res.status, resetAt);
   }
   const json = await res.json();
@@ -334,7 +333,11 @@ export async function deleteFile(
   });
   if (!res.ok) {
     const { message: m, resetAt } = await parseGitHubError(res);
-    throw new GitHubApiError(m || `删除失败 (${res.status})`, res.status, resetAt);
+    throw new GitHubApiError(
+      friendlyBinaryError(res.status, m) || `删除失败 (${res.status})`,
+      res.status,
+      resetAt
+    );
   }
 }
 
