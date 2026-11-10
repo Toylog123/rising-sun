@@ -148,12 +148,6 @@ export function meetingsToMarkdown(opts: {
       lines.push(m.notes);
       lines.push("");
     }
-    if (m.decisions) {
-      lines.push("### 决议");
-      lines.push("");
-      lines.push(m.decisions);
-      lines.push("");
-    }
     if (m.attachments && m.attachments.length > 0) {
       lines.push("### 汇报材料");
       lines.push("");

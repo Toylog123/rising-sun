@@ -27,7 +27,7 @@ Rising Sun 是一个 2025 年新成立的课题组，专注**芯片设计自动�
 | **任务列表** | `/tasks` | 按成员分组的所有任务（含新增进展、归档、永久删除） |
 | **成员** | `/members` | 课题组所有成员（老师 + 学生），可编辑（简介/职称/研究方向） |
 | **成果** | `/achievements` | 论文 / 专利 / 比赛获奖 三类，分类显示 |
-| **组会** | `/meetings` | 每周组会纪要（日期 / 主讲人 / 议题 / 纪要 / 决议）+ **汇报材料 PDF 上传** + 按主讲人筛选 |
+| **组会** | `/meetings` | 每周组会纪要（日期 / 主讲人 / 议题 / 纪要）+ **汇报材料 PDF 上传** + 按主讲人筛选 |
 | **新建任务** | `/new` | 表单：指导老师 + 协同成员（多选） + 标题 + 创建时间 + 状态 |
 | **归档** | `/archive` | 已完成任务 / 已删除任务（Tab 区分："全部 / 已完成 / 已删除"） |
 
@@ -269,7 +269,7 @@ npm run publish -- --prune      # 顺便删掉远端已废弃的旧产物
 
 ```ts
 {
-  id, date: "YYYY-MM-DD", speaker, topic, notes?, decisions?,
+  id, date: "YYYY-MM-DD", speaker, topic, notes?,
   attachments?: {                  // 汇报材料（PPT 导出的 PDF）
     name: string;                  // 原始文件名（展示用）
     path: string;                  // 仓库路径，如 "uploads/meetings/2026-11-07_a1b2c3_汇报.pdf"

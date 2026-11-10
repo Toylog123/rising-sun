@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download, Paperclip, Eye, AlertCircle } from "lucide-react";
+import { Plus, Pencil, Calendar, Users, FlaskConical, FileText, Download, Paperclip, Eye, AlertCircle } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
 import PdfPreview from "@/components/PdfPreview";
@@ -201,16 +201,6 @@ export default function Meetings() {
                     纪要
                   </div>
                   <CollapsibleText text={m.notes} />
-                </div>
-              )}
-
-              {m.decisions && (
-                <div className="mt-3 pt-3 border-t border-[#f0ece4]">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#9a9590] mb-1">
-                    <CheckCircle2 size={12} />
-                    决议
-                  </div>
-                  <p className="text-sm text-[#4a4540] whitespace-pre-wrap leading-relaxed">{m.decisions}</p>
                 </div>
               )}
 

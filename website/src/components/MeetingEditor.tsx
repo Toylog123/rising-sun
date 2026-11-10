@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Plus, Pencil, AlertCircle, Calendar, User, FileText, CheckCircle2, Paperclip, Upload, Loader2, Trash2 } from "lucide-react";
+import { X, Plus, Pencil, AlertCircle, Calendar, User, FileText, Paperclip, Upload, Loader2, Trash2 } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import { useTaskStore } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
@@ -39,7 +39,6 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
   const [speaker, setSpeaker] = useState("");
   const [topic, setTopic] = useState("");
   const [notes, setNotes] = useState("");
-  const [decisions, setDecisions] = useState("");
   const [error, setError] = useState("");
 
   // 附件：已保存的（来自 initial）+ 本次新选的（待上传）
@@ -55,7 +54,6 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       setSpeaker(initial.speaker);
       setTopic(initial.topic);
       setNotes(initial.notes ?? "");
-      setDecisions(initial.decisions ?? "");
       setAttachments(initial.attachments ?? []);
     } else {
       const today = new Date().toISOString().slice(0, 10);
@@ -63,7 +61,6 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       setSpeaker("");
       setTopic("");
       setNotes("");
-      setDecisions("");
       setAttachments([]);
     }
     setPending([]);
@@ -153,7 +150,6 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       speaker: speaker.trim(),
       topic: topic.trim(),
       notes: notes.trim() || undefined,
-      decisions: decisions.trim() || undefined,
       attachments: finalAttachments.length > 0 ? finalAttachments : undefined,
     };
 
@@ -273,21 +269,6 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="讨论了哪些内容、有什么观点…（两三句话即可，细节留在 PDF 里）"
-              className={areaCls}
-            />
-          </div>
-
-          <div>
-            <label className={label}>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-[#c96442]" />
-                决议（可选）
-              </span>
-            </label>
-            <textarea
-              value={decisions}
-              onChange={(e) => setDecisions(e.target.value)}
-              placeholder="下一步要做什么、何时完成"
               className={areaCls}
             />
           </div>

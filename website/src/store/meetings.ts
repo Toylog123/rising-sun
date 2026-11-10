@@ -13,7 +13,6 @@ export interface Meeting {
   speaker: string;     // 主讲人（学生名 或 老师）
   topic: string;       // 议题/标题
   notes?: string;      // 纪要
-  decisions?: string;  // 决议
   attachments?: MeetingAttachment[];  // 汇报材料（PDF 等）
   updatedAt?: string;  // ISO 时间戳，冲突合并时判断谁更新
 }
@@ -53,7 +52,6 @@ function normalizeMeetings(raw: unknown): Meeting[] {
     speaker: m.speaker ?? "",
     topic: m.topic ?? "",
     notes: m.notes,
-    decisions: m.decisions,
     attachments: Array.isArray(m.attachments)
       ? m.attachments
           .filter((a) => a && typeof a.path === "string" && a.path)
