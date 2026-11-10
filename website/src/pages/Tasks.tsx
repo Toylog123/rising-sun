@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, ListTodo, Users, Plus, Archive, Download } from "lucide-react";
 import { useTaskStore, latestStatus } from "@/store/tasks";
@@ -12,10 +12,18 @@ export default function Tasks() {
   const tasks = allTasks.filter((t) => !t.archived);
   const members = useTaskStore((s) => s.members);
   const advisor = useTaskStore((s) => s.advisor);
+  const syncStatus = useTaskStore((s) => s.syncStatus);
+  const pullNow = useTaskStore((s) => s.pullNow);
   const [params] = useSearchParams();
   const [member, setMember] = useState(params.get("member") || "全部");
   const [statusFilter, setStatusFilter] = useState("全部");
   const [q, setQ] = useState("");
+
+  // 进页面自动拉一次远端（首页之外直接进本页也能拿到最新任务）
+  useEffect(() => {
+    if (syncStatus === "idle") void pullNow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const groups = useMemo(() => {
     // 排除老师（role=teacher）：只让学生出现在成员筛选里

@@ -7,7 +7,7 @@
  *
  * 运行：node src/lib/merge.test.mjs
  */
-import { mergeMeetings } from "./merge.ts";
+import { mergeMeetings, mergeSeedAndStored } from "./merge.ts";
 
 let failed = 0;
 function check(name, actual, expected) {
@@ -100,6 +100,62 @@ check(
   "双方各自新增的记录都保留",
   both.map((x) => x.id).sort(),
   ["mine", "theirs"]
+);
+
+console.log("\nmergeSeedAndStored 自检（浏览器缓存 vs 仓库种子）");
+
+// 9. 缓存是空数组（最早部署时 meetings.json 还是空的）→ 种子必须全部进来
+check(
+  "空缓存不会盖掉种子记录",
+  mergeSeedAndStored([], [m("s1"), m("s2")]).map((x) => x.id),
+  ["s1", "s2"]
+);
+
+// 10. 缓存里有种子没有的记录 → 保留（用户本地新建、还没推送的）
+check(
+  "本地独有的记录被保留",
+  mergeSeedAndStored([m("mine")], [m("s1")]).map((x) => x.id).sort(),
+  ["mine", "s1"]
+);
+
+// 11. 两边都有、种子没有时间戳（老数据）→ 以种子为准
+check(
+  "种子无时间戳时以种子为准",
+  mergeSeedAndStored(
+    [m("x", { topic: "缓存" })],
+    [m("x", { topic: "种子" })]
+  ).map((x) => x.topic),
+  ["种子"]
+);
+
+// 12. 两边都有时间戳 → 取更新的那条
+check(
+  "按 updatedAt 取新的那条",
+  mergeSeedAndStored(
+    [m("x", { topic: "缓存", updatedAt: "2026-11-03T00:00:00.000Z" })],
+    [m("x", { topic: "种子", updatedAt: "2026-11-02T00:00:00.000Z" })]
+  ).map((x) => x.topic),
+  ["缓存"]
+);
+
+// 13. 种子更新 → 缓存旧版本被顶掉
+check(
+  "种子较新时用种子",
+  mergeSeedAndStored(
+    [m("x", { topic: "缓存", updatedAt: "2026-11-02T00:00:00.000Z" })],
+    [m("x", { topic: "种子", updatedAt: "2026-11-03T00:00:00.000Z" })]
+  ).map((x) => x.topic),
+  ["种子"]
+);
+
+// 14. 结果按日期倒序
+check(
+  "结果按日期倒序",
+  mergeSeedAndStored(
+    [m("a", { date: "2026-01-01" })],
+    [m("b", { date: "2026-05-01" }), m("c", { date: "2026-03-01" })]
+  ).map((x) => x.date),
+  ["2026-05-01", "2026-03-01", "2026-01-01"]
 );
 
 console.log(failed === 0 ? "\n全部通过" : `\n${failed} 项失败`);

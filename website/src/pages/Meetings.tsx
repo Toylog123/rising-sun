@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download, Paperclip, Eye } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Download, Paperclip, Eye, AlertCircle } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
 import PdfPreview from "@/components/PdfPreview";
@@ -11,11 +11,19 @@ import { formatBytes, type MeetingAttachment } from "@/lib/uploads";
 export default function Meetings() {
   const meetings = useMeetingStore((s) => s.meetings);
   const pull = useMeetingStore((s) => s.pull);
+  const syncStatus = useMeetingStore((s) => s.syncStatus);
+  const syncError = useMeetingStore((s) => s.syncError);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Meeting | null>(null);
   const [preview, setPreview] = useState<MeetingAttachment | null>(null);
   const [speakerFilter, setSpeakerFilter] = useState<string | null>(null);
+
+  // 进页面自动拉一次远端，保证看到的是仓库里最新的记录
+  useEffect(() => {
+    if (syncStatus === "idle") pull();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sorted = useMemo(
     () => [...meetings].sort((a, b) => b.date.localeCompare(a.date)),
@@ -63,9 +71,10 @@ export default function Meetings() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => pull()}
-            className="rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 transition-colors"
+            disabled={syncStatus === "pulling"}
+            className="rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 transition-colors disabled:opacity-50"
           >
-            刷新
+            {syncStatus === "pulling" ? "刷新中…" : "刷新"}
           </button>
           <button
             onClick={() =>
@@ -89,6 +98,20 @@ export default function Meetings() {
           </button>
         </div>
       </div>
+
+      {/* 同步失败提示：拉不到远端时要说清楚，而不是让页面看起来就是空的 */}
+      {syncError && (
+        <div className="mb-5 rounded-xl border border-[#e8b4a4] bg-[#fdf3ef] px-4 py-3 text-sm text-[#a1452a] flex items-center gap-2 flex-wrap">
+          <AlertCircle size={15} className="shrink-0" />
+          <span className="flex-1">同步失败：{syncError}</span>
+          <button
+            onClick={() => pull()}
+            className="font-medium underline hover:no-underline"
+          >
+            重试
+          </button>
+        </div>
+      )}
 
       {/* 按主讲人筛选：一眼看清谁汇报过几次、传了几份材料 */}
       {speakerStats.length > 0 && (

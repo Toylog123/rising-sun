@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Plus, Pencil, Trash2, BookOpen, Lightbulb, Trophy, Award, ExternalLink,
   Calendar, Users, GraduationCap,
@@ -240,10 +240,17 @@ const CATEGORY_ORDER: AchievementCategory[] = ["论文", "专利", "比赛"];
 export default function Achievements() {
   const achievements = useAchievementStore((s) => s.achievements);
   const pull = useAchievementStore((s) => s.pull);
+  const syncStatus = useAchievementStore((s) => s.syncStatus);
   const removeAchievement = useAchievementStore((s) => s.removeAchievement);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Achievement | null>(null);
+
+  // 进页面自动拉一次远端，保证看到的是仓库里最新的成果
+  useEffect(() => {
+    if (syncStatus === "idle") pull();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 按类别 + 年份倒序
   const grouped = useMemo(() => {

@@ -59,3 +59,35 @@ export function mergeMeetings<T extends MergeableMeeting>(
 
   return merged.sort((a, b) => b.date.localeCompare(a.date));
 }
+
+/**
+ * 把「浏览器缓存里的记录」与「仓库里最新的种子记录」并起来。
+ *
+ * 为什么要这一步：最早部署时 meetings.json 还是空数组，老用户浏览器里
+ * localStorage 的 `rising-sun-meetings-v1` 存下了 `meetings: []`。
+ * zustand 的 persist 会用这份缓存覆盖掉新的种子数据，组会页就一片空白
+ * （用户反馈「组会里面没有看到组会记录」）。种子是仓库里的权威副本，
+ * 应当始终并进来；本地独有的记录（用户自己新建、还没推送的）保留。
+ *
+ * 与 mergeMeetings 的区别：这里两边都有时比较 updatedAt，种子没时间戳
+ * （老数据）视作更旧；mergeMeetings 是「远端没时间戳时以远端为准」。
+ */
+export function mergeSeedAndStored<T extends MergeableMeeting>(
+  stored: T[],
+  seed: T[]
+): T[] {
+  const byId = new Map<string, T>();
+  for (const m of seed) byId.set(m.id, m);
+  for (const m of stored) {
+    const seeded = byId.get(m.id);
+    if (!seeded) {
+      // 本地独有：保留（等下次推送）
+      byId.set(m.id, m);
+      continue;
+    }
+    const st = m.updatedAt ?? "";
+    const xt = seeded.updatedAt ?? "";
+    byId.set(m.id, st > xt ? m : seeded);
+  }
+  return Array.from(byId.values()).sort((a, b) => b.date.localeCompare(a.date));
+}

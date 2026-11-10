@@ -4,7 +4,7 @@ import seed from "@/data/meetings.json";
 import { fetchMeetings, pushMeetings, GitHubApiError, deleteFile, fetchFileSha } from "@/lib/github";
 import { sleep } from "@/lib/uploads";
 import { registerTokenStore, resolveInitialToken } from "@/lib/auth";
-import { mergeMeetings as mergeMeetingsRaw } from "@/lib/merge";
+import { mergeMeetings as mergeMeetingsRaw, mergeSeedAndStored } from "@/lib/merge";
 import type { MeetingAttachment } from "@/lib/uploads";
 
 export interface Meeting {
@@ -222,6 +222,17 @@ export const useMeetingStore = create<MeetingState>()(
         ghToken: state.ghToken,
         remoteSha: state.remoteSha,
       }),
+      // 关键：不要用旧缓存整体覆盖状态，而是把缓存里的记录与仓库种子合并。
+      // 老用户缓存里存的是最早的空数组，直接覆盖会让组会页一直是空的。
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<MeetingState>;
+        const storedMeetings = Array.isArray(p.meetings) ? (p.meetings as Meeting[]) : [];
+        return {
+          ...current,
+          ...p,
+          meetings: mergeSeedAndStored(storedMeetings, seedMeetings),
+        };
+      },
       onRehydrateStorage: () => (state) => {
         // 老用户的 token 可能只存在于 tasks store，这里补齐
         if (state) {
