@@ -9,8 +9,8 @@
       "decisions": "P0：确认 WNS/TNS 改善率与「违例清零」的统计口径；引用该工作时必须一并说明五条局限。\nP1（设想，未实施）：先用跨阶段时序指标筛出候选违例区域，再交给重综合做补丁，可能比全网表切割省算力。",
       "attachments": [
         {
-          "name": "RSECO_论文汇报.pdf",
-          "path": "uploads/meetings/2026-11-06_g64sqa_RSECO_论文汇报.pdf",
+          "name": "佟亚龙_RSECO：基于重综合的掩膜前时序ECO框架.pdf",
+          "path": "uploads/meetings/2026-11-06_g64sqa_佟亚龙_RSECO：基于重综合的掩膜前时序ECO框架.pdf",
           "size": 2567712,
           "sha": "be0dc7cc4f0c8d11621af7f0fe851a60ae8a444c",
           "uploadedAt": "2026-11-09T13:45:00.000Z"
@@ -27,8 +27,8 @@
       "decisions": "P0：明确开题定位（做 SEU 加固新方法，还是 ZACHO 框架下的工程化评测），并定技术底座（DMBF 与 ZACHO 尚未二选一）；评测口径先定死 —— 报「约束违例率」与「真实满足面积约束时的 SER」。\nP1：指标集定为 SER 降幅、面积/功耗开销、约束违例率、Pareto HV、加固效率与推理加速，基线含随机/贪心/DMBF/ZACHO 公开结果；把布局侧的跨阶段指标筛选思路迁到加固选择。风险：合成与真实电路分布差异。",
       "attachments": [
         {
-          "name": "SEU故障分析与加固优化汇报-1024_谢俊杰.pdf",
-          "path": "uploads/meetings/2026-10-30_4wdekw_SEU故障分析与加固优化汇报-1024_谢俊杰.pdf",
+          "name": "谢俊杰_SEU故障分析与加固优化：DMBF与ZACHO.pdf",
+          "path": "uploads/meetings/2026-10-30_4wdekw_谢俊杰_SEU故障分析与加固优化：DMBF与ZACHO.pdf",
           "size": 2622709,
           "sha": "bb1e716fd23185b2afd57fd8973e9672bd6fe41d",
           "uploadedAt": "2026-11-09T14:05:00.000Z"
@@ -45,8 +45,8 @@
       "decisions": "P0 主线：候选生成 → 跨阶段指标筛选 → 统一后端验证；待验证假设为跨阶段筛选能否提高单位评价预算下的时序质量。\nP1：数据不足、搜索成本、跨阶段目标失配三者中优先解决哪一个。\n评审注意：引用各论文数值须核对五类口径。",
       "attachments": [
         {
-          "name": "宏单元布局.pdf",
-          "path": "uploads/meetings/2026-10-23_37ubxm_宏单元布局.pdf",
+          "name": "肖睿颿_学习驱动的宏单元布局：六篇论文的搜索、迁移与跨阶段优化.pdf",
+          "path": "uploads/meetings/2026-10-23_37ubxm_肖睿颿_学习驱动的宏单元布局：六篇论文的搜索、迁移与跨阶段优化.pdf",
           "size": 1210170,
           "sha": "2e38079fb0268af0b968f4bbf92ad2e684f2e35f",
           "uploadedAt": "2026-11-09T13:45:00.000Z"
@@ -63,8 +63,8 @@
       "decisions": "P0：① 合成数据 + 专家数据混合（FlowPlace 走合成、EIM 走专家，同期同门却无交集，是天然接缝）；② 硬约束「投影 vs 梯度引导」两条路线在同一 benchmark 上公平对比。\nP1：③ 预训练表征当生成 backbone；④ 把「学权重调度」搬到布局阶段；⑤ 建多任务后端评测基准。",
       "attachments": [
         {
-          "name": "2026.10.16-组会汇报.pdf",
-          "path": "uploads/meetings/2026-10-16_45li8w_2026.10.16-组会汇报.pdf",
+          "name": "周雨时_AI4EDA六篇论文综述：数据集构建方法.pdf",
+          "path": "uploads/meetings/2026-10-16_45li8w_周雨时_AI4EDA六篇论文综述：数据集构建方法.pdf",
           "size": 3209183,
           "sha": "6c6c29ef9512a24c466357958ba66d99136df076",
           "uploadedAt": "2026-11-09T10:38:00.000Z"

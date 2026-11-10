@@ -13,6 +13,9 @@ import {
   formatBytes,
   sanitizeFileName,
   buildUploadPath,
+  buildAttachmentName,
+  shortenForFileName,
+  ATTACHMENT_NAME_MAX,
   checkFile,
   UPLOAD_DIR,
   MAX_ATTACHMENT_BYTES,
@@ -101,13 +104,47 @@ ok("sanitizeFileName 保留中文", sanitizeFileName("组会汇报.pdf") === "�
 ok("sanitizeFileName 去掉斜杠", sanitizeFileName("a/b:c.pdf") === "a_b_c.pdf");
 ok("sanitizeFileName 空名兜底", sanitizeFileName("   ") === "attachment.pdf");
 
-// 7) 上传路径：日期 + 随机后缀 + 原名，且落在 uploads/meetings 下
+// 7) 上传路径：日期 + 随机后缀 + 统一命名，且落在 uploads/meetings 下
 const fakeFile = { name: "汇报.pdf", size: 1024, type: "application/pdf" };
-const p = buildUploadPath(fakeFile, "2026-11-07");
+const p = buildUploadPath("周雨时_AI4EDA综述.pdf", "2026-11-07");
 ok("上传路径落在 uploads/meetings 下", p.startsWith(`${UPLOAD_DIR}/`), p);
 ok("上传路径带日期", p.includes("2026-11-07"), p);
-ok("上传路径带随机后缀（不同调用不重名）", p !== buildUploadPath(fakeFile, "2026-11-07"));
-ok("上传路径保留原文件名", p.endsWith("_汇报.pdf"), p);
+ok("上传路径带随机后缀（不同调用不重名）", p !== buildUploadPath("周雨时_AI4EDA综述.pdf", "2026-11-07"));
+ok("上传路径保留统一命名", p.endsWith("_周雨时_AI4EDA综述.pdf"), p);
+
+// 7b) 统一命名规范：姓名_汇报内容.pdf
+ok(
+  "统一命名为 姓名_汇报内容.pdf",
+  buildAttachmentName("周雨时", "AI4EDA 六篇论文综述：数据集构建方法") ===
+    "周雨时_AI4EDA六篇论文综述：数据集构建方法.pdf",
+  buildAttachmentName("周雨时", "AI4EDA 六篇论文综述：数据集构建方法")
+);
+ok(
+  "命名去掉标题里的空格",
+  buildAttachmentName("谢俊杰", "SEU 故障分析与加固优化") === "谢俊杰_SEU故障分析与加固优化.pdf",
+  buildAttachmentName("谢俊杰", "SEU 故障分析与加固优化")
+);
+ok(
+  "汇报内容过长时整体长度受限",
+  buildAttachmentName("佟亚龙", "RSECO：基于重综合的掩膜前时序 ECO 框架与实验结果分析").length <=
+    "佟亚龙_".length + ATTACHMENT_NAME_MAX + ".pdf".length,
+  buildAttachmentName("佟亚龙", "RSECO：基于重综合的掩膜前时序 ECO 框架与实验结果分析")
+);
+ok(
+  "汇报内容过长时优先在分隔符处断开",
+  shortenForFileName("学习驱动的宏单元布局：六篇论文的搜索、迁移与跨阶段优化", 20) ===
+    "学习驱动的宏单元布局：六篇论文的搜索",
+  shortenForFileName("学习驱动的宏单元布局：六篇论文的搜索、迁移与跨阶段优化", 20)
+);
+ok(
+  "截断后不会留下悬挂的连接词",
+  !/[与和的及或]$/.test(shortenForFileName("宏单元布局与布线优化", 8)),
+  shortenForFileName("宏单元布局与布线优化", 8)
+);
+ok("空姓名有兜底", buildAttachmentName("", "某个议题") === "汇报人_某个议题.pdf");
+ok("空议题有兜底", buildAttachmentName("周雨时", "") === "周雨时_组会汇报.pdf");
+ok("危险字符被清掉", !/[/:*?"<>|]/.test(buildAttachmentName("周/雨时", "a:b*c?d")), buildAttachmentName("周/雨时", "a:b*c?d"));
+ok("shortenForFileName 不超上限", shortenForFileName("一二三四五六七八九十", 5).length <= 5);
 
 // 8) 校验规则
 ok("非 PDF 被拒", checkFile({ name: "a.pptx", size: 10, type: "" }).ok === false);

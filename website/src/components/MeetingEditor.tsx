@@ -8,6 +8,7 @@ import {
   uploadAttachment,
   checkFile,
   formatBytes,
+  buildAttachmentName,
   sleep,
   MAX_ATTACHMENT_BYTES,
   type MeetingAttachment,
@@ -130,7 +131,9 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       const uploaded: MeetingAttachment[] = [];
       try {
         for (const f of pending) {
-          uploaded.push(await uploadAttachment(f, ghToken, date));
+          uploaded.push(
+            await uploadAttachment(f, ghToken, date, speaker.trim(), topic.trim())
+          );
           // 官方建议相邻两次 mutative 请求之间至少隔 1 秒，避免二级限速
           if (pending.length > 1) await sleep(1000);
         }
@@ -318,6 +321,9 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
             <p className="mt-1.5 text-xs text-[#9a9590]">
               单个文件不超过 {formatBytes(MAX_ATTACHMENT_BYTES)}，保存时会连同记录一起推到 GitHub
             </p>
+            <p className="mt-1 text-xs text-[#9a9590]">
+              命名规范：{buildAttachmentName(speaker.trim(), topic.trim())}
+            </p>
 
             {attachments.length > 0 && (
               <ul className="mt-2.5 space-y-1.5">
@@ -352,7 +358,9 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
                     className="flex items-center gap-2 rounded-xl border border-[#c96442]/25 bg-[#faf9f5] px-3 py-2"
                   >
                     <FileText size={14} className="text-[#c96442] shrink-0" />
-                    <span className="text-sm text-[#1a1a1a] truncate flex-1">{f.name}</span>
+                    <span className="text-sm text-[#1a1a1a] truncate flex-1">
+                      {buildAttachmentName(speaker.trim(), topic.trim())}
+                    </span>
                     <span className="text-xs text-[#9a9590] shrink-0">{formatBytes(f.size)}</span>
                     <span className="shrink-0 text-xs text-[#c96442]">待上传</span>
                     <button
