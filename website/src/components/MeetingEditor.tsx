@@ -257,16 +257,19 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           </div>
 
           <div>
-            <label className={label}>
+            <label className={`${label} flex items-center gap-2`}>
               <span className="inline-flex items-center gap-1.5">
                 <FileText size={14} className="text-[#c96442]" />
                 纪要（可选）
+              </span>
+              <span className="ml-auto text-xs font-normal text-[#9a9590]">
+                简要写：做了什么、关键结论
               </span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="讨论了哪些内容、有什么观点…"
+              placeholder="讨论了哪些内容、有什么观点…（两三句话即可，细节留在 PDF 里）"
               className={areaCls}
             />
           </div>

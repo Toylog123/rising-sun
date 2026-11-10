@@ -3,6 +3,7 @@ import { Plus, Pencil, Calendar, Users, FlaskConical, CheckCircle2, FileText, Do
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
 import PdfPreview from "@/components/PdfPreview";
+import CollapsibleText from "@/components/CollapsibleText";
 import { downloadText, timestamp, meetingsToMarkdown } from "@/lib/download";
 import { formatBytes, type MeetingAttachment } from "@/lib/uploads";
 
@@ -199,7 +200,7 @@ export default function Meetings() {
                     <FileText size={12} />
                     纪要
                   </div>
-                  <p className="text-sm text-[#4a4540] whitespace-pre-wrap leading-relaxed">{m.notes}</p>
+                  <CollapsibleText text={m.notes} />
                 </div>
               )}
 
