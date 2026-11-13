@@ -1,0 +1,1136 @@
+/**
+ * 刊会主数据（单一来源）。
+ *
+ * 用途：选刊手册页面、成果录入的刊会选择器、以及毕业要求等级推导，
+ * 都从这一份数据来，避免三处各写一份导致对不上。
+ *
+ * 数据口径（2026-11 整理）：
+ *   - ccf   ：CCF《推荐国际学术会议和期刊目录》，取自 ccf.org.cn 十个领域页面的
+ *             全量 644 条逐条比对。**只收计算机方向**，纯电路/器件类期刊会议
+ *             （JSSC、TED、ISSCC、CICC 等）本就不在其中，不是"漏收"，因此这类
+ *             条目 ccf 留空，不代表水平低。
+ *   - cas   ：中科院文献情报中心期刊分区表（升级版）大类分区；会议无分区。
+ *   - ccfTj ：CCF《计算领域高质量科技期刊分级目录》（2025），只收国内刊。
+ *   - csee  ：中国电子学会《电子技术、通信技术领域高质量科技期刊分级目录》，
+ *             只收国内有 CN 号的期刊。
+ *   查不到的一律留空，页面显示「未知」，不做推测。
+ */
+
+export type VenueKind = "期刊" | "会议";
+
+/** 研究方向标签：选刊时先看这个对不对口 */
+export const FIELD_TAGS = [
+  "EDA/物理设计",
+  "体系结构",
+  "FPGA/可重构",
+  "电路与系统",
+  "器件与工艺",
+  "测试与可靠性",
+  "辐射效应",
+  "AI for EDA",
+  "综合/交叉",
+] as const;
+export type FieldTag = (typeof FIELD_TAGS)[number];
+
+export interface VenueRow {
+  /** 常用简称（唯一键） */
+  abbr: string;
+  /** 全称 */
+  name: string;
+  kind: VenueKind;
+  /** 研究方向标签 */
+  fields: FieldTag[];
+  /** CCF 推荐目录等级；"" = 不在 CCF 目录（不是水平判断） */
+  ccf?: "A" | "B" | "C" | "";
+  /** CCF 所属领域 */
+  ccfDomain?: string;
+  /** 中科院大类分区："1区".."4区"；"" = 未知 / 不适用（会议） */
+  cas?: string;
+  /** 中科院 Top 期刊 */
+  casTop?: boolean;
+  /** 中国电子学会分级 T1/T2/T3；"" = 不在该目录 */
+  csee?: string;
+  /** CCF《计算领域高质量科技期刊分级目录》T1/T2/T3（仅国内刊） */
+  ccfTj?: string;
+  /** 最新影响因子（JCR）；未核实留空 */
+  impact?: number;
+  /** 期刊 ISSN */
+  issn?: string;
+  /** 学院原文「一类目录」13 本之一 */
+  tier1?: boolean;
+  /** 学院原文点名的条目（如集成电路学科单列 NSREC） */
+  namedInDoc?: boolean;
+  /** 一句话说明：收什么、为什么相关 */
+  note: string;
+}
+
+export const CCF_DOMAIN_ARCH = "计算机体系结构/并行与分布计算/存储系统";
+export const CCF_DOMAIN_CROSS = "交叉/综合/新兴";
+export const CCF_DOMAIN_AI = "人工智能";
+export const CCF_DOMAIN_SE = "软件工程/系统软件/程序设计语言";
+export const CCF_DOMAIN_DB = "数据库/数据挖掘/内容检索";
+export const CCF_DOMAIN_TCS = "计算机科学理论";
+export const CCF_DOMAIN_CG = "计算机图形学与多媒体";
+
+/** 天然子刊 */
+const NATURE_KIDS: VenueRow[] = [
+  {
+    abbr: "npj Comput. Mater.",
+    name: "npj Computational Materials",
+    kind: "期刊",
+    fields: ["器件与工艺", "AI for EDA"],
+    ccf: "",
+    note: "计算材料子刊，工艺-器件协同建模可用；开放获取，版面费较高。",
+  },
+  {
+    abbr: "Commun. Eng.",
+    name: "Communications Engineering",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    note: "Nature Portfolio 工程子刊，工程系统级成果的开放获取渠道。",
+  },
+  {
+    abbr: "Sci. Rep.",
+    name: "Scientific Reports",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    note: "开放获取大类刊，门槛低于子刊，注意学院是否认可与预警名单。",
+  },
+  {
+    abbr: "Chip",
+    name: "Chip",
+    kind: "期刊",
+    fields: ["器件与工艺", "电路与系统"],
+    ccf: "",
+    note: "国内主办、国际发行的芯片类期刊，覆盖器件到系统。",
+  },
+];
+
+/** 器件与工艺补充 */
+const DEVICE_JOURNALS: VenueRow[] = [
+  {
+    abbr: "JEDS",
+    name: "IEEE Journal of the Electron Devices Society",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    issn: "2168-6734",
+    note: "开放获取的电子器件期刊，审稿较快，适合器件建模类结果。",
+  },
+  {
+    abbr: "SST",
+    name: "Semiconductor Science and Technology",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    note: "IOP 出版的半导体科学与技术期刊。",
+  },
+  {
+    abbr: "JSSC",
+    name: "IEEE Journal of Solid-State Circuits",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    issn: "0018-9200",
+    casTop: true,
+    note: "★集成电路设计第一期刊，必须流片实测。EDA 算法类论文不匹配。注意它不在 CCF 目录里。",
+  },
+  {
+    abbr: "SSC-L",
+    name: "IEEE Solid-State Circuits Letters",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    issn: "2573-9603",
+    note: "JSSC 的短文姊妹刊，快速发表单点电路创新，同样要求流片。",
+  },
+  {
+    abbr: "TCAS-I",
+    name: "IEEE Transactions on Circuits and Systems I: Regular Papers",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    issn: "1549-8328",
+    note: "电路与系统主力期刊。CCF 目录把它归在体系结构领域、是 C 类；认定时两个口径要分清。",
+  },
+  {
+    abbr: "TCAS-II",
+    name: "IEEE Transactions on Circuits and Systems II: Express Briefs",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    issn: "1549-7747",
+    note: "TCAS-I 的短文版，周期短，适合快速发表电路级成果。不在 CCF 目录。",
+  },
+  {
+    abbr: "TED",
+    name: "IEEE Transactions on Electron Devices",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    issn: "0018-9383",
+    note: "器件物理与建模的主流期刊，器件-电路协同设计方向可用。不在 CCF 目录。",
+  },
+  {
+    abbr: "EDL",
+    name: "IEEE Electron Device Letters",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    issn: "0741-3106",
+    note: "器件快报，篇幅短、审稿快，适合新器件单点结果。",
+  },
+  {
+    abbr: "TPEL",
+    name: "IEEE Transactions on Power Electronics",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    issn: "0885-8993",
+    casTop: true,
+    note: "电力电子方向，与数字 EDA 关联较弱，仅在涉及电源管理电路时相关。",
+  },
+];
+
+/** 可靠性 / 辐射效应补充（本组谢俊杰方向） */
+const RELIABILITY_JOURNALS: VenueRow[] = [
+  {
+    abbr: "TNS",
+    name: "IEEE Transactions on Nuclear Science",
+    kind: "期刊",
+    fields: ["辐射效应", "测试与可靠性"],
+    ccf: "",
+    issn: "0018-9499",
+    note: "★核与空间辐射效应方向的核心期刊，与 NSREC 会议配套；SEU、单粒子效应、加固设计的主出口。",
+  },
+  {
+    abbr: "TDMR",
+    name: "IEEE Transactions on Device and Materials Reliability",
+    kind: "期刊",
+    fields: ["测试与可靠性", "辐射效应"],
+    ccf: "",
+    issn: "1530-4388",
+    note: "器件与材料可靠性，老化、失效机理与可靠性设计。",
+  },
+  {
+    abbr: "TSM",
+    name: "IEEE Transactions on Semiconductor Manufacturing",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    issn: "0894-6507",
+    note: "半导体制造与良率，涉及工艺变异建模时可用。",
+  },
+  {
+    abbr: "TR",
+    name: "IEEE Transactions on Reliability",
+    kind: "期刊",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_CROSS,
+    note: "可靠性工程期刊（CCF 交叉/综合/新兴 C 类），偏系统可靠性统计与建模。",
+  },
+];
+
+/** 微电子/器件与电路补充 */
+const MICRO_JOURNALS: VenueRow[] = [
+  {
+    abbr: "IEEE Access",
+    name: "IEEE Access",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    note: "开放获取大类刊，审稿快但口碑一般，注意学院是否认可与预警名单。",
+  },
+  {
+    abbr: "Microelectron. J.",
+    name: "Microelectronics Journal",
+    kind: "期刊",
+    fields: ["电路与系统", "器件与工艺"],
+    ccf: "",
+    note: "微电子综合期刊，周期较短，适合阶段性成果。",
+  },
+  {
+    abbr: "AICSP",
+    name: "Analog Integrated Circuits and Signal Processing",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "模拟集成电路与信号处理。",
+  },
+  {
+    abbr: "IET CDT",
+    name: "IET Circuits, Devices & Systems",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "IET 系列电路与器件期刊，门槛适中。",
+  },
+  {
+    abbr: "AEÜ",
+    name: "AEÜ - International Journal of Electronics and Communications",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "电子与通信综合期刊，审稿周期较短。",
+  },
+  {
+    abbr: "EL",
+    name: "Electronics Letters",
+    kind: "期刊",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "IET 快报类期刊，篇幅极短（2-3 页），适合快速占位。",
+  },
+];
+
+/** 体系结构补充 */
+const ARCH_EXTRA: VenueRow[] = [
+  {
+    abbr: "CAL",
+    name: "IEEE Computer Architecture Letters",
+    kind: "期刊",
+    fields: ["体系结构"],
+    ccf: "",
+    issn: "1556-6056",
+    note: "体系结构短报文刊，篇幅 4-5 页，适合快速发表单点架构创新。",
+  },
+  {
+    abbr: "TACO",
+    name: "ACM Transactions on Architecture and Code Optimization",
+    kind: "期刊",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    issn: "1544-3566",
+    note: "体系结构与编译优化交叉期刊。注意它在 CCF 目录里是 A 类。",
+  },
+  {
+    abbr: "JSA",
+    name: "Journal of Systems Architecture: Embedded Software Design",
+    kind: "期刊",
+    fields: ["体系结构"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "系统架构与嵌入式软件设计，CCF B 类。",
+  },
+  {
+    abbr: "FMSD",
+    name: "Formal Methods in System Design",
+    kind: "期刊",
+    fields: ["EDA/物理设计", "测试与可靠性"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_TCS,
+    note: "形式化方法与系统设计，等价性检查（CEC）方向的对口期刊。",
+  },
+  {
+    abbr: "CAD",
+    name: "Computer-Aided Design",
+    kind: "期刊",
+    fields: ["EDA/物理设计"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_CG,
+    note: "Elsevier 的 CAD 期刊（CCF 图形学与多媒体领域 B 类），几何建模与几何算法方向可用。",
+  },
+  {
+    abbr: "FITEE",
+    name: "Frontiers of Information Technology & Electronic Engineering",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_CROSS,
+    note: "国内主办英文刊（浙大），CCF 交叉/综合/新兴 C 类。",
+  },
+  {
+    abbr: "JCST",
+    name: "Journal of Computer Science and Technology",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_CROSS,
+    note: "国内主办英文刊（中科院计算所），CCF 交叉/综合/新兴 B 类。",
+  },
+  {
+    abbr: "FCS",
+    name: "Frontiers of Computer Science",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_CROSS,
+    note: "国内主办英文刊（高教社），CCF 交叉/综合/新兴 B 类。",
+  },
+];
+
+/** 中文期刊（CCF 计算领域高质量科技期刊分级目录 + CSCD/EI） */
+const CN_JOURNALS: VenueRow[] = [
+  {
+    abbr: "电子学报",
+    name: "电子学报（Acta Electronica Sinica）",
+    kind: "期刊",
+    fields: ["综合/交叉", "电路与系统"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "★国内电子领域旗舰期刊，CCF 计算领域 T1，EI/CSCD 收录。",
+  },
+  {
+    abbr: "中国科学:信息",
+    name: "中国科学：信息科学（Scientia Sinica Informationis）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "★国内信息科学综合顶刊，CCF 计算领域 T1。注意英文版 SCIS 是 CCF A 类，中文版不是同一套口径。",
+  },
+  {
+    abbr: "电子与信息学报",
+    name: "电子与信息学报（Journal of Electronics & Information Technology）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "国内电子信息领域主流期刊，CCF 计算领域 T1，EI/CSCD 收录。",
+  },
+  {
+    abbr: "通信学报",
+    name: "通信学报（Journal on Communications）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "通信方向国内主力期刊，CCF 计算领域 T1。",
+  },
+  {
+    abbr: "计算机学报",
+    name: "计算机学报（Chinese Journal of Computers）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "计算机方向国内旗舰期刊，CCF 计算领域 T1。",
+  },
+  {
+    abbr: "软件学报",
+    name: "软件学报（Journal of Software）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "软件与系统方向国内旗舰期刊，CCF 计算领域 T1。",
+  },
+  {
+    abbr: "计算机研究与发展",
+    name: "计算机研究与发展（Journal of Computer Research and Development）",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "计算机方向国内主力期刊，CCF 计算领域 T1。",
+  },
+  {
+    abbr: "自动化学报",
+    name: "自动化学报（Acta Automatica Sinica）",
+    kind: "期刊",
+    fields: ["AI for EDA", "综合/交叉"],
+    ccf: "",
+    ccfTj: "T1",
+    note: "自动化与 AI 方向国内旗舰期刊，CCF 计算领域 T1。",
+  },
+  {
+    abbr: "半导体学报",
+    name: "Journal of Semiconductors（半导体学报）",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    issn: "1674-4926",
+    note: "半导体器件与工艺方向国内英文刊，中科院半导体所主办。",
+  },
+  {
+    abbr: "国防科技大学学报",
+    name: "国防科技大学学报",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    note: "本校学报。集成电路学科硕士公开评阅①里明确列了「《国防科技大学学报》1 篇」，是校内认定的快捷通道。",
+  },
+  {
+    abbr: "微电子学",
+    name: "微电子学",
+    kind: "期刊",
+    fields: ["电路与系统", "器件与工艺"],
+    ccf: "",
+    note: "国内微电子方向期刊，CSCD 收录，周期较短。",
+  },
+  {
+    abbr: "固体电子学研究与进展",
+    name: "固体电子学研究与进展（Research & Progress of SSE）",
+    kind: "期刊",
+    fields: ["器件与工艺"],
+    ccf: "",
+    note: "国内固体电子学方向期刊，CSCD 收录。",
+  },
+  {
+    abbr: "集成电路与嵌入式系统",
+    name: "集成电路与嵌入式系统",
+    kind: "期刊",
+    fields: ["电路与系统", "体系结构"],
+    ccf: "",
+    ccfTj: "T3",
+    note: "国内集成电路与嵌入式方向期刊，CCF 计算领域 T3。",
+  },
+  {
+    abbr: "NSR",
+    name: "National Science Review",
+    kind: "期刊",
+    fields: ["综合/交叉"],
+    ccf: "",
+    casTop: true,
+    note: "★国内综合类顶刊（中科院 1 区 Top），芯片与器件方向有新意的工作可尝试。",
+  },
+  {
+    abbr: "SCIS",
+    name: "Science China Information Sciences",
+    kind: "期刊",
+    fields: ["综合/交叉", "体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_CROSS,
+    issn: "1674-733X",
+    note: "★国内英文信息科学顶刊，CCF 交叉/综合/新兴 A 类——是国内刊体系里唯一进 ABC 目录的。",
+  },
+];
+
+/** 会议 */
+const CONFERENCES: VenueRow[] = [
+  {
+    abbr: "DAC",
+    name: "ACM/IEEE Design Automation Conference",
+    kind: "会议",
+    fields: ["EDA/物理设计", "AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "★EDA 领域唯一 CCF A 类会议，本组布局、ECO、时序方向的最高档目标。",
+  },
+  {
+    abbr: "ICCAD",
+    name: "IEEE/ACM International Conference on Computer-Aided Design",
+    kind: "会议",
+    fields: ["EDA/物理设计", "AI for EDA"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "★EDA 方法论主战场，物理设计、逻辑综合的经典投稿点。CCF 官方目录中为 B 类（不是 A）。",
+  },
+  {
+    abbr: "DATE",
+    name: "Design, Automation & Test in Europe",
+    kind: "会议",
+    fields: ["EDA/物理设计", "测试与可靠性"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "欧洲 EDA 综合会议，投稿时间点与 DAC 错开，可并行准备。",
+  },
+  {
+    abbr: "ASP-DAC",
+    name: "Asia and South Pacific Design Automation Conference",
+    kind: "会议",
+    fields: ["EDA/物理设计"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "亚太 EDA 会议，地点近、门槛相对低，适合先积累一篇。",
+  },
+  {
+    abbr: "ISPD",
+    name: "International Symposium on Physical Design",
+    kind: "会议",
+    fields: ["EDA/物理设计"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "★物理设计专会，规模小、方向极对口，布局布线议题集中。",
+  },
+  {
+    abbr: "GLSVLSI",
+    name: "ACM Great Lakes Symposium on VLSI",
+    kind: "会议",
+    fields: ["EDA/物理设计", "电路与系统"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "VLSI 设计综合会议，规模中等，可作为中间成果出口。",
+  },
+  {
+    abbr: "ISQED",
+    name: "International Symposium on Quality Electronic Design",
+    kind: "会议",
+    fields: ["测试与可靠性", "EDA/物理设计"],
+    ccf: "",
+    note: "电子设计质量与可靠性会议，不在 CCF 目录，但方向对口、门槛较低。",
+  },
+  {
+    abbr: "ICCD",
+    name: "IEEE International Conference on Computer Design",
+    kind: "会议",
+    fields: ["体系结构", "EDA/物理设计"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "计算机设计会议，覆盖架构、VLSI 设计与 CAD 方法。",
+  },
+  {
+    abbr: "ASPLOS",
+    name: "ACM ASPLOS (Architectural Support for Programming Languages and Operating Systems)",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "体系结构四大顶会之一，偏软硬件协同，离 EDA 较远。",
+  },
+  {
+    abbr: "ISCA",
+    name: "ACM/IEEE International Symposium on Computer Architecture",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "体系结构第一会议，适合加速器、存算一体方向。",
+  },
+  {
+    abbr: "MICRO",
+    name: "IEEE/ACM International Symposium on Microarchitecture",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "微架构顶会，偏实现细节与实测。",
+  },
+  {
+    abbr: "HPCA",
+    name: "IEEE International Symposium on High-Performance Computer Architecture",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "高性能体系结构顶会。",
+  },
+  {
+    abbr: "PPoPP",
+    name: "ACM SIGPLAN Symposium on Principles & Practice of Parallel Programming",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "并行编程原理与实践，CCF A 类会议。",
+  },
+  {
+    abbr: "HOT CHIPS",
+    name: "Hot Chips: A Symposium on High Performance Chips",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "高性能芯片研讨会（CCF B 类），以工业界芯片发布为主，学术投稿机会有限。",
+  },
+  {
+    abbr: "FPGA",
+    name: "ACM/SIGDA International Symposium on Field-Programmable Gate Arrays",
+    kind: "会议",
+    fields: ["FPGA/可重构"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "★FPGA 方向第一会议，架构、CAD 与工具链议题都有。",
+  },
+  {
+    abbr: "FPL",
+    name: "International Conference on Field-Programmable Logic and Applications",
+    kind: "会议",
+    fields: ["FPGA/可重构"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "欧洲 FPGA 会议，覆盖可重构应用与设计方法。",
+  },
+  {
+    abbr: "FCCM",
+    name: "IEEE Symposium on Field-Programmable Custom Computing Machines",
+    kind: "会议",
+    fields: ["FPGA/可重构"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "FPGA 定制计算，偏加速器实现与实测。",
+  },
+  {
+    abbr: "FPT",
+    name: "International Conference on Field-Programmable Technology",
+    kind: "会议",
+    fields: ["FPGA/可重构"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "亚太 FPGA 技术会议，投稿门槛相对低。",
+  },
+  {
+    abbr: "CODES+ISSS",
+    name: "International Conference on Hardware/Software Co-design and System Synthesis",
+    kind: "会议",
+    fields: ["体系结构", "FPGA/可重构"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "软硬件协同设计，嵌入系统综合方向。",
+  },
+  {
+    abbr: "CASES",
+    name: "International Conference on Compilers, Architectures, and Synthesis for Embedded Systems",
+    kind: "会议",
+    fields: ["体系结构", "AI for EDA"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "嵌入式系统的编译、架构与综合，与高层次综合相关。",
+  },
+  {
+    abbr: "ISLPED",
+    name: "International Symposium on Low Power Electronics and Design",
+    kind: "会议",
+    fields: ["电路与系统", "EDA/物理设计"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "低功耗设计专会，功耗优化与低功耗架构。",
+  },
+  {
+    abbr: "NOCS",
+    name: "ACM/IEEE International Symposium on Networks-on-Chip",
+    kind: "会议",
+    fields: ["体系结构"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "片上网络专会，多核互连架构。",
+  },
+  {
+    abbr: "ASAP",
+    name: "IEEE International Conference on Application-Specific Systems, Architectures, and Processors",
+    kind: "会议",
+    fields: ["体系结构", "FPGA/可重构"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "专用体系结构与处理器，与领域专用加速器相关。",
+  },
+  {
+    abbr: "ITC",
+    name: "International Test Conference",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "★测试方向最高档会议，DFT、测试生成、故障诊断。",
+  },
+  {
+    abbr: "ETS",
+    name: "IEEE European Test Symposium",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "欧洲测试会议，与 ITC 同方向的次级出口。",
+  },
+  {
+    abbr: "ATS",
+    name: "IEEE Asian Test Symposium",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "亚洲测试会议，投稿门槛低于 ITC。",
+  },
+  {
+    abbr: "VTS",
+    name: "IEEE VLSI Test Symposium",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "VLSI 测试专会，偏测试方法创新。",
+  },
+  {
+    abbr: "ITC-Asia",
+    name: "International Test Conference in Asia",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "ITC 亚洲分会，区域性测试会议。",
+  },
+  {
+    abbr: "IOLTS",
+    name: "IEEE International Symposium on On-Line Testing and Robust System Design",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "",
+    note: "在线测试与鲁棒设计，与错误自检、容错方向直接对应。",
+  },
+  {
+    abbr: "DFTS",
+    name: "IEEE International Symposium on Defect and Fault Tolerance in VLSI and Nanotechnology Systems",
+    kind: "会议",
+    fields: ["测试与可靠性", "辐射效应"],
+    ccf: "",
+    note: "缺陷与容错专会，与软错误、加固设计方向接近。",
+  },
+  {
+    abbr: "DFT",
+    name: "IEEE International Symposium on Defect and Fault Tolerance（同 DFTS）",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "",
+    note: "提示项，录入口统一用 DFTS。",
+  },
+  {
+    abbr: "NSREC",
+    name: "IEEE Nuclear & Space Radiation Effects Conference",
+    kind: "会议",
+    fields: ["辐射效应", "测试与可靠性"],
+    ccf: "",
+    namedInDoc: true,
+    note: "★辐射效应领域顶级会议，学院集成电路学科原文将其单列为二类 A-4。SEU 与加固方向最对口。",
+  },
+  {
+    abbr: "RADECS",
+    name: "European Conference on Radiation and its Effects on Components and Systems",
+    kind: "会议",
+    fields: ["辐射效应"],
+    ccf: "",
+    note: "欧洲辐射效应会议，与 NSREC 同方向。",
+  },
+  {
+    abbr: "IRPS",
+    name: "IEEE International Reliability Physics Symposium",
+    kind: "会议",
+    fields: ["测试与可靠性", "器件与工艺"],
+    ccf: "",
+    note: "★可靠性物理最高级别会议，失效机理与可靠性模型的主渠道。",
+  },
+  {
+    abbr: "CHES",
+    name: "International Conference on Cryptographic Hardware and Embedded Systems",
+    kind: "会议",
+    fields: ["电路与系统", "测试与可靠性"],
+    ccf: "B",
+    ccfDomain: "网络与信息安全",
+    note: "密码硬件与嵌入式系统（CCF 信息安全 B 类），硬件安全方向的对口会议。",
+  },
+  {
+    abbr: "ISCAS",
+    name: "IEEE International Symposium on Circuits and Systems",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    note: "电路与系统领域规模最大的会议，覆盖广、录用率相对高。CCF 目录中为 C 类（不是 B）。",
+  },
+  {
+    abbr: "MWSCAS",
+    name: "IEEE International Midwest Symposium on Circuits and Systems",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "区域性电路与系统会议，门槛较低。",
+  },
+  {
+    abbr: "NEWCAS",
+    name: "IEEE International New Circuits and Systems Conference",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "新电路与系统会议，区域性。",
+  },
+  {
+    abbr: "ICECS",
+    name: "IEEE International Conference on Electronics, Circuits and Systems",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "电子、电路与系统综合会议。",
+  },
+  {
+    abbr: "LASCAS",
+    name: "IEEE Latin America Symposium on Circuits and Systems",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "拉美地区电路与系统会议。",
+  },
+  {
+    abbr: "PRIME",
+    name: "International Conference on Ph.D. Research in Microelectronics and Electronics",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "面向博士生的微电子研究会议，适合低年级练手。",
+  },
+  {
+    abbr: "ASICON",
+    name: "IEEE International Conference on ASIC",
+    kind: "会议",
+    fields: ["电路与系统", "EDA/物理设计"],
+    ccf: "",
+    note: "专用集成电路会议，国内参与度高，门槛适中。",
+  },
+  {
+    abbr: "ICSICT",
+    name: "International Conference on Solid-State and Integrated Circuit Technology",
+    kind: "会议",
+    fields: ["电路与系统", "器件与工艺"],
+    ccf: "",
+    note: "固态与集成电路技术国际会议，国内主办，器件-电路交叉。",
+  },
+  {
+    abbr: "IEDM",
+    name: "IEEE International Electron Devices Meeting",
+    kind: "会议",
+    fields: ["器件与工艺"],
+    ccf: "",
+    note: "★器件领域最高级别会议（业界称器件界奥林匹克），不在 CCF 目录，产业地位极高，通常需实验数据。",
+  },
+  {
+    abbr: "ISSCC",
+    name: "IEEE International Solid-State Circuits Conference",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "★芯片设计最高级别会议（业界称集成电路奥林匹克），必须流片实测。不在 CCF 目录，但业界地位远超多数 CCF A。",
+  },
+  {
+    abbr: "VLSI Symp.",
+    name: "IEEE Symposium on VLSI Technology and Circuits",
+    kind: "会议",
+    fields: ["电路与系统", "器件与工艺"],
+    ccf: "",
+    note: "工艺与电路双轨的顶级会议，与 ISSCC 同级别，需流片。",
+  },
+  {
+    abbr: "ESSCIRC",
+    name: "European Solid-State Circuits Conference",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "欧洲固态电路会议。",
+  },
+  {
+    abbr: "A-SSCC",
+    name: "IEEE Asian Solid-State Circuits Conference",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "亚洲固态电路会议，ISSCC 的亚洲对应会议，需流片。",
+  },
+  {
+    abbr: "CICC",
+    name: "IEEE Custom Integrated Circuits Conference",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "定制集成电路会议，工业界参与度高，需流片。",
+  },
+  {
+    abbr: "VLSI-DAT",
+    name: "International Symposium on VLSI Design, Automation and Test",
+    kind: "会议",
+    fields: ["测试与可靠性", "EDA/物理设计"],
+    ccf: "",
+    note: "台湾地区主办的 VLSI 设计、自动化与测试会议，门槛较低。",
+  },
+  {
+    abbr: "VLSID",
+    name: "International Conference on VLSI Design",
+    kind: "会议",
+    fields: ["EDA/物理设计", "体系结构"],
+    ccf: "",
+    note: "印度主办的国际 VLSI 设计会议，区域性。",
+  },
+  {
+    abbr: "DSD",
+    name: "Euromicro Conference on Digital System Design",
+    kind: "会议",
+    fields: ["体系结构", "FPGA/可重构"],
+    ccf: "",
+    note: "数字系统设计会议，欧洲区域性。",
+  },
+  {
+    abbr: "SOCC",
+    name: "IEEE International System-on-Chip Conference",
+    kind: "会议",
+    fields: ["体系结构", "电路与系统"],
+    ccf: "",
+    note: "片上系统会议。注意：CCF 目录里的 SoCC 是 ACM 云计算会议，与此不是同一个。",
+  },
+  {
+    abbr: "SAMOS",
+    name: "International Conference on Embedded Computer Systems: Architectures, Modeling and Simulation",
+    kind: "会议",
+    fields: ["体系结构", "FPGA/可重构"],
+    ccf: "",
+    note: "嵌入式计算系统的架构、建模与仿真，欧洲区域性会议。",
+  },
+  {
+    abbr: "SBCCI",
+    name: "Symposium on Integrated Circuits and Systems Design",
+    kind: "会议",
+    fields: ["电路与系统", "EDA/物理设计"],
+    ccf: "",
+    note: "拉美地区的集成电路与系统设计会议，区域性。",
+  },
+  {
+    abbr: "FMCAD",
+    name: "Formal Methods in Computer-Aided Design",
+    kind: "会议",
+    fields: ["EDA/物理设计", "测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_TCS,
+    note: "形式化方法与 CAD 交叉会议，等价性检查、形式验证方向的对口出口。",
+  },
+  {
+    abbr: "SAT",
+    name: "International Conference on Theory and Applications of Satisfiability Testing",
+    kind: "会议",
+    fields: ["EDA/物理设计"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_TCS,
+    note: "SAT 求解理论与应用，EDA 里 SAT 求解器的改进类工作可投。",
+  },
+  {
+    abbr: "ICST",
+    name: "IEEE International Conference on Software Testing, Verification and Validation",
+    kind: "会议",
+    fields: ["测试与可靠性"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_SE,
+    note: "软件测试与验证（CCF 软件工程 C 类），与硬件测试方向相近但侧重软件。",
+  },
+];
+
+/** AI/ML 会议（AI for EDA 的交叉出口） */
+const AI_CONFERENCES: VenueRow[] = [
+  {
+    abbr: "NeurIPS",
+    name: "Conference on Neural Information Processing Systems",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_AI,
+    note: "AI 三大顶会之一。AI for EDA 的方法若足够通用（不依赖具体工艺）可投。",
+  },
+  {
+    abbr: "ICML",
+    name: "International Conference on Machine Learning",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_AI,
+    note: "AI 三大顶会之一，偏方法论普适性。",
+  },
+  {
+    abbr: "AAAI",
+    name: "AAAI Conference on Artificial Intelligence",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_AI,
+    note: "AI 顶会之一，篇幅充裕，AI+硬件方向可用。",
+  },
+  {
+    abbr: "IJCAI",
+    name: "International Joint Conference on Artificial Intelligence",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_AI,
+    note: "AI 顶会之一，AI+EDA 交叉议题的常见出口。",
+  },
+  {
+    abbr: "ICLR",
+    name: "International Conference on Learning Representations",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "",
+    ccfDomain: CCF_DOMAIN_AI,
+    note: "AI 顶会（官方 CCF 目录未收录，实际影响力与 NeurIPS 同级），AI for EDA 的算法类成果就近可投。",
+  },
+  {
+    abbr: "ICDM",
+    name: "IEEE International Conference on Data Mining",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "B",
+    ccfDomain: CCF_DOMAIN_DB,
+    note: "数据挖掘会议，设计数据分析类工作可投。",
+  },
+  {
+    abbr: "SIGKDD",
+    name: "ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+    kind: "会议",
+    fields: ["AI for EDA"],
+    ccf: "A",
+    ccfDomain: CCF_DOMAIN_DB,
+    note: "数据挖掘第一会议，设计数据驱动的 EDA 工作可尝试。",
+  },
+];
+
+export const VENUES: VenueRow[] = [
+  ...NATURE_KIDS,
+  ...ARCH_EXTRA,
+  ...DEVICE_JOURNALS,
+  ...RELIABILITY_JOURNALS,
+  ...MICRO_JOURNALS,
+  ...CN_JOURNALS,
+  ...CONFERENCES,
+  ...AI_CONFERENCES,
+];
+
+/** 按简称索引（重复简称以最后一个为准，便于覆盖修正） */
+export const VENUE_BY_ABBR = new Map<string, VenueRow>();
+for (const v of VENUES) VENUE_BY_ABBR.set(v.abbr, v);
+
+export function venuesByField(field: FieldTag): VenueRow[] {
+  return VENUES.filter((v) => v.fields.includes(field));
+}
+
+export const VENUE_SOURCES = [
+  {
+    id: "ccf",
+    label: "CCF 推荐国际学术会议和期刊目录",
+    detail: "从 ccf.org.cn 十个领域页面抓取全量 644 条逐条比对。只收计算机方向，纯电路/器件类不在其中。",
+    url: "https://www.ccf.org.cn/Academic_Evaluation/",
+  },
+  {
+    id: "ccftj",
+    label: "CCF《计算领域高质量科技期刊分级目录》（2025）",
+    detail: "国内刊的 T1/T2/T3，共 68 本；官方声明与国际 ABC 目录不等效。",
+    url: "https://www.ccf.org.cn/ccftjgjxskwml/",
+  },
+  {
+    id: "cas",
+    label: "中科院文献情报中心期刊分区表（升级版·大类分区）",
+    detail: "只对期刊有效，会议无分区；未核实的条目留空，页面显示「未知」。",
+    url: "https://www.fenqubiao.com/",
+  },
+  {
+    id: "csee",
+    label: "中国电子学会《电子技术、通信技术领域高质量科技期刊分级目录》",
+    detail: "只收国内有 CN 号的期刊；学院原文把它用于集成电路学科的 A-3、B-2 两档。",
+    url: "https://www.cie.org.cn/",
+  },
+  {
+    id: "issn",
+    label: "ISSN Portal / Crossref",
+    detail: "刊号逐条核对，用于消除重名歧义（如 TCAS-I 与 TCSVT、TSMC 与半导体制造刊）。",
+    url: "https://portal.issn.org/",
+  },
+];
+
+/** 容易被误认的条目 */
+export const GOTCHAS: string[] = [
+  "ICCAD 在 CCF 官方目录里是 B 类会议（DAC 才是 A 类）。网上常见的「ICCAD 是 A 类」不对。",
+  "JSSC、ISSCC、TED、EDL、TCAS-II 都不在 CCF 目录——CCF 目录不覆盖固态电路与器件方向，不是漏收。",
+  "TCAS-I 在 CCF 体系结构领域是 C 类；中科院分区另算。两个口径要分清。",
+  "CCF 目录里的 SOCC 是 ACM 云计算会议（B 类），IEEE 的 System-on-Chip Conference 是另一个会议。",
+  "CCF 目录里的 TSMC 是 IEEE Trans. on Systems, Man, and Cybernetics: Systems，不是半导体制造期刊。",
+  "ISCAS 在 CCF 目录是 C 类会议，不是 B 类。",
+  "中文刊全部不在国际 ABC 目录，属于 CCF 计算领域 T1/T2/T3 另一套体系，两套不等效。",
+  "中国科学：信息科学中文版与英文版 SCIS 口径不同：英文版 SCIS 是 CCF A 类，中文版不是。",
+  "NSREC 只在集成电路学科原文里被单列为二类 A-4；计算机学科目录没有这条，跨学科认定时注意。",
+  "集成电路学科硕士公开评阅①里「《国防科技大学学报》1 篇」是校内快捷通道，比投外部期刊容易得多。",
+];
