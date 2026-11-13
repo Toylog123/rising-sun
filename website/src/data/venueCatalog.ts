@@ -226,6 +226,17 @@ cas: "2区",
 /** 可靠性 / 辐射效应补充（本组谢俊杰方向） */
 const RELIABILITY_JOURNALS: VenueRow[] = [
   {
+    abbr: "Integration",
+    name: "Integration, the VLSI Journal",
+    kind: "期刊",
+    fields: ["EDA/物理设计", "电路与系统"],
+    ccf: "C",
+    ccfDomain: CCF_DOMAIN_ARCH,
+    cas: "3区",
+    impact: 2.6,
+    note: "Elsevier 的 VLSI 综合期刊（CCF 体系结构 C 类），后端流程、验证、低功耗设计都收，周期较短。",
+  },
+  {
     abbr: "TNS",
     name: "IEEE Transactions on Nuclear Science",
     kind: "期刊",
@@ -1344,8 +1355,8 @@ const FIXES: Record<string, Partial<VenueRow>> = {
   "TPEL": { csee: "T1" },
   "SSC-L": { csee: "T2" },
   "TCAS-II": { cas: "2区", casTop: true, impact: 4.6, csee: "T2" },
-  "TNS": { csee: "T2" },
-  "TDMR": { csee: "T2" },
+  "TNS": { cas: "2区", casTop: false, impact: 2.4, csee: "T2" },
+  "TDMR": { cas: "3区", casTop: false, impact: 2.7, csee: "T2" },
   "TSM": { csee: "T2" },
   "Nat. Electron.": { csee: "T1" },
   "Nat. Photonics": { csee: "T1" },
@@ -1362,6 +1373,8 @@ const FIXES: Record<string, Partial<VenueRow>> = {
   "ISSCC": { note: "IEEE SSCS 主办，固态电路领域声望最高的会议，工业界芯片成果首选发布地。" },
   "VLSI Symp.": { note: "IEEE SSCS / JSAP 主办，工艺（Technology）与电路（Circuits）双轨，与 ISSCC 同级。" },
   "IOLTS": { note: "在线测试与系统专会，收在线测试、鲁棒性、故障注入、瞬态故障与辐射引发的软错误，对「辐射效应 → 软错误」方向很对口。" },
+  "IEEE Access": { cas: "4区", casTop: false, impact: 4.2 },
+  "EDL": { cas: "2区", casTop: false, impact: 4.6 },
 };
 
 export const VENUES: VenueRow[] = [
