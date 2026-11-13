@@ -9,7 +9,8 @@
  *             全量 644 条逐条比对。**只收计算机方向**，纯电路/器件类期刊会议
  *             （JSSC、TED、ISSCC、CICC 等）本就不在其中，不是"漏收"，因此这类
  *             条目 ccf 留空，不代表水平低。
- *   - cas   ：中科院文献情报中心期刊分区表（升级版）大类分区；会议无分区。
+ *   - cas   ：中科院文献情报中心期刊分区表（升级版）大类分区，按 2025 年 3 月版核对；
+ *             会议无分区。影响因子取最新 JIF（2024 JCR）。
  *   - ccfTj ：CCF《计算领域高质量科技期刊分级目录》（2025），只收国内刊。
  *   - csee  ：中国电子学会《高质量科技期刊分级目录》（T1/T2/T3）。注意它
  *             **不是**只收中文刊：T1/T2 里大量是 IEEE Trans.、Nature 子刊
@@ -149,7 +150,7 @@ cas: "3区",
     issn: "0018-9200",
     cas: "1区",
     casTop: true,
-    impact: 5.4,
+    impact: 5.6,
     note: "★集成电路设计第一期刊，必须流片实测。EDA 算法类论文不匹配。注意它不在 CCF 目录里。",
   },
   {
@@ -1337,12 +1338,12 @@ const FIXES: Record<string, Partial<VenueRow>> = {
   "中国科学:信息": { csee: "T2" },
   "SCIS": { csee: "T1" },
   "计算机学报": { csee: "T1", note: "CCF 计算领域高质量科技期刊 T1；中国电子学会目录里只在 2022 版「计算机技术」子目录出现（T1，序号 2）。" },
-  "JSSC": { csee: "T1" },
-  "TCAS-I": { csee: "T1" },
-  "TED": { csee: "T1" },
+  "JSSC": { cas: "1区", casTop: true, impact: 5.6, csee: "T1" },
+  "TCAS-I": { cas: "2区", casTop: true, impact: 5.6, csee: "T1" },
+  "TED": { cas: "3区", casTop: false, impact: 3.6, csee: "T1" },
   "TPEL": { csee: "T1" },
   "SSC-L": { csee: "T2" },
-  "TCAS-II": { csee: "T2" },
+  "TCAS-II": { cas: "2区", casTop: true, impact: 4.6, csee: "T2" },
   "TNS": { csee: "T2" },
   "TDMR": { csee: "T2" },
   "TSM": { csee: "T2" },
