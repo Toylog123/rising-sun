@@ -104,7 +104,8 @@ rising-sun/
 │   │   │   ├── achievements.ts     # 成果（自动同步）
 │   │   │   └── ui.ts                # Confirm + Toast 全局状态
 │   │   ├── hooks/
-│   │   │   └── useScrollReveal.ts  # 滚动渐入动画
+│   │   │   ├── useScrollReveal.ts  # 滚动渐入动画
+│   │   │   └── useConfirmClose.ts  # 编辑弹窗「未保存就关闭」二次确认
 │   │   ├── lib/
 │   │   │   ├── github.ts            # GitHub Contents API 封装（含二进制上传）
 │   │   │   ├── uploads.ts           # 附件上传 / Pages & raw 链接生成

@@ -12,6 +12,7 @@ import {
 } from "@/store/tasks";
 import { STUDENT_STATUS_OPTIONS } from "@/lib/students";
 import Avatar from "./Avatar";
+import { useConfirmClose } from "@/hooks/useConfirmClose";
 
 interface StudentEditorProps {
   open: boolean;
@@ -38,6 +39,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
   const [bio, setBio] = useState("");
   const [note, setNote] = useState("");
   const [advisor, setAdvisor] = useState(globalAdvisor);
+  const [email, setEmail] = useState("");
+  const [homepage, setHomepage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -54,6 +57,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       setBio(initial.bio ?? "");
       setNote(initial.note ?? "");
       setAdvisor(initial.advisor ?? globalAdvisor);
+      setEmail(initial.email ?? "");
+      setHomepage(initial.homepage ?? "");
     } else {
       setRole("student");
       setName("");
@@ -66,18 +71,31 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       setBio("");
       setNote("");
       setAdvisor(globalAdvisor);
+      setEmail("");
+      setHomepage("");
     }
     setError("");
   }, [open, initial, globalAdvisor]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  // 有没有填过东西：有内容时点遮罩/按 ESC 不会直接关掉
+  const dirty = Boolean(
+    name.trim() ||
+      avatar.trim() ||
+      title.trim() ||
+      enrolledAt.trim() ||
+      bio.trim() ||
+      note.trim() ||
+      advisor.trim() ||
+      email.trim() ||
+      homepage.trim()
+  );
+
+  const { requestClose, onBackdropMouseDown } = useConfirmClose({
+    open,
+    dirty,
+    onClose,
+    message: "成员信息还没保存，关闭后需要重新填写。",
+  });
 
   if (!open) return null;
 
@@ -113,6 +131,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       bio: bio.trim() || undefined,
       note: note.trim() || undefined,
       advisor: advisor || undefined,
+      email: email.trim() || undefined,
+      homepage: homepage.trim() || undefined,
     };
     if (isEdit && initial) {
       updateStudent(initial.name, baseData);
@@ -130,7 +150,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={onBackdropMouseDown}
     >
       <div
         className="relative w-full max-w-lg rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -146,7 +166,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors"
           >
             <X size={18} />
@@ -297,6 +317,27 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
               <p className="text-xs text-[#9a9590]">学科与学位层次决定毕业要求按哪一套目录判定。</p>
             </>
           )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={label}>邮箱（可选）</label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="例如：name@nudt.edu.cn"
+                className={field}
+              />
+            </div>
+            <div>
+              <label className={label}>个人主页（可选）</label>
+              <input
+                value={homepage}
+                onChange={(e) => setHomepage(e.target.value)}
+                placeholder="例如：https://…"
+                className={field}
+              />
+            </div>
+          </div>
 
           <div>
             <label className={label}>简介</label>

@@ -12,6 +12,7 @@ import { confirmDialog } from "@/store/ui";
 import { useTaskStore } from "@/store/tasks";
 import { venueList, PROGRAM_RULES, type AchievementLevel, levelLabel } from "@/data/degreeAwards";
 import VenuePicker from "@/components/VenuePicker";
+import { useConfirmClose } from "@/hooks/useConfirmClose";
 
 interface AchievementEditorProps {
   open: boolean;
@@ -133,14 +134,25 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
     setError("");
   }, [open, initial]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  // 有没有填过东西：有内容时点遮罩/按 ESC 不会直接关掉
+  const dirty =
+    Boolean(
+      owner ||
+        authorsText.trim() ||
+        paperTitle.trim() ||
+        paperVenue.trim() ||
+        patentName.trim() ||
+        compName.trim() ||
+        note.trim() ||
+        link.trim()
+    ) || category !== "论文";
+
+  const { requestClose, onBackdropMouseDown } = useConfirmClose({
+    open,
+    dirty,
+    onClose,
+    message: "新增/编辑的内容还没保存，关闭后需要重新填写。",
+  });
 
   // 选中目录条目后自动带出全称
   useEffect(() => {
@@ -255,7 +267,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={onBackdropMouseDown}
     >
       <div
         className="relative w-full max-w-2xl rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -270,7 +282,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
               {isEdit ? "编辑成果" : "新增成果"}
             </h2>
           </div>
-          <button onClick={onClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
+          <button onClick={requestClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
             <X size={18} />
           </button>
         </div>
@@ -694,7 +706,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
           >
             取消

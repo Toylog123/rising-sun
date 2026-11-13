@@ -4,6 +4,7 @@ import { useMeetingStore, type Meeting } from "@/store/meetings";
 import { useTaskStore } from "@/store/tasks";
 import { confirmDialog } from "@/store/ui";
 import Combobox from "./Combobox";
+import { useConfirmClose } from "@/hooks/useConfirmClose";
 import {
   uploadAttachment,
   checkFile,
@@ -67,14 +68,21 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
     setError("");
   }, [open, initial]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  // 有没有填过东西：有内容时点遮罩/按 ESC 不会直接关掉（正在上传时也不允许关）
+  const dirty =
+    uploading ||
+    Boolean(date.trim() || speaker.trim() || topic.trim() || notes.trim()) ||
+    pending.length > 0 ||
+    (initial ? attachments.length !== (initial.attachments?.length ?? 0) : attachments.length > 0);
+
+  const { requestClose, onBackdropMouseDown } = useConfirmClose({
+    open,
+    dirty,
+    onClose,
+    message: uploading
+      ? "附件还在上传中，关闭会中断上传，确定要关闭吗？"
+      : "组会记录还没保存，关闭后需要重新填写。",
+  });
 
   if (!open) return null;
 
@@ -189,7 +197,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={onBackdropMouseDown}
     >
       <div
         className="relative w-full max-w-lg rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -205,7 +213,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors"
           >
             <X size={18} />
@@ -378,7 +386,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
             </button>
           )}
           <button
-            onClick={onClose}
+            onClick={requestClose}
             disabled={uploading}
             className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors disabled:opacity-50"
           >

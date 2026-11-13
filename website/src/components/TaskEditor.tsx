@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { X, Pencil, AlertCircle, GraduationCap, Users, Sparkles, Check } from "lucide-react";
 import { useTaskStore, type Task } from "@/store/tasks";
 import Combobox from "./Combobox";
+import { useConfirmClose } from "@/hooks/useConfirmClose";
 
 interface TaskEditorProps {
   open: boolean;
@@ -32,14 +33,22 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
     setError("");
   }, [open, task, globalAdvisor]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  // 有没有改过任务内容：改过时点遮罩/按 ESC 不会直接关掉
+  const dirty = Boolean(
+    task &&
+      (title.trim() !== task.title ||
+        advisor !== (task.advisor ?? globalAdvisor) ||
+        createdAt !== task.createdAt ||
+        assignees.length !== task.assignees.length ||
+        assignees.some((a, i) => a !== task.assignees[i]))
+  );
+
+  const { requestClose, onBackdropMouseDown } = useConfirmClose({
+    open,
+    dirty,
+    onClose,
+    message: "任务信息还没保存，关闭后需要重新修改。",
+  });
 
   if (!open || !task) return null;
 
@@ -87,7 +96,7 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={onBackdropMouseDown}
     >
       <div
         className="relative w-full max-w-2xl rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
@@ -100,7 +109,7 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
             </div>
             <h2 className="font-serif text-lg font-bold text-[#1a1a1a]">编辑任务</h2>
           </div>
-          <button onClick={onClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
+          <button onClick={requestClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
             <X size={18} />
           </button>
         </div>
@@ -201,7 +210,7 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
 
         <div className="px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f5] flex items-center gap-2">
           <button
-            onClick={onClose}
+            onClick={requestClose}
             className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
           >
             取消
