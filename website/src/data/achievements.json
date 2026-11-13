@@ -1,3 +1,26 @@
 {
-  "achievements": []
+  "achievements": [
+    {
+      "year": "2026",
+      "authors": [
+        "谢俊杰",
+        "刘胜",
+        "刘畅"
+      ],
+      "owner": "谢俊杰",
+      "graduate": true,
+      "category": "论文",
+      "title": "Event-Driven Register-Level SEU Fault Localization for Integrated Circuits Using CNN-SE-BiLSTM",
+      "venue": "ICICM2026",
+      "venueKind": "会议",
+      "venueName": "ICICM2026",
+      "correspondingAuthors": [],
+      "authorRole": "一作",
+      "coAuthor": false,
+      "bestPaper": false,
+      "largeConference": false,
+      "level": "基本目录",
+      "id": "ach-1794559369258-796"
+    }
+  ]
 }
