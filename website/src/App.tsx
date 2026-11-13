@@ -6,6 +6,7 @@ import Archive from "@/pages/Archive";
 import AddTask from "@/pages/AddTask";
 import Students from "@/pages/Students";
 import Meetings from "@/pages/Meetings";
+import DegreeRequirements from "@/pages/DegreeRequirements";
 import Achievements from "@/pages/Achievements";
 import NotFound from "@/pages/NotFound";
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/new" element={<AddTask />} />
           <Route path="/students" element={<Students />} />
           <Route path="/meetings" element={<Meetings />} />
+          <Route path="/degree-requirements" element={<DegreeRequirements />} />
           <Route path="/achievements" element={<Achievements />} />
           <Route path="*" element={<NotFound />} />
         </Route>

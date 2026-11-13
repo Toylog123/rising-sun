@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Calendar, Users, FlaskConical, FileText, Download, Paperclip, Eye, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Calendar, Users, FlaskConical, FileText, Download, Paperclip, Eye, AlertCircle, GraduationCap } from "lucide-react";
 import { useMeetingStore, type Meeting } from "@/store/meetings";
 import MeetingEditor from "@/components/MeetingEditor";
 import PdfPreview from "@/components/PdfPreview";
@@ -70,6 +71,14 @@ export default function Meetings() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            to="/degree-requirements"
+            title="学位授予与评阅要求、紧密相关成果范围目录"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+          >
+            <GraduationCap size={14} />
+            学位要求
+          </Link>
           <button
             onClick={() => pull()}
             disabled={syncStatus === "pulling"}

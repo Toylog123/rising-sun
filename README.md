@@ -28,10 +28,11 @@ Rising Sun 是一个 2025 年新成立的课题组，专注**芯片设计自动�
 | **成员** | `/members` | 课题组所有成员（老师 + 学生），可编辑（简介/职称/研究方向） |
 | **成果** | `/achievements` | 论文 / 专利 / 比赛获奖 三类，分类显示 |
 | **组会** | `/meetings` | 每周组会纪要（日期 / 主讲人 / 议题 / 纪要）+ **汇报材料 PDF 上传** + 按主讲人筛选 |
+| **学位要求** | `/degree-requirements` | 计算机学院学位授予与评阅要求（0812/0835 计算机科学与技术·软件工程、1401 集成电路科学与工程）+ 紧密相关成果范围目录 + 选刊手册，全文可检索 |
 | **新建任务** | `/new` | 表单：指导老师 + 协同成员（多选） + 标题 + 创建时间 + 状态 |
 | **归档** | `/archive` | 已完成任务 / 已删除任务（Tab 区分："全部 / 已完成 / 已删除"） |
 
-**Navbar 5 个主链接**（水平居中布局）：首页 / 任务 / 成员 / 成果 / 组会
+**Navbar 6 个主链接**（水平居中布局）：首页 / 任务 / 成员 / 成果 / 组会 / 学位要求
 
 ---
 
@@ -92,6 +93,7 @@ rising-sun/
 │   │   │   ├── Students.tsx
 │   │   │   ├── Achievements.tsx
 │   │   │   ├── Meetings.tsx
+│   │   │   ├── DegreeRequirements.tsx # 学位要求与选刊手册（可检索）
 │   │   │   ├── AddTask.tsx
 │   │   │   └── Archive.tsx
 │   │   ├── store/                   # Zustand stores
@@ -113,7 +115,8 @@ rising-sun/
 │   │   ├── data/                    # 种子数据（build 进 bundle）
 │   │   │   ├── tasks.json
 │   │   │   ├── meetings.json
-│   │   │   └── achievements.json
+│   │   │   ├── achievements.json
+│   │   │   └── degreeRequirements.ts # 学位要求原文 + 选刊手册（静态数据）
 │   │   ├── App.tsx
 │   │   ├── main.tsx
 │   │   └── index.css

@@ -39,6 +39,7 @@ const navLinks = [
   { to: "/students", label: "成员" },
   { to: "/achievements", label: "成果" },
   { to: "/meetings", label: "组会" },
+  { to: "/degree-requirements", label: "学位要求" },
 ];
 
 function CommitButton() {
