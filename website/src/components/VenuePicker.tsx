@@ -55,6 +55,8 @@ export default function VenuePicker({
             }}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             placeholder={placeholder ?? (kind === "期刊" ? "搜索期刊（如 TCAD、电子学报）" : "搜索会议（如 DAC、ICCAD）")}
+            // 左侧留出图标的位置：传入的 className 自带 px-3.5，不覆盖的话文字会压到放大镜上
+            style={{ paddingLeft: "2.25rem" }}
             className={className}
           />
         </div>
