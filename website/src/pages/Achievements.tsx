@@ -8,6 +8,9 @@ import {
   type PaperAchievement, type PatentAchievement, type CompetitionAchievement,
 } from "@/store/achievements";
 import AchievementEditor from "@/components/AchievementEditor";
+import DegreeBoard from "@/components/DegreeBoard";
+import { useTaskStore } from "@/store/tasks";
+import { levelLabel } from "@/data/degreeAwards";
 
 const CATEGORY_META: Record<
   AchievementCategory,
@@ -65,6 +68,17 @@ function PaperCard({ a, onEdit, onRemove }: { a: PaperAchievement; onEdit: () =>
                 {a.cas && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-xs font-medium text-purple-700">
                     中科院 {a.cas}
+                  </span>
+                )}
+                {a.owner && (
+                  <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 bg-[#c96442]/10 border border-[#c96442]/20 text-xs font-medium text-[#c96442]">
+                    <GraduationCap size={11} />
+                    {a.owner}
+                  </span>
+                )}
+                {a.level && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-xs font-medium text-green-700">
+                    {levelLabel(a.level as never)}
                   </span>
                 )}
               </div>
@@ -243,8 +257,14 @@ export default function Achievements() {
   const syncStatus = useAchievementStore((s) => s.syncStatus);
   const removeAchievement = useAchievementStore((s) => s.removeAchievement);
 
+  const members = useTaskStore((s) => s.members);
+
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Achievement | null>(null);
+  const [ownerFilter, setOwnerFilter] = useState<string | null>(null);
+
+  const students = members.filter((m) => m.role !== "teacher" && m.program && m.degree);
+  const rangeStudent = students.find((m) => m.name === ownerFilter);
 
   // 进页面自动拉一次远端，保证看到的是仓库里最新的成果
   useEffect(() => {
@@ -252,17 +272,18 @@ export default function Achievements() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 按类别 + 年份倒序
+  // 按类别 + 年份倒序（受归属人筛选影响）
   const grouped = useMemo(() => {
     const result: Record<AchievementCategory, Achievement[]> = { 论文: [], 专利: [], 比赛: [] };
     for (const a of achievements) {
+      if (ownerFilter && a.owner !== ownerFilter) continue;
       result[a.category].push(a);
     }
     for (const cat of CATEGORY_ORDER) {
       result[cat].sort((a, b) => b.year.localeCompare(a.year));
     }
     return result;
-  }, [achievements]);
+  }, [achievements, ownerFilter]);
 
   const openAdd = () => {
     setEditing(null);
@@ -338,10 +359,56 @@ export default function Achievements() {
       </section>
 
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {students.length > 0 && (
+          <div className="mb-8 rounded-2xl bg-white border border-[#e8e4db] p-5">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+              <h2 className="font-serif text-lg font-bold text-[#1a1a1a] flex items-center gap-2">
+                <GraduationCap size={18} className="text-[#c96442]" />
+                按成员汇总
+              </h2>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setOwnerFilter(null)}
+                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                    ownerFilter === null
+                      ? "bg-[#c96442] text-white border-[#c96442]"
+                      : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                  }`}
+                >
+                  全部 {achievements.length}
+                </button>
+                {students.map((m) => {
+                  const n = achievements.filter((x) => x.owner === m.name).length;
+                  return (
+                    <button
+                      key={m.name}
+                      onClick={() => setOwnerFilter(m.name)}
+                      className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                        ownerFilter === m.name
+                          ? "bg-[#c96442] text-white border-[#c96442]"
+                          : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                      }`}
+                    >
+                      {m.name} {n}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {rangeStudent && (
+              <div className="mt-3 pt-3 border-t border-[#f0ece4]">
+                <DegreeBoard student={rangeStudent} />
+              </div>
+            )}
+          </div>
+        )}
+
         {total === 0 ? (
           <div className="rounded-2xl bg-white border border-[#e8e4db] px-6 py-16 text-center">
             <Award size={32} className="mx-auto text-[#9a9590]" />
-            <p className="mt-3 text-sm text-[#6b6560]">还没有成果记录</p>
+            <p className="mt-3 text-sm text-[#6b6560]">
+              {ownerFilter ? `${ownerFilter} 还没有归属的成果` : "还没有成果记录"}
+            </p>
             <p className="mt-1 text-xs text-[#9a9590]">课题组 2025 年成立，添加新成果时点"新增成果"</p>
             <button
               onClick={openAdd}

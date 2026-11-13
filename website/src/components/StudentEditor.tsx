@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { X, Plus, Pencil, AlertCircle, GraduationCap, User, Calendar } from "lucide-react";
-import { useTaskStore, type Student, type StudentStatus, type MemberRole } from "@/store/tasks";
+import {
+  useTaskStore,
+  type Student,
+  type StudentStatus,
+  type MemberRole,
+  type ProgramId,
+  type DegreeLevel,
+  PROGRAM_OPTIONS,
+  DEGREE_OPTIONS,
+} from "@/store/tasks";
 import { STUDENT_STATUS_OPTIONS } from "@/lib/students";
 import Avatar from "./Avatar";
 
@@ -24,6 +33,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
   const [title, setTitle] = useState("");
   const [enrolledAt, setEnrolledAt] = useState("");
   const [status, setStatus] = useState<StudentStatus>("在读");
+  const [program, setProgram] = useState<ProgramId>("集成电路科学与工程");
+  const [degree, setDegree] = useState<DegreeLevel>("硕士");
   const [bio, setBio] = useState("");
   const [note, setNote] = useState("");
   const [advisor, setAdvisor] = useState(globalAdvisor);
@@ -38,6 +49,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       setTitle(initial.title ?? "");
       setEnrolledAt(initial.enrolledAt ?? "");
       setStatus(initial.status ?? "在读");
+      setProgram(initial.program ?? "集成电路科学与工程");
+      setDegree(initial.degree ?? "硕士");
       setBio(initial.bio ?? "");
       setNote(initial.note ?? "");
       setAdvisor(initial.advisor ?? globalAdvisor);
@@ -48,6 +61,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       setTitle("");
       setEnrolledAt("");
       setStatus("在读");
+      setProgram("集成电路科学与工程");
+      setDegree("硕士");
       setBio("");
       setNote("");
       setAdvisor(globalAdvisor);
@@ -92,6 +107,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       role,
       enrolledAt: enrolledAt || undefined,
       status: role === "teacher" ? undefined : status,
+      program: role === "teacher" ? undefined : program,
+      degree: role === "teacher" ? undefined : degree,
       title: role === "teacher" ? title.trim() || undefined : undefined,
       bio: bio.trim() || undefined,
       note: note.trim() || undefined,
@@ -211,36 +228,74 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
               />
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={label}>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Calendar size={14} className="text-[#c96442]" />
-                    入校时间
-                  </span>
-                </label>
-                <input
-                  type="month"
-                  value={enrolledAt}
-                  onChange={(e) => setEnrolledAt(e.target.value)}
-                  className={field}
-                />
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar size={14} className="text-[#c96442]" />
+                      入校时间
+                    </span>
+                  </label>
+                  <input
+                    type="month"
+                    value={enrolledAt}
+                    onChange={(e) => setEnrolledAt(e.target.value)}
+                    className={field}
+                  />
+                </div>
+                <div>
+                  <label className={label}>状态</label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as StudentStatus)}
+                    className={field}
+                  >
+                    {STUDENT_STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className={label}>状态</label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as StudentStatus)}
-                  className={field}
-                >
-                  {STUDENT_STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <GraduationCap size={14} className="text-[#c96442]" />
+                      学科
+                    </span>
+                  </label>
+                  <select
+                    value={program}
+                    onChange={(e) => setProgram(e.target.value as ProgramId)}
+                    className={field}
+                  >
+                    {PROGRAM_OPTIONS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={label}>学位层次</label>
+                  <select
+                    value={degree}
+                    onChange={(e) => setDegree(e.target.value as DegreeLevel)}
+                    className={field}
+                  >
+                    {DEGREE_OPTIONS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+              <p className="text-xs text-[#9a9590]">学科与学位层次决定毕业要求按哪一套目录判定。</p>
+            </>
           )}
 
           <div>

@@ -28,7 +28,9 @@
         "ECO"
       ],
       "email": "1622574463@qq.com",
-      "github": "https://github.com/Toylog123"
+      "github": "https://github.com/Toylog123",
+      "program": "集成电路科学与工程",
+      "degree": "硕士"
     },
     {
       "name": "周雨时",
@@ -41,7 +43,9 @@
       "researchAreas": [
         "AI for EDA",
         "物理设计"
-      ]
+      ],
+      "program": "集成电路科学与工程",
+      "degree": "硕士"
     },
     {
       "name": "谢俊杰",
@@ -55,7 +59,9 @@
         "ECO",
         "可靠性设计",
         "容错计算"
-      ]
+      ],
+      "program": "集成电路科学与工程",
+      "degree": "硕士"
     },
     {
       "name": "肖睿颿",
@@ -68,7 +74,9 @@
       "researchAreas": [
         "AI for EDA",
         "物理设计"
-      ]
+      ],
+      "program": "集成电路科学与工程",
+      "degree": "硕士"
     }
   ],
   "tasks": [

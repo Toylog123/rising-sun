@@ -54,6 +54,8 @@ export interface GuideTier {
 }
 
 export interface RequirementRow {
+  /** 条款 id（成果认定规则 assumptionId 与之对应） */
+  id?: string;
   /** 学位 */
   degree: string;
   /** 基本要求 */
@@ -481,6 +483,7 @@ export const venueGuides: VenueGuide[] = [
         degree: "博士",
         basic:
           "本人一作、以国防科技大学为第一单位，在紧密相关成果范围目录发表论文 ≥ 2 篇。评阅方式为双盲评阅。",
+        id: "cs-博士",
         publicReview:
           "满足基本要求后，全部成果符合下列之一：① 一类目录 1 篇（一作或通信，含共同作者）；② 二类(A) 2 篇，其中 ≥1 篇为 A-1；③ 二类(A) A-1 单篇 + 预审 A「优秀」+ 分委会推荐；④ 二类(B) 4 篇，其中 ≥2 篇为 B-1；⑤ 二类(B) B-1 两篇 + 专著（前 2）/ 省部级奖（前 3）；⑥ 重大项目应用 + 公示无异议 + 导师与预审专家组推荐。",
       },
@@ -488,12 +491,14 @@ export const venueGuides: VenueGuide[] = [
         degree: "博士（提前）",
         basic:
           "满足基本要求的基础上，本人一作（含共同作者）、以国防科大为第一单位，在一类目录发表 1 篇及以上。",
+        id: "cs-博士（提前）",
         publicReview: "提前申请学位以此为唯一门槛，仍需满足基本要求。",
       },
       {
         degree: "硕士",
         basic:
           "至少 1 篇本人一作或二作（导师 / 协助导师一作）、以国防科大为第一单位，在正式出版期刊或会议论文集全文发表（含在线发表）或录用；或以国防科大为第一完成单位 + 授权发明专利 1 项（前 2）/ 专著 1 部（前 3）。",
+        id: "cs-硕士",
         publicReview:
           "满足基本要求后，全部成果符合下列之一：① CCF 推荐目录 / CCF 高质量科技期刊 T1、T2 / 《国防科技大学学报》/ IEEE JointCloud 1 篇（一作或二作）；② 中科院大类 3 区及以上 1 篇。",
       },
@@ -726,6 +731,7 @@ export const venueGuides: VenueGuide[] = [
         degree: "博士",
         basic:
           "本人一作、以国防科大第一单位，在本学科紧密相关成果范围目录发表论文 ≥ 2 篇。评阅方式为双盲评阅。",
+        id: "ice-博士",
         publicReview:
           "满足基本要求后，全部成果符合下列之一：① 一类目录 1 篇（一作或通信，含共同作者）；② 二类(A) 2 篇；③ 二类(A) A-1 单篇 + 预审 A「优秀」+ 分委会推荐；④ 二类(B) 4 篇；⑤ 二类(B) 3 篇 + 专著（前 2）/ 省部级奖（前 3）；⑥ 重大项目应用 + 联合导师组联名推荐。",
       },
@@ -733,12 +739,14 @@ export const venueGuides: VenueGuide[] = [
         degree: "博士（提前）",
         basic:
           "满足基本要求的基础上，本人一作（含共同作者）、以国防科大为第一单位，在目录（一类目录）发表 1 篇及以上。",
+        id: "ice-博士（提前）",
         note: "原文此条写的是「计算机科学与技术、软件工程学科紧密相关成果范围目录（一类目录）」，与本学科目录不一致，实际执行请以学院解释为准。",
       },
       {
         degree: "硕士",
         basic:
           "至少 1 篇本人一作或二作（导师 / 协助导师一作）、以国防科大为第一单位，在正式出版期刊或会议论文集全文发表（含在线发表）或录用；或以国防科大为第一完成单位 + 授权发明专利 1 项（前 2）/ 专著 1 部（前 3）。",
+        id: "ice-硕士",
         publicReview:
           "满足基本要求后，全部成果符合下列之一：① CCF 推荐目录 / CCF 高质量科技期刊 T1、T2 / 中国电子学会《电子技术、通信技术领域高质量科技期刊分级目录》T1、T2 / 《国防科技大学学报》1 篇；② 中科院大类 3 区及以上 1 篇。",
       },
@@ -994,6 +1002,7 @@ export const venueGuides: VenueGuide[] = [
         degree: "博士",
         basic:
           "基于学位论文（实践成果）工作，申请时须取得紧密相关成果 ≥ 2 项，其中工程新技术研究类学位论文须包含 A 类成果 ≥ 1 项。成果类型 A~G 见下方说明。",
+        id: "dz-博士",
         publicReview:
           "智能科学学院、系统工程学院分委会的学位论文（实践成果）一律双盲评阅；其他学院的分委会一般双盲，达到相应学院规定的一级学科公开评阅要求的，可申请公开评阅。",
       },
@@ -1006,6 +1015,7 @@ export const venueGuides: VenueGuide[] = [
         degree: "硕士",
         basic:
           "基于学位论文（实践成果）工作，申请时须取得下列成果类型中至少 1 项（A~F 见下方说明）。",
+        id: "dz-硕士",
         publicReview:
           "系统工程学院、气象海洋学院分委会一律双盲评阅；前沿交叉学科学院、智能科学学院、电子对抗学院分委会为「公开 + 双盲」评阅；其他学院分委会为公开评阅。",
       },
@@ -1236,6 +1246,12 @@ export const venueGuides: VenueGuide[] = [
     },
   },
 ];
+
+/** 按 id 找某学科的学院原文条款 */
+export function findRequirement(programName: string, requirementId: string): RequirementRow | undefined {
+  const g = venueGuides.find((x) => x.name === programName || x.id === programName);
+  return g?.requirements.find((r) => r.id === requirementId);
+}
 
 /** 兼容旧引用 */
 export const venueGuide = venueGuides[1];

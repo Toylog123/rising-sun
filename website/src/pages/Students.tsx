@@ -9,6 +9,7 @@ import { calcGrade, statusToneStudent } from "@/lib/students";
 import { confirmDialog } from "@/store/ui";
 import StudentEditor from "@/components/StudentEditor";
 import Avatar from "@/components/Avatar";
+import { DegreeProgress } from "@/components/DegreeBoard";
 
 const STATUS_BG: Record<string, string> = {
   green: "bg-green-50 text-green-700 border-green-200",
@@ -293,6 +294,8 @@ export default function Students() {
                           {s.bio}
                         </p>
                       )}
+
+                      <DegreeProgress student={s} />
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {(s.email || s.homepage || s.github) ? (

@@ -26,11 +26,21 @@ export type StudentStatus = "在读" | "休学" | "交流中" | "已毕业" | "�
 
 export type MemberRole = "teacher" | "student";
 
+/** 学科口径（与 degreeRequirements 的三份选刊手册对应） */
+export const PROGRAM_OPTIONS = ["集成电路科学与工程", "计算机科学与技术", "电子信息"] as const;
+export type ProgramId = (typeof PROGRAM_OPTIONS)[number];
+
+/** 学位层次 */
+export const DEGREE_OPTIONS = ["硕士", "博士"] as const;
+export type DegreeLevel = (typeof DEGREE_OPTIONS)[number];
+
 export interface Student {
   name: string;            // 唯一主键
   enrolledAt?: string;     // YYYY-MM 月精度（老师可选）
   status?: StudentStatus;  // 学生才用，老师可选
   role?: MemberRole;       // 默认 "student"（兼容旧数据）
+  program?: ProgramId;     // 学科口径，默认 集成电路科学与工程
+  degree?: DegreeLevel;    // 学位层次，默认 硕士
   note?: string;
   advisor?: string;        // 默认继承全局 advisor
   // 学生风采展示字段（可选）
@@ -133,6 +143,8 @@ function normalizeMembers(raw: unknown): Student[] {
     enrolledAt: s.enrolledAt ?? "",
     status: (s.status ?? "在读") as StudentStatus,
     role: s.role,
+    program: s.program,
+    degree: s.degree,
     note: s.note,
     advisor: s.advisor,
     avatar: s.avatar,

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import {
   X, Plus, Pencil, AlertCircle, Calendar, FileText, Link2, Users,
-  GraduationCap, BookOpen, Lightbulb, Trophy,
+  GraduationCap, BookOpen, Lightbulb, Trophy, UserCheck, Sparkles,
 } from "lucide-react";
 import {
   useAchievementStore, type Achievement, type AchievementCategory,
-  JCR_OPTIONS, CAS_OPTIONS, PATENT_STATUS, AWARD_LEVELS,
-  type JcrZone, type CasZone, type PatentStatus,
+  JCR_OPTIONS, CAS_OPTIONS, PATENT_STATUS, AWARD_LEVELS, AUTHOR_ROLE_OPTIONS,
+  type JcrZone, type CasZone, type PatentStatus, type AuthorRole,
 } from "@/store/achievements";
 import { confirmDialog } from "@/store/ui";
+import { useTaskStore } from "@/store/tasks";
+import { venueList, PROGRAM_RULES, type AchievementLevel, levelLabel } from "@/data/degreeAwards";
+import VenuePicker from "@/components/VenuePicker";
 
 interface AchievementEditorProps {
   open: boolean;
@@ -22,10 +25,13 @@ const CATEGORIES: { key: AchievementCategory; label: string; icon: typeof Trophy
   { key: "比赛", label: "比赛获奖", icon: Trophy },
 ];
 
+const MANUAL_LEVEL_OPTIONS: AchievementLevel[] = ["A-1", "A-2", "A-3", "A-4", "B-1", "B-2", "B-3", "基本目录"];
+
 export default function AchievementEditor({ open, initial, onClose }: AchievementEditorProps) {
   const addAchievement = useAchievementStore((s) => s.addAchievement);
   const updateAchievement = useAchievementStore((s) => s.updateAchievement);
   const removeAchievement = useAchievementStore((s) => s.removeAchievement);
+  const members = useTaskStore((s) => s.members);
 
   const isEdit = Boolean(initial);
 
@@ -35,12 +41,23 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   const [note, setNote] = useState("");
   const [link, setLink] = useState("");
 
+  // 归属与毕业匹配
+  const [owner, setOwner] = useState("");
+  const [graduate, setGraduate] = useState(true);
+
   // 论文字段
   const [paperTitle, setPaperTitle] = useState("");
   const [paperVenue, setPaperVenue] = useState("");
+  const [paperVenueKind, setPaperVenueKind] = useState<"期刊" | "会议">("期刊");
+  const [paperVenueKey, setPaperVenueKey] = useState("");
   const [paperJcr, setPaperJcr] = useState<JcrZone | "">("");
   const [paperCas, setPaperCas] = useState<CasZone | "">("");
   const [paperCorrText, setPaperCorrText] = useState("");
+  const [authorRole, setAuthorRole] = useState<AuthorRole | "">("一作");
+  const [coAuthor, setCoAuthor] = useState(false);
+  const [bestPaper, setBestPaper] = useState(false);
+  const [largeConference, setLargeConference] = useState(false);
+  const [paperLevel, setPaperLevel] = useState<AchievementLevel | "">("");
 
   // 专利字段
   const [patentName, setPatentName] = useState("");
@@ -62,12 +79,21 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
       setAuthorsText(initial.authors.join("、"));
       setNote(initial.note ?? "");
       setLink(initial.link ?? "");
+      setOwner(initial.owner ?? "");
+      setGraduate(initial.graduate !== false);
       if (initial.category === "论文") {
         setPaperTitle(initial.title);
         setPaperVenue(initial.venue);
+        setPaperVenueKey(initial.venueKey ?? "");
+        setPaperVenueKind(initial.venueKind ?? "期刊");
         setPaperJcr(initial.jcr ?? "");
         setPaperCas(initial.cas ?? "");
         setPaperCorrText(initial.correspondingAuthors?.join("、") ?? "");
+        setAuthorRole(initial.authorRole ?? "一作");
+        setCoAuthor(Boolean(initial.coAuthor));
+        setBestPaper(Boolean(initial.bestPaper));
+        setLargeConference(Boolean(initial.largeConference));
+        setPaperLevel((initial.level ?? "") as AchievementLevel | "");
       } else if (initial.category === "专利") {
         setPatentName(initial.name);
         setPatentNo(initial.patentNo ?? "");
@@ -83,11 +109,20 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
       setAuthorsText("");
       setNote("");
       setLink("");
+      setOwner("");
+      setGraduate(true);
       setPaperTitle("");
       setPaperVenue("");
+      setPaperVenueKey("");
+      setPaperVenueKind("期刊");
       setPaperJcr("");
       setPaperCas("");
       setPaperCorrText("");
+      setAuthorRole("一作");
+      setCoAuthor(false);
+      setBestPaper(false);
+      setLargeConference(false);
+      setPaperLevel("");
       setPatentName("");
       setPatentNo("");
       setPatentStatus("");
@@ -107,7 +142,21 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // 选中目录条目后自动带出全称
+  useEffect(() => {
+    if (!paperVenueKey) return;
+    const v = venueList.find((x) => x.key === paperVenueKey);
+    if (v) {
+      setPaperVenue(v.name);
+      setPaperVenueKind(v.kind);
+    }
+  }, [paperVenueKey]);
+
   if (!open) return null;
+
+  // 当前归属学生的学科，用于提示这套目录会按哪套规则判定
+  const ownerStudent = members.find((m) => m.name === owner && m.role !== "teacher");
+  const programHint = ownerStudent?.program ? PROGRAM_RULES[ownerStudent.program] : undefined;
 
   const submit = () => {
     if (!year) {
@@ -119,47 +168,59 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
       setError("请至少填写一位作者/发明人/获奖成员");
       return;
     }
+    if (!owner.trim()) {
+      setError("请选择成果归属人（学生的成果要归属到人才能统计毕业要求）");
+      return;
+    }
+
+    const base = {
+      year,
+      authors,
+      owner: owner.trim(),
+      graduate,
+      note: note.trim() || undefined,
+      link: link.trim() || undefined,
+    };
 
     let data: Omit<Achievement, "id">;
     if (category === "论文") {
       if (!paperTitle.trim()) return setError("请填写论文标题");
       if (!paperVenue.trim()) return setError("请填写会议/期刊名");
       data = {
+        ...base,
         category: "论文",
-        year,
-        authors,
         title: paperTitle.trim(),
         venue: paperVenue.trim(),
+        venueKey: paperVenueKey || undefined,
+        venueKind: paperVenueKind,
+        venueName: paperVenue.trim(),
         jcr: (paperJcr || undefined) as JcrZone | undefined,
         cas: (paperCas || undefined) as CasZone | undefined,
         correspondingAuthors: paperCorrText.split(/[、,，\s]+/).map((s) => s.trim()).filter(Boolean),
-        note: note.trim() || undefined,
-        link: link.trim() || undefined,
+        authorRole: (authorRole || undefined) as AuthorRole | undefined,
+        coAuthor,
+        bestPaper,
+        largeConference,
+        level: paperLevel || undefined,
       } as Omit<Achievement, "id">;
     } else if (category === "专利") {
       if (!patentName.trim()) return setError("请填写专利名称");
       data = {
+        ...base,
         category: "专利",
-        year,
-        authors,
         name: patentName.trim(),
         patentNo: patentNo.trim() || undefined,
         status: (patentStatus || undefined) as PatentStatus | undefined,
-        note: note.trim() || undefined,
-        link: link.trim() || undefined,
       } as Omit<Achievement, "id">;
     } else {
       if (!compName.trim()) return setError("请填写比赛名");
       if (!compAward.trim()) return setError("请填写奖项（如：一等奖）");
       data = {
+        ...base,
         category: "比赛",
-        year,
-        authors,
         competition: compName.trim(),
         award: compAward.trim(),
         advisors: compAdvisorsText.split(/[、,，\s]+/).map((s) => s.trim()).filter(Boolean),
-        note: note.trim() || undefined,
-        link: link.trim() || undefined,
       } as Omit<Achievement, "id">;
     }
 
@@ -188,6 +249,8 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   const field =
     "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
   const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
+  const hint = "mt-1.5 text-xs text-[#9a9590]";
+  const check = "inline-flex items-center gap-1.5 text-sm text-[#6b6560]";
 
   return (
     <div
@@ -239,6 +302,43 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
             </div>
           </div>
 
+          {/* 归属人 */}
+          <div className="rounded-xl border border-[#f0ece4] bg-[#faf9f5] p-3.5 space-y-3">
+            <div>
+              <label className={label}>
+                <span className="inline-flex items-center gap-1.5">
+                  <UserCheck size={14} className="text-[#c96442]" />
+                  成果归属人
+                </span>
+              </label>
+              <select value={owner} onChange={(e) => setOwner(e.target.value)} className={field}>
+                <option value="">选择成员</option>
+                {members
+                  .filter((m) => m.status !== "已毕业")
+                  .map((m) => (
+                    <option key={m.name} value={m.name}>
+                      {m.name}
+                      {m.role === "teacher" ? "（老师）" : ""}
+                    </option>
+                  ))}
+              </select>
+              {programHint && (
+                <p className={hint}>
+                  将按 {ownerStudent?.program} · {ownerStudent?.degree ?? "未填学位"} 的毕业要求判定
+                </p>
+              )}
+            </div>
+            <label className="flex items-center gap-2 text-sm text-[#6b6560]">
+              <input
+                type="checkbox"
+                checked={graduate}
+                onChange={(e) => setGraduate(e.target.checked)}
+                className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+              />
+              计入本人毕业要求统计
+            </label>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={label}>
@@ -287,11 +387,61 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                   autoFocus={!isEdit}
                 />
               </div>
+
               <div>
                 <label className={label}>
                   <span className="inline-flex items-center gap-1.5">
                     <FileText size={14} className="text-[#c96442]" />
-                    会议 / 期刊名
+                    刊物类型
+                  </span>
+                </label>
+                <div className="flex gap-2">
+                  {(["期刊", "会议"] as const).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        setPaperVenueKind(k);
+                        setPaperVenueKey("");
+                      }}
+                      className={`rounded-xl border px-3 py-2 text-sm transition-all ${
+                        paperVenueKind === k
+                          ? "bg-[#c96442] text-white border-[#c96442]"
+                          : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                      }`}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className={label}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-[#c96442]" />
+                    从成果目录选择（决定等级判定）
+                  </span>
+                </label>
+                <VenuePicker
+                  kind={paperVenueKind}
+                  value={paperVenueKey}
+                  onChange={(key, v) => {
+                    setPaperVenueKey(key);
+                    if (key) setPaperVenue(v.name);
+                  }}
+                  className={field}
+                />
+                <p className={hint}>
+                  选目录条目后，系统按 CCF / 中科院分区 / CCF 高质量科技期刊 / 一类目录自动判定等级。
+                </p>
+              </div>
+
+              <div>
+                <label className={label}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <FileText size={14} className="text-[#c96442]" />
+                    会议 / 期刊全称（不在目录内时手填）
                   </span>
                 </label>
                 <input
@@ -301,6 +451,71 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                   className={field}
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>本人位次</label>
+                  <select
+                    value={authorRole}
+                    onChange={(e) => setAuthorRole(e.target.value as AuthorRole | "")}
+                    className={field}
+                  >
+                    <option value="">未填</option>
+                    {AUTHOR_ROLE_OPTIONS.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={label}>等级兜底（目录外时手填）</label>
+                  <select
+                    value={paperLevel}
+                    onChange={(e) => setPaperLevel(e.target.value as AchievementLevel | "")}
+                    className={field}
+                    disabled={Boolean(paperVenueKey)}
+                  >
+                    <option value="">自动判定</option>
+                    {MANUAL_LEVEL_OPTIONS.map((l) => (
+                      <option key={l} value={l}>
+                        {levelLabel(l)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                <label className={check}>
+                  <input
+                    type="checkbox"
+                    checked={coAuthor}
+                    onChange={(e) => setCoAuthor(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                  />
+                  与他人共同署名（仅限一人使用）
+                </label>
+                <label className={check}>
+                  <input
+                    type="checkbox"
+                    checked={bestPaper}
+                    onChange={(e) => setBestPaper(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                  />
+                  CCF A/B 会议最佳论文（×1.5）
+                </label>
+                <label className={check}>
+                  <input
+                    type="checkbox"
+                    checked={largeConference}
+                    onChange={(e) => setLargeConference(e.target.checked)}
+                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                  />
+                  当年录用 ≥500 篇的会议（×0.7）
+                </label>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={label}>JCR 分区</label>

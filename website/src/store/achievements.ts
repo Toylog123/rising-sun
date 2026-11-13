@@ -22,6 +22,12 @@ export type PatentStatus = (typeof PATENT_STATUS)[number];
 /** 比赛奖项等级（示例，可输入） */
 export const AWARD_LEVELS = ["特等奖", "一等奖", "二等奖", "三等奖", "金奖", "银奖", "铜奖", "优胜奖"] as const;
 
+/** 本人在论文中的位次 */
+export const AUTHOR_ROLE_OPTIONS = ["一作", "共同一作", "导师一作本人二作", "通讯", "其它"] as const;
+export type AuthorRole = (typeof AUTHOR_ROLE_OPTIONS)[number];
+export const isAuthorRole = (v: unknown): v is AuthorRole =>
+  typeof v === "string" && (AUTHOR_ROLE_OPTIONS as readonly string[]).includes(v);
+
 interface AchievementBase {
   id: string;
   category: AchievementCategory;
@@ -29,16 +35,30 @@ interface AchievementBase {
   authors: string[];     // 发明人 / 获奖成员 / 论文作者
   note?: string;
   link?: string;
+  owner?: string;        // 归属成员（学生 / 老师姓名），空 = 未指定
+  graduate?: boolean;    // 是否作为本人申请学位的成果参与毕业要求匹配
 }
 
 /** 论文 */
 export interface PaperAchievement extends AchievementBase {
   category: "论文";
   title: string;          // 论文标题
-  venue: string;          // 会议/期刊名
+  venue: string;          // 会议/期刊名（展示用全称）
   jcr?: JcrZone;          // JCR 分区
   cas?: CasZone;          // 中科院分区
   correspondingAuthors?: string[];  // 通讯作者
+  /** 成果目录条目 key（来自 degreeRequirements 的 venues，空 = 不在目录内） */
+  venueKey?: string;
+  /** 会议 / 期刊类型，用于目录外成果手填分区 */
+  venueKind?: "期刊" | "会议";
+  /** 目录条目的名称快照，目录找不到 key 时兜底展示 */
+  venueName?: string;
+  authorRole?: AuthorRole;   // 本人位次
+  coAuthor?: boolean;        // 是否与他人共用这篇（共同作者仅限一人使用）
+  bestPaper?: boolean;       // CCF A/B 会议最佳论文（按 1.5 篇折算）
+  largeConference?: boolean; // 投稿当年录用数 ≥ 500 的 CCF A/B 会议（按 0.7 篇折算）
+  /** 与毕业要求解耦的学院等级快照：一类 / A-1 / A-2 / A-3 / A-4 / B-1 / B-2 / B-3 / 基本目录 */
+  level?: string;
 }
 
 /** 专利 */
@@ -102,6 +122,17 @@ type RawAchievement = {
   competition?: string;
   award?: string;
   advisors?: string[];
+  // 毕业要求匹配（旧数据没有）
+  venueKey?: string;
+  authorRole?: AuthorRole;
+  coAuthor?: boolean;
+  bestPaper?: boolean;
+  largeConference?: boolean;
+  level?: string;
+  venueKind?: "期刊" | "会议";
+  venueName?: string;
+  owner?: string;
+  graduate?: boolean;
 };
 
 function normalizeAchievements(raw: unknown): Achievement[] {
@@ -113,6 +144,8 @@ function normalizeAchievements(raw: unknown): Achievement[] {
       authors: Array.isArray(a.authors) ? a.authors : [],
       note: a.note,
       link: a.link,
+      owner: a.owner || undefined,
+      graduate: a.graduate === undefined ? undefined : Boolean(a.graduate),
     };
     if (a.category === "专利") {
       return { ...base, category: "专利", name: a.name ?? a.title ?? "", patentNo: a.patentNo, status: a.status };
@@ -135,6 +168,14 @@ function normalizeAchievements(raw: unknown): Achievement[] {
       jcr: a.jcr,
       cas: a.cas,
       correspondingAuthors: a.correspondingAuthors,
+      venueKey: a.venueKey || undefined,
+      venueKind: a.venueKind,
+      venueName: a.venueName,
+      authorRole: isAuthorRole(a.authorRole) ? a.authorRole : undefined,
+      coAuthor: a.coAuthor === undefined ? undefined : Boolean(a.coAuthor),
+      bestPaper: a.bestPaper === undefined ? undefined : Boolean(a.bestPaper),
+      largeConference: a.largeConference === undefined ? undefined : Boolean(a.largeConference),
+      level: a.level || undefined,
     };
   });
 }
