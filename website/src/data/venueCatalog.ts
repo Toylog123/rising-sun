@@ -11,8 +11,11 @@
  *             条目 ccf 留空，不代表水平低。
  *   - cas   ：中科院文献情报中心期刊分区表（升级版）大类分区；会议无分区。
  *   - ccfTj ：CCF《计算领域高质量科技期刊分级目录》（2025），只收国内刊。
- *   - csee  ：中国电子学会《电子技术、通信技术领域高质量科技期刊分级目录》，
- *             只收国内有 CN 号的期刊。
+ *   - csee  ：中国电子学会《高质量科技期刊分级目录》（T1/T2/T3）。注意它
+ *             **不是**只收中文刊：T1/T2 里大量是 IEEE Trans.、Nature 子刊
+ *             等国际期刊，属于按学科给国内外期刊一起分级。2026 版覆盖
+ *             「电子科学与技术 / 信息与通信工程 / 综合」三个子目录，
+ *             「计算机技术」仍是 2022 版，引用时要注明版本年份。
  *   查不到的一律留空，页面显示「未知」，不做推测。
  */
 
@@ -1063,6 +1066,22 @@ const CONFERENCES: VenueRow[] = [
     ccfDomain: CCF_DOMAIN_SE,
     note: "软件测试与验证（CCF 软件工程 C 类），与硬件测试方向相近但侧重软件。",
   },
+  {
+    abbr: "HOST",
+    name: "IEEE International Symposium on Hardware Oriented Security and Trust",
+    kind: "会议",
+    fields: ["测试与可靠性", "综合/交叉"],
+    ccf: "",
+    note: "IEEE 主办的硬件安全专会（PUF/TRNG/PQC、木马、侧信道、故障注入、chiplet 与封装安全）。不在 CCF 目录；2027 版采用两轮评审 + 大修通道。",
+  },
+  {
+    abbr: "MWSCAS",
+    name: "IEEE International Midwest Symposium on Circuits and Systems",
+    kind: "会议",
+    fields: ["电路与系统"],
+    ccf: "",
+    note: "区域性 CAS 会议（美国中西部起家），模拟/混合信号、RF、传感器接口，门槛中等偏低。不在 CCF 目录。",
+  },
 ];
 
 /** AI/ML 会议（AI for EDA 的交叉出口） */
@@ -1307,6 +1326,43 @@ const TIER1: VenueRow[] = [
   },
 ];
 
+/* 数据修订表（按简称覆盖字段；只在重建列表时生效，源条目保持原样） */
+const FIXES: Record<string, Partial<VenueRow>> = {
+  "电子学报": { csee: "T1" },
+  "电子与信息学报": { csee: "T2" },
+  "通信学报": { csee: "T1" },
+  "半导体学报": { csee: "T2" },
+  "微电子学": { csee: "T3" },
+  "固体电子学研究与进展": { csee: "T3" },
+  "中国科学:信息": { csee: "T2" },
+  "SCIS": { csee: "T1" },
+  "计算机学报": { csee: "T1", note: "CCF 计算领域高质量科技期刊 T1；中国电子学会目录里只在 2022 版「计算机技术」子目录出现（T1，序号 2）。" },
+  "JSSC": { csee: "T1" },
+  "TCAS-I": { csee: "T1" },
+  "TED": { csee: "T1" },
+  "TPEL": { csee: "T1" },
+  "SSC-L": { csee: "T2" },
+  "TCAS-II": { csee: "T2" },
+  "TNS": { csee: "T2" },
+  "TDMR": { csee: "T2" },
+  "TSM": { csee: "T2" },
+  "Nat. Electron.": { csee: "T1" },
+  "Nat. Photonics": { csee: "T1" },
+  "Nat. Mach. Intell.": { csee: "T1" },
+  "AEÜ": { csee: "T2" },
+  "DAC": { note: "ACM SIGDA / IEEE CEDA 主办，EDA 领域规模最大、工业界参与度最高的旗舰会，覆盖「RTL 到版图」全流程工具与方法；录用率官方不公布。" },
+  "ICCAD": { note: "IEEE CEDA / ACM SIGDA 主办，EDA 领域第二大旗舰会，Front-End / Back-End / 设计与验证 / 新兴技术并行分轨；录用率官方不公布。" },
+  "DATE": { note: "EDAA 主办的欧洲版 DAC，同时收 EDA 与嵌入式/系统层，CfP 范围「从 IC 到大规模分布系统」。" },
+  "ASP-DAC": { note: "亚太区 EDA 主会，ACM SIGDA / IEEE CEDA / 亚洲各地区学会联合主办，设有 University LSI Design Contest 与设计竞赛。" },
+  "ISPD": { note: "ACM SIGDA 主办的物理设计专会（布局布线、时钟树、时序、功耗完整性、DFM），每年设 ISPD Contest，是 P&R 算法方向最对口的单点会议。" },
+  "GLSVLSI": { note: "ACM SIGDA 主办的 VLSI 全栈综合会：电路/微架构、VLSI for AI、CAD（含 P&R/CTS 物理设计）、测试可靠性、后 CMOS、硬件安全都在征稿范围内，是少数同时覆盖「后端 + 测试 + 安全」的 CCF-C 综合会。" },
+  "ISLPED": { note: "功耗/能效专会。2026 版分四轨：技术与电路架构、EDA/系统/软件、AI/量子/新兴硬件、工业设计；第 2 轨明确收功耗感知 EDA 与各抽象层的功耗估计优化。" },
+  "NSREC": { note: "IEEE NPSS 主办的辐射效应领域头号会议，TID / SEE / 单粒子 / 辐照测试与加固设计的主渠道；CCF 不覆盖核与空间领域，因此在目录外。" },
+  "ISSCC": { note: "IEEE SSCS 主办，固态电路领域声望最高的会议，工业界芯片成果首选发布地。" },
+  "VLSI Symp.": { note: "IEEE SSCS / JSAP 主办，工艺（Technology）与电路（Circuits）双轨，与 ISSCC 同级。" },
+  "IOLTS": { note: "在线测试与系统专会，收在线测试、鲁棒性、故障注入、瞬态故障与辐射引发的软错误，对「辐射效应 → 软错误」方向很对口。" },
+};
+
 export const VENUES: VenueRow[] = [
   ...TIER1,
   ...NATURE_KIDS,
@@ -1317,7 +1373,10 @@ export const VENUES: VenueRow[] = [
   ...CN_JOURNALS,
   ...CONFERENCES,
   ...AI_CONFERENCES,
-];
+].map((row) => {
+  const fix = FIXES[row.abbr];
+  return fix ? { ...row, ...fix } : row;
+});
 
 /** 按简称索引（重复简称以最后一个为准，便于覆盖修正） */
 export const VENUE_BY_ABBR = new Map<string, VenueRow>();
@@ -1349,9 +1408,10 @@ export const VENUE_SOURCES = [
   },
   {
     id: "csee",
-    label: "中国电子学会《电子技术、通信技术领域高质量科技期刊分级目录》",
-    detail: "只收国内有 CN 号的期刊；学院原文把它用于集成电路学科的 A-3、B-2 两档。",
-    url: "https://www.cie.org.cn/",
+    label: "中国电子学会《高质量科技期刊分级目录》（T1/T2/T3）",
+    detail:
+      "2026 版覆盖「电子科学与技术 / 信息与通信工程 / 综合」三个子目录（共 368 条，T1 81 / T2 126 / T3 161），「计算机技术」仍是 2022 版（186 条）。注意它不是中文刊目录：T1/T2 里有大量 IEEE Trans.、Nature 子刊。学院原文在集成电路学科的 A-3、B-2 两档引用它。",
+    url: "https://www.cie.org.cn/about_179/",
   },
   {
     id: "issn",
@@ -1373,4 +1433,7 @@ export const GOTCHAS: string[] = [
   "中国科学：信息科学中文版与英文版 SCIS 口径不同：英文版 SCIS 是 CCF A 类，中文版不是。",
   "NSREC 只在集成电路学科原文里被单列为二类 A-4；计算机学科目录没有这条，跨学科认定时注意。",
   "集成电路学科硕士公开评阅①里「《国防科技大学学报》1 篇」是校内快捷通道，比投外部期刊容易得多。",
+  "中国电子学会的分级目录不是中文刊目录：T1/T2 里既有 JSSC、TCAD、TED、TVLSI 等国际期刊，也有电子学报、通信学报等中文刊，按学科一起分级。",
+  "中国电子学会目录 2026 版只更新了「电子科学与技术 / 信息与通信工程 / 综合」三个子目录，「计算机技术」还是 2022 版——引用时务必写清版本年份。",
+  "计算机学报只出现在电子学会 2022 版「计算机技术」子目录（T1），2026 版合订目录里没有它，别拿最新版去查。",
 ];
