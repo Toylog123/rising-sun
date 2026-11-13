@@ -87,8 +87,11 @@ fs.writeFileSync(rootIndexPath, html);
 const KEEP_REVISIONS = 3;
 
 const rootAssets = path.join(rootDir, "assets");
-const ASSET_RE = /^index-[\w-]+\.(js|css)$/;
-const MAP_RE = /^index-[\w-]+\.js\.map$/;
+// index-<hash>.js/css 是入口产物，会被轮换清理；其余（如 catalog-<hash>.js 这类
+// 共享 chunk）跟着入口走，入口被清掉相应的共享 chunk 也要清，否则 assets/ 会堆积。
+const ENTRY_RE = /^index-[\w-]+\.(js|css)$/;
+const CHUNK_RE = /^[\w-]+-[\w-]+\.(js|css)$/;
+const MAP_RE = /^[\w-]+\.js\.map$/;
 
 // sourcemap 永不部署
 for (const f of fs.readdirSync(rootAssets)) {
@@ -98,12 +101,17 @@ for (const f of fs.readdirSync(rootAssets)) {
 // 按修改时间倒序排出旧产物（新的在前）
 const oldAssets = fs
   .readdirSync(rootAssets)
-  .filter((f) => ASSET_RE.test(f) && f !== js && f !== css)
+  .filter((f) => ENTRY_RE.test(f) && f !== js && f !== css)
   .map((f) => ({ f, t: fs.statSync(path.join(rootAssets, f)).mtimeMs }))
   .sort((a, b) => b.t - a.t);
 
-fs.copyFileSync(path.join(distAssets, js), path.join(rootAssets, js));
-fs.copyFileSync(path.join(distAssets, css), path.join(rootAssets, css));
+// 入口产物 + 它依赖的所有共享 chunk 一起同步
+const buildAssets = fs
+  .readdirSync(distAssets)
+  .filter((f) => CHUNK_RE.test(f) || f === js || f === css);
+for (const f of buildAssets) {
+  fs.copyFileSync(path.join(distAssets, f), path.join(rootAssets, f));
+}
 
 // 只清理超出保留窗口的旧产物，但线上 HTML 正在引用的那一对永远保留
 const expired = oldAssets.slice(KEEP_REVISIONS - 1);
@@ -115,6 +123,24 @@ for (const { f } of expired) {
   fs.rmSync(path.join(rootAssets, f));
   console.log(`  清理过期产物 assets/${f}`);
 }
+// 已没用的共享 chunk：入口产物里不再引用它们
+// 注意：必须在上面 copyFileSync 之后判断，且本次要部署的 buildAssets 一律保留。
+const keepNames = new Set(buildAssets);
+const liveChunks = new Set();
+for (const f of fs.readdirSync(rootAssets)) {
+  if (!ENTRY_RE.test(f)) continue;
+  const src = fs.readFileSync(path.join(rootAssets, f), "utf8");
+  for (const m of src.matchAll(/["'`]([\w-]+-[\w-]+\.(?:js|css))["'`]/g)) {
+    liveChunks.add(m[1]);
+  }
+}
+for (const f of fs.readdirSync(rootAssets)) {
+  if (!CHUNK_RE.test(f) || ENTRY_RE.test(f)) continue;
+  if (liveChunks.has(f) || keepNames.has(f)) continue;
+  fs.rmSync(path.join(rootAssets, f));
+  console.log(`  清理过期产物 assets/${f}`);
+}
+
 const kept = oldAssets.length - expired.length;
 if (oldAssets.length > 0) {
   console.log(`  保留旧产物 ${kept} 份（覆盖浏览器 HTML 缓存窗口）`);
@@ -126,5 +152,5 @@ if (fs.existsSync(distLogo)) {
   fs.copyFileSync(distLogo, path.join(rootDir, "logo.svg"));
 }
 
-console.log(`✔ 部署完成：${js} + ${css}`);
+console.log(`✔ 部署完成：${js} + ${css}（共 ${buildAssets.length} 个产物文件）`);
 console.log("  下一步：git add -A && git commit && git push（Pages 约 1-2 分钟生效）");

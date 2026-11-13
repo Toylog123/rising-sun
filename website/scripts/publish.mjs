@@ -81,7 +81,8 @@ function collectFiles() {
 
   if (fs.existsSync(assetsDir)) {
     for (const name of fs.readdirSync(assetsDir).sort()) {
-      if (!/^index-[\w-]+\.(js|css)$/.test(name)) continue;
+      // 入口产物 + 共享 chunk（catalog-*.js 等）都要发，只发 index-* 会 404
+      if (!/^[\w-]+-[\w-]+\.(js|css)$/.test(name)) continue;
       files.push(`assets/${name}`);
     }
   }
