@@ -1,3 +1,5 @@
+import { ccfTjJournals } from "./ccfCatalog";
+
 // 学位成果选刊手册（国防科技大学计算机学院相关学科）
 //
 // 三份手册：
@@ -87,6 +89,8 @@ export interface VenueGuide {
   recommendations: GuideTier[];
   /** 口径提示 */
   caveats: string[];
+  /** 官方目录（原文全量条目，非本组筛选项） */
+  official: OfficialDirectory;
 }
 
 const DISCLAIMER =
@@ -109,10 +113,10 @@ const CCF_A: GuideRow[] = [
     name: "IEEE/ACM International Conference on Computer-Aided Design",
     abbr: "ICCAD",
     kind: "会议",
-    db: "CCF A",
-    level: "A-1",
+    db: "CCF B",
+    level: "B-1",
     difficulty: "难",
-    note: "EDA 方法论主战场，物理设计、布局布线、逻辑综合方向的经典投稿点。CCF A 类会议。",
+    note: "EDA 方法论主战场，物理设计、布局布线、逻辑综合方向的经典投稿点。**CCF 官方目录中 ICCAD 为 B 类会议**（此前误标为 CCF A），计算机学科的 A-1 需要 CCF A 类 + 中科院 1 区 Top，因此 ICCAD 只能算 B-1。",
   },
   {
     name: "IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems",
@@ -220,7 +224,7 @@ const ARCH_B: GuideRow[] = [
     note: "模拟/数字电路通用期刊，CCF B 类；做电路与系统设计时常用。",
   },
   {
-    name: "IEEE/ACM International Conference on Computer-Aided Design 之外的 EDA 专门会议：Asia and South Pacific Design Automation Conference",
+    name: "Asia and South Pacific Design Automation Conference",
     abbr: "ASP-DAC",
     kind: "会议",
     db: "CCF C",
@@ -422,6 +426,47 @@ const DZ_JOURNALS: GuideRow[] = [
   },
 ];
 
+
+/** 官方目录条目（一类目录 / CCF T1-T3） */
+export interface OfficialJournal {
+  /** 序号 */
+  index: number;
+  /** 中文名称 */
+  cn: string;
+  /** 英文名称 */
+  en: string;
+  /** 收录 / 检索 */
+  indexDb?: string;
+  /** 备注 */
+  note?: string;
+}
+
+export interface OfficialDirectory {
+  /** 一类目录（紧密相关成果范围目录一类，13 本顶刊） */
+  tier1?: { title: string; desc: string; rows: OfficialJournal[] }[];
+  /** CCF《计算领域高质量科技期刊分级目录》(2025) T1/T2/T3 全量 */
+  ccfTj?: { title: string; desc: string; rows: OfficialJournal[] }[];
+  /** CCF《推荐国际学术会议和期刊目录》全量（按学科领域分组，仅列 A/B 类） */
+  ccfRank?: { title: string; desc: string; rows: GuideRow[] }[];
+}
+
+/** 一类目录：Nature / Science / Cell 系 13 本（原文附件，ISSN 已于 2026-11-13 经 Crossref 核对） */
+export const TIER1_JOURNALS: OfficialJournal[] = [
+  { index: 1, cn: "Nature", en: "Nature", indexDb: "SCI", note: "ISSN 0028-0836" },
+  { index: 2, cn: "Science", en: "Science", indexDb: "SCI", note: "ISSN 0036-8075" },
+  { index: 3, cn: "Cell", en: "Cell", indexDb: "SCI", note: "ISSN 0092-8674" },
+  { index: 4, cn: "Nature Materials", en: "Nature Materials", indexDb: "SCI", note: "ISSN 1476-1122" },
+  { index: 5, cn: "Nature Electronics", en: "Nature Electronics", indexDb: "SCI", note: "ISSN 2520-1131" },
+  { index: 6, cn: "Nature Physics", en: "Nature Physics", indexDb: "SCI", note: "ISSN 1745-2473" },
+  { index: 7, cn: "Nature Nanotechnology", en: "Nature Nanotechnology", indexDb: "SCI", note: "ISSN 1748-3387" },
+  { index: 8, cn: "Nature Photonics", en: "Nature Photonics", indexDb: "SCI", note: "ISSN 1749-4885" },
+  { index: 9, cn: "Nature Communications", en: "Nature Communications", indexDb: "SCI/EI", note: "ISSN 2041-1723" },
+  { index: 10, cn: "Science Advances", en: "Science Advances", indexDb: "SCI", note: "ISSN 2375-2548" },
+  { index: 11, cn: "Nature Computational Science", en: "Nature Computational Science", indexDb: "SCI", note: "ISSN 2662-8457；原文误拼为 Nature Computional Science" },
+  { index: 12, cn: "Nature Machine Intelligence", en: "Nature Machine Intelligence", indexDb: "SCI", note: "ISSN 2522-5839；原文印作 8588-5839，经 Crossref 核对为笔误" },
+  { index: 13, cn: "Science Robotics", en: "Science Robotics", indexDb: "SCI", note: "ISSN 2470-9476" },
+];
+
 export const venueGuides: VenueGuide[] = [
   {
     id: "cs",
@@ -502,7 +547,7 @@ export const venueGuides: VenueGuide[] = [
     lists: [
       {
         title: "A-1 / A 档：CCF A 类会议与期刊",
-        desc: "本组最现实的 A-1 目标是 DAC / ICCAD 两篇会议。注意期刊侧的 TCAD 虽为 CCF A 期刊，但中科院分区多在 2 区，不满足 A-1 的「1 区 Top」要求。",
+        desc: "本组最现实的 A-1 目标只有 DAC（CCF A 会议）；ICCAD 按 CCF 官方目录是 B 类会议。注意期刊侧的 TCAD 虽为 CCF A 期刊，但中科院分区多在 2 区，不满足 A-1 的「1 区 Top」要求。",
         rows: CCF_A,
       },
       {
@@ -643,12 +688,29 @@ export const venueGuides: VenueGuide[] = [
       },
     ],
     caveats: [
-      "A-1 需要「CCF A 类」与「中科院 1 区 Top」同时满足。DAC / ICCAD 是会议，没有中科院分区，按学院规则可直接算 A-1；TCAD 是 CCF A 期刊但中科院多为 2 区，按 B-1 计更稳妥。",
+      "A-1 需要「CCF A 类」与「中科院 1 区 Top」同时满足。DAC 是 CCF A 类会议，按学院规则可直接算 A-1；TCAD 是 CCF A 期刊但中科院多为 2 区，按 B-1 计更稳妥；ICCAD 在 CCF 官方目录中为 B 类会议，同样按 B-1 计。",
       "折算规则：CCF A/B 类会议最佳论文（该届 ≤3 篇）按 1.5 篇；A/B 类会议当年录用 >500 篇按 0.7 篇（最佳论文不适用）；共同一作原则上仅用一篇。",
       "共同作者成果仅限一名学位申请人使用，且需其他共同作者同意；协助导师须列入学位论文封面。",
       "预警名单：论文发表期间刊物被列入中科院《国际期刊预警名单》的，不能作为紧密相关成果；投稿前务必核对最新版名单。",
       "本手册的「难度」为经验判断，「影响因子」为 JCR 近年近似值，均仅供选题参考，不作认定依据。",
     ],
+    official: {
+      tier1: [{
+        title: "一类目录（紧密相关成果范围目录 一类，13 本）",
+        desc: "学院原文附件列出的 13 本顶刊。博士公开评阅第 ① 条与「提前申请学位」都要求在一类目录发表 1 篇。ISSN 已逐条核对。",
+        rows: TIER1_JOURNALS,
+      }],
+      ccfTj: [{
+        title: "CCF《计算领域高质量科技期刊分级目录》(2025)",
+        desc: "CCF 官方全量：T1 类 19 本、T2 类 22 本、T3 类 27 本，按拼音 / 英文名称排序。原文中「CCF 高质量科技期刊 T1、T2」即引用此目录。",
+        rows: ccfTjJournals.map((j) => ({ index: j.index, cn: j.cn, en: j.en, indexDb: j.lang + " · " + j.cnNo + " · " + j.tier, note: j.host })),
+      }],
+      ccfRank: [{
+        title: "CCF 推荐目录 A 类（与本质方向直接相关）",
+        desc: "CCF《推荐国际学术会议和期刊目录》全量共 644 条（A/B/C × 期刊/会议 × 10 个领域），页面体积考虑，此处只列与本组方向相关的 A/B 两类；完整目录可在 CCF 官网按领域查阅。",
+        rows: [...CCF_A, ...ARCH_B.filter((r) => r.kind === "期刊").slice(0, 4), ...ARCH_B.filter((r) => r.kind === "会议")],
+      }],
+    },
   },
 
   {
@@ -757,7 +819,7 @@ export const venueGuides: VenueGuide[] = [
     lists: [
       {
         title: "A 档：CCF A 类 + 电子学会一类 + NSREC",
-        desc: "本学科 A-1 只需 CCF A 类，不要求中科院 1 区 Top，因此 DAC / ICCAD 会议直接可用；NSREC 是本方向独有的 A-4 通道。",
+        desc: "本学科 A-1 只需 CCF A 类，不要求中科院 1 区 Top，因此 DAC 直接可用；ICCAD 为 CCF B 类会议，属 B-1；NSREC 是本方向独有的 A-4 通道。",
         rows: [
           ...CCF_A,
           {
@@ -900,6 +962,23 @@ export const venueGuides: VenueGuide[] = [
       "提前申请学位条款照录了「计算机科学与技术、软件工程学科」目录名称，与本学科不一致，以学院解释为准。",
       "折算规则、共同作者限制、预警名单与计算机学科相同，见页面上方通用说明。",
     ],
+    official: {
+      tier1: [{
+        title: "一类目录（紧密相关成果范围目录 一类，13 本）",
+        desc: "与计算机学科基本相同的一类目录 13 本顶刊，博士公开评阅第 ① 条要求在此发表 1 篇。",
+        rows: TIER1_JOURNALS,
+      }],
+      ccfTj: [{
+        title: "CCF《计算领域高质量科技期刊分级目录》(2025)",
+        desc: "CCF 官方全量：T1 类 19 本、T2 类 22 本、T3 类 27 本，按拼音 / 英文名称排序。原文中「CCF 高质量科技期刊 T1、T2」即引用此目录。",
+        rows: ccfTjJournals.map((j) => ({ index: j.index, cn: j.cn, en: j.en, indexDb: j.lang + " · " + j.cnNo + " · " + j.tier, note: j.host })),
+      }],
+      ccfRank: [{
+        title: "C 类及以上会议（含 ASP-DAC / FPL / ICCD，本学科 B-1 起算）",
+        desc: "本学科 A-1 只需 CCF A 类（DAC、TCAD）；B-1 需 CCF B 类以上，ICCAD、FPGA、DATE、ICCD、ITC、TVLSI、TODAES 均可计入。",
+        rows: [...CCF_A, ...ARCH_B.filter((r) => r.kind === "会议")],
+      }],
+    },
   },
 
   {
@@ -1138,6 +1217,23 @@ export const venueGuides: VenueGuide[] = [
       "硕士的论文要求宽松（公开出版的学术刊物含会议），但硕士评阅方式在部分学院是「公开 + 双盲」。",
       "以上成果均须将国防科技大学列为完成单位。",
     ],
+    official: {
+      tier1: [{
+        title: "一类目录（紧密相关成果范围目录 一类，13 本）",
+        desc: "电子信息大类总要求未公开附件；此处列出一类目录 13 本顶刊，作为最高等级成果的参照。",
+        rows: TIER1_JOURNALS,
+      }],
+      ccfTj: [{
+        title: "CCF《计算领域高质量科技期刊分级目录》(2025)",
+        desc: "CCF 官方全量：T1 类 19 本、T2 类 22 本、T3 类 27 本，按拼音 / 英文名称排序。原文中「CCF 高质量科技期刊 T1、T2」即引用此目录。",
+        rows: ccfTjJournals.map((j) => ({ index: j.index, cn: j.cn, en: j.en, indexDb: j.lang + " · " + j.cnNo + " · " + j.tier, note: j.host })),
+      }],
+      ccfRank: [{
+        title: "CCF 推荐目录（A / B 类）",
+        desc: "本方向相关的 CCF A / B 类会议期刊，可按学院目录的 A/B 等级映射。",
+        rows: [...CCF_A, ...ARCH_B, ...ICECE_JOURNALS],
+      }],
+    },
   },
 ];
 

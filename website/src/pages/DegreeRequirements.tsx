@@ -1,7 +1,14 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { GraduationCap, ArrowLeft, Search, ChevronDown, ChevronRight, X, Info } from "lucide-react";
-import { venueGuides, type GuideRow, type RequirementRow, type VenueGuide } from "@/data/degreeRequirements";
+import {
+  venueGuides,
+  type GuideRow,
+  type OfficialDirectory,
+  type OfficialJournal,
+  type RequirementRow,
+  type VenueGuide,
+} from "@/data/degreeRequirements";
 
 function Section({
   title,
@@ -95,6 +102,72 @@ function GuideTable({ rows }: { rows: GuideRow[] }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+function OfficialJournalTable({ rows }: { rows: OfficialJournal[] }) {
+  if (rows.length === 0) return <Row tone="note">没有匹配的条目</Row>;
+  return (
+    <div className="overflow-x-auto rounded-xl border border-[#e8e4db] max-h-[520px] overflow-y-auto">
+      <table className="w-full text-sm min-w-[600px]">
+        <thead className="sticky top-0 bg-[#faf9f5]">
+          <tr className="text-[#9a9590] text-xs">
+            <th className="px-3 py-2 text-left font-medium w-12">序号</th>
+            <th className="px-3 py-2 text-left font-medium">刊名</th>
+            <th className="px-3 py-2 text-left font-medium">英文名 / 语种</th>
+            <th className="px-3 py-2 text-left font-medium">检索 / 备注</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#f0ece4]">
+          {rows.map((r) => (
+            <tr key={r.index} className="align-top">
+              <td className="px-3 py-2 text-[#9a9590] whitespace-nowrap">{r.index}</td>
+              <td className="px-3 py-2 text-[#1a1a1a] font-medium">{r.cn}</td>
+              <td className="px-3 py-2 text-[#6b6560]">{r.en}</td>
+              <td className="px-3 py-2 text-[#6b6560]">{r.indexDb ?? ""}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OfficialSection({ o, q, hit }: { o: OfficialDirectory; q: string; hit: (t: string) => boolean }) {
+  const groups = [...(o.tier1 ?? []), ...(o.ccfTj ?? [])].map((grp) => ({
+    ...grp,
+    rows: grp.rows.filter((r) => hit(`${grp.title} ${r.cn} ${r.en} ${r.indexDb ?? ""} ${r.note ?? ""}`)),
+  }));
+  const rankGroups = (o.ccfRank ?? []).map((grp) => ({
+    ...grp,
+    rows: grp.rows.filter((r) => hit(`${grp.title} ${r.name} ${r.abbr} ${r.db ?? ""} ${r.note}`)),
+  }));
+  const visible = [...groups, ...rankGroups].filter((grp) => grp.rows.length > 0);
+  if (!q.trim()) {
+    // 未检索时也全部展示（官方目录条目多，默认折叠）
+  }
+  return (
+    <>
+      {visible.length === 0 && <Row tone="note">没有匹配的条目</Row>}
+      {groups
+        .filter((grp) => grp.rows.length > 0)
+        .map((grp) => (
+          <div key={grp.title}>
+            <h3 className="text-sm font-semibold text-[#c96442] mb-0.5">{grp.title}</h3>
+            {grp.desc && <p className="text-xs text-[#9a9590] mb-2">{grp.desc}</p>}
+            <OfficialJournalTable rows={grp.rows} />
+          </div>
+        ))}
+      {rankGroups
+        .filter((grp) => grp.rows.length > 0)
+        .map((grp) => (
+          <div key={grp.title}>
+            <h3 className="text-sm font-semibold text-[#c96442] mb-0.5">{grp.title}</h3>
+            {grp.desc && <p className="text-xs text-[#9a9590] mb-2">{grp.desc}</p>}
+            <GuideTable rows={grp.rows} />
+          </div>
+        ))}
+    </>
   );
 }
 
@@ -217,6 +290,17 @@ function GuideView({ g, q }: { g: VenueGuide; q: string }) {
             </li>
           ))}
         </ol>
+      </Section>
+
+      <Section
+        title="六、官方目录（原文全量条目）"
+        count={[...(g.official.tier1 ?? []), ...(g.official.ccfTj ?? []), ...(g.official.ccfRank ?? [])].reduce(
+          (n, x) => n + x.rows.length,
+          0
+        )}
+        defaultOpen={false}
+      >
+        <OfficialSection o={g.official} q={q} hit={hit} />
       </Section>
 
       {nothing && q.trim() && (
