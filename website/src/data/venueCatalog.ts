@@ -52,6 +52,8 @@ export interface VenueRow {
   cas?: string;
   /** 中科院 Top 期刊 */
   casTop?: boolean;
+  /** 中科院大类学科（如「计算机科学」「工程技术」） */
+  casMajor?: string;
   /** 中国电子学会分级 T1/T2/T3；"" = 不在该目录 */
   csee?: string;
   /** CCF《计算领域高质量科技期刊分级目录》T1/T2/T3（仅国内刊） */

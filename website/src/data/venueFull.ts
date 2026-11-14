@@ -9,6 +9,42 @@
 
 import type { FieldTag, VenueKind, VenueRow } from "./venueCatalog";
 import { CSEE_BY_ISSN, CSEE_ENTRIES } from "./cseeFull";
+import { CCF_ISSN } from "./ccfIssn";
+import { CCFT_BY_NAME, casOf } from "./casFull";
+
+/** 取 CCF 条目的 ISSN（Crossref 补全），键优先简称、其次全称 */
+function issnOf(abbr: string, name: string): string | undefined {
+  const a = CCF_ISSN[abbr];
+  if (a) return a[0];
+  const b = CCF_ISSN[name];
+  return b ? b[0] : undefined;
+}
+
+/** 中科院分区（2025 升级版）：优先按 ISSN 查权威表，查不到再用手工表 */
+function casOfRow(r: { abbr: string; name: string; issn?: string }): {
+  cas?: "1区" | "2区" | "3区" | "4区";
+  casTop?: boolean;
+  casMajor?: string;
+  impact?: number;
+} {
+  const hand = CAS_TABLE[r.abbr];
+  const info = casOf(r.issn ?? issnOf(r.abbr, r.name));
+  if (info) {
+    const cas = `${info.quartile}区` as "1区" | "2区" | "3区" | "4区";
+    return { cas, casTop: info.top, casMajor: info.major, impact: hand?.[2] };
+  }
+  if (!hand || !hand[0]) return { impact: hand?.[2] };
+  return {
+    cas: hand[0] as "1区" | "2区" | "3区" | "4区",
+    casTop: hand[1],
+    impact: hand[2],
+  };
+}
+
+/** CCF 计算领域高质量科技期刊分级目录（2025）：按刊名/中文名匹配 */
+function ccfTjOf(abbr: string, name: string): string | undefined {
+  return CCFT_BY_NAME[name] ?? CCFT_BY_NAME[abbr];
+}
 
 /** CCF 领域 → 本站研究方向标签 */
 const DOMAIN_FIELDS: Record<string, FieldTag[]> = {
@@ -215,16 +251,20 @@ export function buildCatalog(input: CatalogInput): BuiltCatalog {
 
   for (const r of baseRows) {
     const ccfHit = ccfIndex.get(r.abbr.toUpperCase());
-    const cas = CAS_TABLE[r.abbr];
+    const issn = r.issn ?? issnOf(r.abbr, r.name);
+    const casInfo = casOfRow({ abbr: r.abbr, name: r.name, issn });
     const row: VenueRow = {
       ...r,
+      issn,
       ccf: r.ccf ?? (ccfHit ? ccfHit.ccf : ""),
       ccfDomain: r.ccfDomain ?? ccfHit?.domain,
       ccfKind: r.kind,
-      cas: r.cas !== undefined ? r.cas : cas ? cas[0] : undefined,
-      casTop: r.casTop !== undefined ? r.casTop : cas ? cas[1] : undefined,
-      impact: r.impact ?? cas?.[2],
-      csee: r.csee ?? cseeOf(r.abbr, r.name, r.issn),
+      cas: r.cas !== undefined ? r.cas : casInfo.cas,
+      casTop: r.casTop !== undefined ? r.casTop : casInfo.casTop,
+      casMajor: r.casMajor ?? casInfo.casMajor,
+      impact: r.impact ?? casInfo.impact,
+      ccfTj: r.ccfTj ?? ccfTjOf(r.abbr, r.name),
+      csee: r.csee ?? cseeOf(r.abbr, r.name, issn),
       tier1: r.tier1 || TIER1_ABBRS.has(r.abbr),
       namedInDoc: r.namedInDoc || NAMED_IN_DOC.has(r.abbr),
       source: "verified",
@@ -235,7 +275,8 @@ export function buildCatalog(input: CatalogInput): BuiltCatalog {
   let fromCcf = 0;
   for (const hit of ccfIndex.values()) {
     if (byAbbr.has(hit.abbr)) continue;
-    const cas = CAS_TABLE[hit.abbr];
+    const issn = issnOf(hit.abbr, hit.name);
+    const casInfo = casOfRow({ abbr: hit.abbr, name: hit.name, issn });
     const fields = DOMAIN_FIELDS[hit.domain] ?? ["综合/交叉"];
     const note =
       (CORE_ABBRS.has(hit.abbr) ? "★本院方向对口。" : "") +
@@ -244,14 +285,17 @@ export function buildCatalog(input: CatalogInput): BuiltCatalog {
       abbr: hit.abbr,
       name: hit.name,
       kind: hit.kind,
-      fields: cas ? fields : hit.kind === "会议" ? fields : fields,
+      fields,
       ccf: hit.ccf,
       ccfDomain: hit.domain,
       ccfKind: hit.kind,
-      cas: cas ? cas[0] : undefined,
-      casTop: cas ? cas[1] : undefined,
-      impact: cas ? cas[2] : undefined,
-      csee: cseeOf(hit.abbr, hit.name),
+      issn,
+      cas: casInfo.cas,
+      casTop: casInfo.casTop,
+      casMajor: casInfo.casMajor,
+      impact: casInfo.impact,
+      ccfTj: ccfTjOf(hit.abbr, hit.name),
+      csee: cseeOf(hit.abbr, hit.name, issn),
       tier1: TIER1_ABBRS.has(hit.abbr),
       namedInDoc: NAMED_IN_DOC.has(hit.abbr),
       note,
