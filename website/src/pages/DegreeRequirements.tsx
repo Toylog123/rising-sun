@@ -273,8 +273,10 @@ export default function DegreeRequirements() {
   const [program, setProgram] = useState<ProgramName>("集成电路科学与工程");
   const meta = PROGRAMS.find((p) => p.program === program) ?? PROGRAMS[0];
 
-  const basicD = findRequirement(program, "硕士");
-  const basicB = findRequirement(program, "博士");
+  // 条款按 id 取：cs-硕士 / ice-博士 等；findRequirement 的第二参数是 requirementId，
+  // 不是「硕士 / 博士」这两个字，早前传错导致「本专业成果要求」区块一直是空的。
+  const basicD = findRequirement(program, `${meta.id}-硕士`);
+  const basicB = findRequirement(program, `${meta.id}-博士`);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

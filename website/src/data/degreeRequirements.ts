@@ -1249,7 +1249,11 @@ export const venueGuides: VenueGuide[] = [
 
 /** 按 id 找某学科的学院原文条款 */
 export function findRequirement(programName: string, requirementId: string): RequirementRow | undefined {
-  const g = venueGuides.find((x) => x.name === programName || x.id === programName);
+  // 原文里的学科名可能更全（如「计算机科学与技术、软件工程」），
+  // 而页面上的专业名只有前半段，所以既比 id、也比名字前缀。
+  const g =
+    venueGuides.find((x) => x.id === programName || x.name === programName) ??
+    venueGuides.find((x) => x.name.startsWith(programName) || programName.startsWith(x.name));
   return g?.requirements.find((r) => r.id === requirementId);
 }
 
