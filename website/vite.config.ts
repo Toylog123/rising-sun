@@ -15,6 +15,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
+          /*
+           * 中科院分区表 3.8 万条，压缩后仍是约 460 kB 的字符串常量。
+           * 单独切一个 chunk，让选刊手册页可以懒加载它；
+           * 注意它必须排在 catalog 之前判断，否则会被卷进 catalog。
+           */
+          if (id.includes("data/casFull")) {
+            return "cas";
+          }
           if (
             id.includes("data/ccfCatalog") ||
             id.includes("data/ccfFull") ||
