@@ -60,12 +60,18 @@ export interface VenueRow {
   impact?: number;
   /** 期刊 ISSN */
   issn?: string;
+  /** 国内统一刊号（中文刊，如 11-2087/TN） */
+  cnNo?: string;
   /** 学院原文「一类目录」13 本之一 */
   tier1?: boolean;
   /** 学院原文点名的条目（如集成电路学科单列 NSREC） */
   namedInDoc?: boolean;
   /** 一句话说明：收什么、为什么相关 */
   note: string;
+  /** CCF 目录里它是期刊还是会议（决定能否用中科院分区） */
+  ccfKind?: VenueKind;
+  /** 数据来源：verified = 官方核实 / ccf = 从 CCF 全量目录新增 */
+  source?: string;
 }
 
 export const CCF_DOMAIN_ARCH = "计算机体系结构/并行与分布计算/存储系统";
@@ -92,7 +98,7 @@ cas: "1区",
   {
     abbr: "Commun. Eng.",
     name: "Communications Engineering",
-    kind: "期刊",
+    kind: "期刊", issn: "2731-3395",
     fields: ["综合/交叉"],
     ccf: "",
     note: "Nature Portfolio 工程子刊，工程系统级成果的开放获取渠道。",
@@ -110,7 +116,7 @@ cas: "3区",
   {
     abbr: "Chip",
     name: "Chip",
-    kind: "期刊",
+    kind: "期刊", issn: "2709-4723",
     fields: ["器件与工艺", "电路与系统"],
     ccf: "",
 impact: 6.0,
@@ -443,7 +449,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "电子学报",
     name: "电子学报（Acta Electronica Sinica）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-2087/TN",
     fields: ["综合/交叉", "电路与系统"],
     ccf: "",
     ccfTj: "T1",
@@ -452,7 +458,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "中国科学:信息",
     name: "中国科学：信息科学（Scientia Sinica Informationis）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-5846/TP",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -461,7 +467,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "电子与信息学报",
     name: "电子与信息学报（Journal of Electronics & Information Technology）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-4494/TN",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -470,7 +476,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "通信学报",
     name: "通信学报（Journal on Communications）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-2102/TN",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -479,7 +485,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "计算机学报",
     name: "计算机学报（Chinese Journal of Computers）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-1826/TP",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -488,7 +494,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "软件学报",
     name: "软件学报（Journal of Software）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-2560/TP",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -497,7 +503,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "计算机研究与发展",
     name: "计算机研究与发展（Journal of Computer Research and Development）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-1777/TP",
     fields: ["综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -506,7 +512,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "自动化学报",
     name: "自动化学报（Acta Automatica Sinica）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-2109/TP",
     fields: ["AI for EDA", "综合/交叉"],
     ccf: "",
     ccfTj: "T1",
@@ -515,7 +521,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "半导体学报",
     name: "Journal of Semiconductors（半导体学报）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "11-5781/TN",
     fields: ["器件与工艺"],
     ccf: "",
     issn: "1674-4926",
@@ -524,7 +530,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "国防科技大学学报",
     name: "国防科技大学学报",
-    kind: "期刊",
+    kind: "期刊", cnNo: "43-1067/T",
     fields: ["综合/交叉"],
     ccf: "",
     note: "本校学报。集成电路学科硕士公开评阅①里明确列了「《国防科技大学学报》1 篇」，是校内认定的快捷通道。",
@@ -532,7 +538,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "微电子学",
     name: "微电子学",
-    kind: "期刊",
+    kind: "期刊", cnNo: "50-1090/TN",
     fields: ["电路与系统", "器件与工艺"],
     ccf: "",
     note: "国内微电子方向期刊，CSCD 收录，周期较短。",
@@ -540,7 +546,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "固体电子学研究与进展",
     name: "固体电子学研究与进展（Research & Progress of SSE）",
-    kind: "期刊",
+    kind: "期刊", cnNo: "32-1110/TN",
     fields: ["器件与工艺"],
     ccf: "",
     note: "国内固体电子学方向期刊，CSCD 收录。",
@@ -548,7 +554,7 @@ const CN_JOURNALS: VenueRow[] = [
   {
     abbr: "集成电路与嵌入式系统",
     name: "集成电路与嵌入式系统",
-    kind: "期刊",
+    kind: "期刊", cnNo: "10-1910/V",
     fields: ["电路与系统", "体系结构"],
     ccf: "",
     ccfTj: "T3",

@@ -15,7 +15,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes("data/ccfCatalog") || id.includes("data/degreeAwards") || id.includes("data/degreeRequirements")) {
+          if (
+            id.includes("data/ccfCatalog") ||
+            id.includes("data/ccfFull") ||
+            id.includes("data/cseeFull") ||
+            id.includes("data/venueCatalog") ||
+            id.includes("data/venueFull") ||
+            id.includes("data/venueIndex") ||
+            id.includes("data/venueGrades") ||
+            id.includes("data/degreeAwards") ||
+            id.includes("data/degreeRequirements")
+          ) {
             return "catalog";
           }
           return undefined;
