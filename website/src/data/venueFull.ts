@@ -240,6 +240,8 @@ export interface BuiltCatalog {
   verified: number;
   /** 按 CCF 领域新增的条数 */
   fromCcf: number;
+  /** 按电子学会分级目录补充的条数 */
+  fromCsee: number;
   /** 手工补充、不在 CCF 目录的条数 */
   manual: number;
 }
@@ -304,6 +306,38 @@ export function buildCatalog(input: CatalogInput): BuiltCatalog {
     fromCcf += 1;
   }
 
+  /*
+   * 再把电子学会《电子技术、通信技术领域高质量科技期刊分级目录》全量 368 条补进来。
+   * 只补「CCF 目录里没有、也没有手工条目」的部分（尤其是一批通信/微波/光学方向的
+   * IEEE 期刊，集成电路学院的成果也常投这些），已有条目不覆盖。
+   * 这些条目 CCF/中科院分区从 ISSN 反查即可，方向标签按「综合/交叉」兜底。
+   */
+  let fromCsee = 0;
+  for (const e of CSEE_ENTRIES) {
+    const key = e.issn || e.name.toLowerCase();
+    if (byAbbr.has(key) || [...byAbbr.values()].some((r) => r.name === e.name)) continue;
+    const info = casOf(e.issn);
+    const isCn = Boolean(e.cn);
+    const row: VenueRow = {
+      abbr: e.name,
+      name: e.cn ? `${e.cn}（${e.name}）` : e.name,
+      kind: "期刊",
+      fields: ["综合/交叉"],
+      cas: info ? (`${info.quartile}区` as "1区" | "2区" | "3区" | "4区") : undefined,
+      casTop: info?.top,
+      casMajor: info?.major,
+      csee: e.level,
+      issn: e.issn || undefined,
+      cnNo: e.cn || undefined,
+      note: isCn
+        ? "中国电子学会分级目录收录的中文刊，CCF 与中科院分区体系均不适用。"
+        : "中国电子学会分级目录收录；未进入 CCF 推荐目录。",
+      source: "csee",
+    };
+    byAbbr.set(key, row);
+    fromCsee += 1;
+  }
+
   const rows = [...byAbbr.values()].sort((a, b) => {
     const t1 = (b.tier1 ? 1 : 0) - (a.tier1 ? 1 : 0);
     if (t1 !== 0) return t1;
@@ -315,5 +349,5 @@ export function buildCatalog(input: CatalogInput): BuiltCatalog {
   });
 
   const verified = baseRows.length;
-  return { rows, verified, fromCcf, manual: verified };
+  return { rows, verified, fromCcf, fromCsee, manual: verified };
 }
