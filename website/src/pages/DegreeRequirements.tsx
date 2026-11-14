@@ -123,6 +123,7 @@ function VenueTable({ rows }: { rows: GradedVenue[] }) {
               <td className="px-3 py-2 text-[#4a4540] whitespace-nowrap">
                 {r.cas ? r.cas : r.kind === "会议" ? <span className="text-[#b5b0aa]">—</span> : <span className="text-[#b5b0aa]">未知</span>}
                 {r.casTop && " · Top"}
+                {r.casMajor && <div className="text-[11px] text-[#9a9590]">{r.casMajor}</div>}
               </td>
               <td className="px-3 py-2 text-xs text-[#6b6560] space-y-0.5">
                 {r.tier1 && <div>一类目录</div>}
