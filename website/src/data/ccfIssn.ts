@@ -101,6 +101,7 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "IMAGE": ["0923-5965", true],
   "Information Sciences": ["0020-0255", true],
   "INFORMS": ["1091-9856", true],
+  "Integration": ["0167-9260", true],
   "IOT": ["2327-4662", true],
   "IPL": ["0020-0190", true],
   "IS": ["0306-4379", true],
@@ -115,6 +116,7 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "JCSS": ["0022-0000", true],
   "JDM": ["1063-8016", true],
   "JETC": ["1550-4832", true],
+  "JETTA": ["0923-8174", false],
   "JFP": ["0956-7968", true],
   "JGITM": ["1097-198X", true],
   "JGO": ["0925-5001", true],
@@ -127,6 +129,7 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "Journal of Cryptology": ["0933-2790", true],
   "Journal of Software: Evolution and Process": ["2047-7473", true],
   "JPDC": ["0743-7315", true],
+  "JSA": ["1383-7621", false],
   "JSAC": ["0733-8716", true],
   "JSC": ["0747-7171", true],
   "JSIS": ["0963-8687", true],
@@ -157,6 +160,7 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "npj Comput. Mater.": ["2057-3960", true],
   "NPL": ["1370-4621", true],
   "NSR": ["2053-714X", true],
+  "PACM PL": ["2475-1421", true],
   "Parallel Computing": ["0167-8191", true],
   "Performance Evaluation: An International Journal": ["0166-5316", false],
   "PLDI": ["1531-7102", false],
@@ -207,6 +211,7 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "TCPS": ["2378-962X", true],
   "TCS": ["0304-3975", true],
   "TCSS": ["2329-924X", true],
+  "TCSVT": ["1051-8215", true],
   "TDSC": ["1545-5971", true],
   "TEC": ["1089-778X", true],
   "TECS": ["1539-9087", true],
@@ -260,10 +265,11 @@ export const CCF_ISSN: Record<string, [string, boolean]> = {
   "UMUAI": ["0924-1868", true],
   "VLDBJ": ["1066-8888", true],
   "WCMC": ["1530-8669", true],
+  "WCNC": ["1536-1284", false],
   "WI": ["2405-6456", true],
   "Wireless Networks": ["1022-0038", true],
   "WWW": ["1386-145X", true],
 };
 
 /** 统计：补全成功的条数 */
-export const CCF_ISSN_STATS = { filled: 253 };
+export const CCF_ISSN_STATS = { filled: 259 };
