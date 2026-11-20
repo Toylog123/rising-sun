@@ -7,6 +7,7 @@ import {
 import { useTaskStore, latestStatus, statusTone, latestUpdate } from "@/store/tasks";
 import { timeAgo } from "@/lib/github";
 import StatusBadge from "@/components/StatusBadge";
+import HeroLogo from "@/components/HeroLogo";
 
 const DIRECTIONS = [
   {
@@ -102,23 +103,8 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-accent via-accent/60 to-transparent" />
         <div className="pointer-events-none absolute -right-40 -top-40 h-[420px] w-[420px] rounded-full bg-accent/[0.09] blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-1/4 h-64 w-64 rounded-full bg-warning-wash/70 blur-3xl" />
-        {/* 背景水印复用 logo.svg 作 mask，颜色由 CSS 渐变控制，品牌图形不会走偏 */}
-        <div
-          className="pointer-events-none absolute -right-[8%] top-1/2 hidden h-[420px] w-[450px] -translate-y-1/2 opacity-[0.32] xl:block"
-          aria-hidden="true"
-          style={{
-            WebkitMaskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
-            maskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
-            WebkitMaskSize: "contain",
-            maskSize: "contain",
-            WebkitMaskRepeat: "no-repeat",
-            maskRepeat: "no-repeat",
-            WebkitMaskPosition: "center",
-            maskPosition: "center",
-            background: "linear-gradient(170deg, #FDE68A 0%, #FBBF24 42%, #F97316 100%)",
-          }}
-        />
         <div className="relative mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_260px]">
           <div className="max-w-3xl">
             <div className="mb-7 flex flex-wrap items-center gap-2">
               <span className="eyebrow"><FlaskConical size={12} className="text-accent" />芯片设计自动化 · EDA</span>
@@ -160,6 +146,16 @@ export default function Home() {
                 <BookOpen size={16} />研究进展
               </Link>
             </div>
+          </div>
+
+          {/* 右侧：原创品牌徽章，填充留白、平衡构图（小屏隐藏避免拥挤） */}
+          <div className="hidden justify-center lg:flex">
+            <div className="relative">
+              {/* 徽章后的柔和光晕，增加层次 */}
+              <div className="pointer-events-none absolute inset-0 scale-125 rounded-full bg-accent/[0.06] blur-2xl" />
+              <HeroLogo className="relative w-[240px] drop-shadow-[0_8px_24px_rgba(80,50,30,0.10)]" />
+            </div>
+          </div>
           </div>
         </div>
       </section>
