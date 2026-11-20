@@ -287,14 +287,34 @@ export default function Home() {
             {feed.length === 0 ? (
               <p className="px-5 py-10 text-center text-sm text-faint">暂无进展记录</p>
             ) : feed.map(({ t, u }) => (
-              <div key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 transition-colors hover:bg-wash/40">
-                <span className="w-20 shrink-0 font-mono text-xs text-faint">{u!.date}</span>
-                <span className="text-sm font-medium text-ink">
-                  {t.assignees.length === 1 ? t.assignees[0] : `${t.assignees.slice(0, 2).join("、")}${t.assignees.length > 2 ? " 等" : ""}`}
-                </span>
-                <span className="min-w-[160px] flex-1 text-sm text-muted">{t.title}</span>
-                <StatusBadge status={u!.status} />
-                {u!.note && <span className="w-full text-xs text-faint sm:w-auto">（{u!.note}）</span>}
+              <div key={t.id} className="px-5 py-3.5 transition-colors hover:bg-wash/40">
+                {/* 移动端：日期与状态同一行 */}
+                <div className="flex items-center justify-between gap-3 sm:hidden">
+                  <span className="font-mono text-xs text-faint">{u!.date}</span>
+                  <StatusBadge status={u!.status} />
+                </div>
+
+                {/* 桌面端：日期 / 内容 / 状态 三列固定，逐行严格对齐 */}
+                <div className="mt-2 flex items-start gap-3 sm:mt-0 sm:grid sm:grid-cols-[88px_minmax(0,1fr)_auto] sm:items-start sm:gap-4">
+                  <span className="hidden font-mono text-xs text-faint sm:block sm:pt-0.5">{u!.date}</span>
+
+                  {/* 姓名与标题用子网格分列，备注固定在标题正下方 */}
+                  <div className="flex min-w-0 items-start gap-3 sm:grid sm:grid-cols-[80px_minmax(0,1fr)] sm:gap-x-3">
+                    <span className="shrink-0 text-sm font-medium text-ink">
+                      {t.assignees.length === 1 ? t.assignees[0] : `${t.assignees.slice(0, 2).join("、")}${t.assignees.length > 2 ? " 等" : ""}`}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm leading-relaxed text-muted">{t.title}</p>
+                      {u!.note && (
+                        <p className="mt-1 text-xs leading-relaxed text-faint">（{u!.note}）</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block sm:pt-0.5">
+                    <StatusBadge status={u!.status} />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
