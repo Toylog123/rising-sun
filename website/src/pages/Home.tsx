@@ -104,38 +104,38 @@ export default function Home() {
         <div className="pointer-events-none absolute -right-40 -top-40 h-[420px] w-[420px] rounded-full bg-accent/[0.09] blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-1/4 h-64 w-64 rounded-full bg-warning-wash/70 blur-3xl" />
         <div className="relative mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
-          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="max-w-3xl">
-            <div className="rise-in mb-7 flex flex-wrap items-center gap-x-4 gap-y-2" style={{ animationDelay: "40ms" }}>
-              <span className="eyebrow"><FlaskConical size={12} className="text-accent" />芯片设计自动化 · EDA</span>
-              <span className="flex items-center gap-3.5 text-xs text-muted">
+            <div className="rise-in mb-8 flex flex-wrap items-center gap-x-4 gap-y-2" style={{ animationDelay: "40ms" }}>
+              <span className="eyebrow !border-accent/25 !bg-accent/[0.06] !text-accent-deep"><FlaskConical size={12} className="text-accent" />芯片设计自动化 · EDA</span>
+              <span className="flex items-center gap-3.5 text-[13px] text-muted">
                 <span className="inline-flex items-center gap-1.5"><Sparkles size={12} className="text-accent/70" />成立于 2025</span>
                 {advisor && (
                   <span className="inline-flex items-center gap-1.5"><GraduationCap size={13} className="text-accent/70" />指导老师 · {advisor}</span>
                 )}
               </span>
             </div>
-            <h1 className="rise-in font-serif text-5xl font-black leading-[1.15] tracking-heading text-ink sm:text-7xl" style={{ animationDelay: "100ms" }}>
+            <h1 className="rise-in font-serif text-5xl font-black leading-[1.12] tracking-heading text-ink sm:text-[4.5rem]" style={{ animationDelay: "100ms" }}>
               Rising Sun
-              <span className="mt-3 block text-xl font-normal tracking-wider2 text-muted sm:text-2xl">
+              <span className="mt-3.5 block text-lg font-medium tracking-wider2 text-muted sm:text-xl">
                 芯片设计自动化课题组
               </span>
             </h1>
             {/* 编辑式分隔线：左右镜像对称，两侧细线由外向内渐深，中间点缀圆点 */}
-            <div className="rise-in mt-7 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
+            <div className="rise-in mt-8 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
               <span className="h-px w-16 bg-gradient-to-r from-transparent to-accent/60" />
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
               <span className="h-px w-16 bg-gradient-to-l from-transparent to-accent/60" />
             </div>
-            <p className="rise-in mt-6 max-w-2xl text-base leading-[1.9] text-body-strong sm:text-lg" style={{ animationDelay: "220ms" }}>
+            <p className="rise-in mt-7 max-w-[34rem] text-[15px] leading-[1.85] text-body-strong sm:text-base" style={{ animationDelay: "220ms" }}>
               我们是一个年轻的课题组，成立于 2025 年，专注于
-              <strong className="font-semibold text-ink">芯片设计自动化（EDA）</strong>方向。
+              <strong className="font-semibold text-ink decoration-accent/40 underline-offset-4 hover:underline">芯片设计自动化（EDA）</strong>方向。
               围绕物理设计、布局布线、工程变更优化（ECO）等关键环节，结合机器学习与运筹优化方法，
               探索更智能、更高效的 EDA 算法与工具。
             </p>
-            <div className="rise-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: "300ms" }}>
-              <Link to="/students" className="btn-primary !px-6 !py-2.5">
-                <Users size={16} />了解组员<ArrowRight size={14} />
+            <div className="rise-in mt-10 flex flex-wrap gap-3" style={{ animationDelay: "300ms" }}>
+              <Link to="/students" className="btn-primary group !rounded-full !px-6 !py-2.5">
+                <Users size={16} />了解组员<ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link to="/meetings" className="btn-secondary !rounded-full !px-6 !py-2.5">
                 <Calendar size={16} />组会记录
@@ -151,7 +151,7 @@ export default function Home() {
             <div className="rise-in relative" style={{ animationDelay: "200ms" }}>
               {/* 徽章后的柔和光晕，增加层次 */}
               <div className="pointer-events-none absolute inset-0 scale-125 rounded-full bg-accent/[0.06] blur-2xl" />
-              <HeroLogo className="relative w-[240px] drop-shadow-[0_8px_24px_rgba(80,50,30,0.10)]" />
+              <HeroLogo className="relative w-[264px] drop-shadow-[0_8px_24px_rgba(80,50,30,0.10)]" />
             </div>
           </div>
           </div>
