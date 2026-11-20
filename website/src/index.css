@@ -125,6 +125,23 @@
     background-image: radial-gradient(circle, #c96442 1px, transparent 1px);
     background-size: 28px 28px;
   }
+
+  /* 首屏错落入场：元素依次淡入上移，建立阅读层级（delay 由内联 style 控制） */
+  .rise-in {
+    animation: riseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* 入场关键帧放在 layer 外，确保全局可用；both 保证 delay 期间不闪烁 */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 滚动条：暖灰配色，与纸感底色一致 */
