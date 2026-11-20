@@ -222,44 +222,50 @@ export default function Home() {
         {members.length === 0 ? (
           <div className="surface px-6 py-14 text-center text-sm text-muted">暂无成员任务数据</div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="surface divide-y divide-line overflow-hidden">
             {members.map((m) => {
               const s = statOf(m);
               return (
                 <Link
                   key={m}
                   to={`/tasks?member=${encodeURIComponent(m)}`}
-                  className="surface group p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/25 hover:shadow-lift"
+                  className="group flex items-center gap-3 px-4 py-4 transition-colors hover:bg-wash/50 sm:gap-6 sm:px-6"
                 >
-                  <div className="flex items-center justify-between">
+                  {/* 左：头像 + 姓名（桌面固定宽度逐行对齐；移动端自适应避免姓名被截断） */}
+                  <div className="flex shrink-0 items-center gap-2.5 sm:w-32 sm:gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-wash font-serif text-sm font-bold text-accent ring-1 ring-accent/20">
+                      {m.slice(0, 1)}
+                    </span>
+                    <span className="whitespace-nowrap font-serif text-base font-semibold text-ink">{m}</span>
+                  </div>
+                  {/* 右：进度条 + 状态，占据剩余宽度并逐行对齐 */}
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-wash font-serif text-sm font-bold text-accent ring-1 ring-accent/20">
-                        {m.slice(0, 1)}
-                      </span>
-                      <span className="font-serif text-base font-semibold text-ink">{m}</span>
+                      {/* 堆叠色带：进行中 / 挂起 / 已完成 按比例分段 */}
+                      <div
+                        className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-wash"
+                        role="img"
+                        aria-label={s.total > 0 ? `共 ${s.total} 项：已完成 ${s.done}、进行中 ${s.active}、挂起 ${s.hold}` : "暂无任务"}
+                      >
+                        <div className="flex h-full w-full gap-0.5">
+                          {s.done > 0 && <div className="h-full bg-success-ink/80" style={{ width: `${pctOf(s.done, s.total)}%` }} />}
+                          {s.active > 0 && <div className="h-full bg-accent" style={{ width: `${pctOf(s.active, s.total)}%` }} />}
+                          {s.hold > 0 && <div className="h-full bg-danger-ink/80" style={{ width: `${pctOf(s.hold, s.total)}%` }} />}
+                        </div>
+                      </div>
+                      <span className="w-10 shrink-0 text-right text-xs text-faint">{s.total} 项</span>
                     </div>
-                    <span className="text-xs text-faint">{s.total} 项</span>
-                  </div>
-                  {/* 堆叠色带：进行中 / 挂起 / 已完成 按比例分段，空条比没有更糟 */}
-                  <div
-                    className="mt-4 flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-wash"
-                    role="img"
-                    aria-label={s.total > 0 ? `共 ${s.total} 项：已完成 ${s.done}、进行中 ${s.active}、挂起 ${s.hold}` : "暂无任务"}
-                  >
-                    {s.done > 0 && <div className="h-full bg-success-ink/80" style={{ width: `${pctOf(s.done, s.total)}%` }} />}
-                    {s.active > 0 && <div className="h-full bg-warning-ink/80" style={{ width: `${pctOf(s.active, s.total)}%` }} />}
-                    {s.hold > 0 && <div className="h-full bg-danger-ink/80" style={{ width: `${pctOf(s.hold, s.total)}%` }} />}
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    {s.total === 0 ? (
-                      <span className="text-faint">暂无任务</span>
-                    ) : (
-                      <>
-                        {s.active > 0 && <span className="font-semibold text-warning-ink">进行中 {s.active}</span>}
-                        {s.hold > 0 && <span className="font-semibold text-danger-ink">挂起 {s.hold}</span>}
-                        {s.done > 0 && <span className="font-semibold text-success-ink">已完成 {s.done}</span>}
-                      </>
-                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      {s.total === 0 ? (
+                        <span className="text-faint">暂无任务</span>
+                      ) : (
+                        <>
+                          {s.active > 0 && <span className="font-semibold text-accent">进行中 {s.active}</span>}
+                          {s.hold > 0 && <span className="font-semibold text-danger-ink">挂起 {s.hold}</span>}
+                          {s.done > 0 && <span className="font-semibold text-success-ink">已完成 {s.done}</span>}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );
