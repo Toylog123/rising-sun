@@ -3,47 +3,105 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  line-height: 1.6;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ==========================================================================
+   基础层：统一全站的排版节奏、焦点态和滚动体验
+   ========================================================================== */
+@layer base {
+  :root {
+    font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #f6f3ed; /* canvas */
+    color: #413b36; /* body-strong */
+  }
+
+  /* 标题统一使用宋体 + 更紧凑的字距，建立稳定的视觉层级 */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
+  }
+
+  /* 键盘可达性：所有可交互元素给出一致的赤陶色焦点环 */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #c96442;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: rgba(201, 100, 66, 0.16);
+    color: #1b1a18;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+/* ==========================================================================
+   组件层：全站复用的「纸感」基础构件
+   ========================================================================== */
+@layer components {
+  /* 通用卡片：白纸浮起、柔和描边、克制的悬停抬升 */
+  .surface {
+    @apply rounded-card border border-line bg-paper;
+  }
+
+  .surface-hover {
+    @apply transition-all duration-300 hover:border-accent/30 hover:shadow-soft;
+  }
+
+  /* 区块眉标（section eyebrow）：小图标 + 标签的统一胶囊 */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1 text-xs text-muted shadow-sm;
+  }
+
+  /* 主按钮 / 次按钮：统一圆角、内距、字重与悬停反馈 */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-control bg-accent px-4 py-2 text-sm font-medium text-white shadow-brand transition-all duration-200 hover:bg-accent-deep hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-control border border-line bg-paper px-4 py-2 text-sm font-medium text-ink transition-all duration-200 hover:border-accent/40 hover:text-accent hover:shadow-sm;
+  }
+
+  /* 图标按钮（编辑/删除/设置等） */
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-tag p-1.5 text-muted transition-colors hover:bg-wash hover:text-accent;
+  }
+
+  .icon-btn-danger {
+    @apply inline-flex items-center justify-center rounded-tag p-1.5 text-muted transition-colors hover:bg-danger-wash hover:text-danger-ink;
+  }
+
+  /* 表单控件：统一输入框与下拉框的外观 */
+  .field {
+    @apply rounded-control border border-line bg-paper px-3 py-2 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/50 focus:ring-2 focus:ring-accent/10;
+  }
+
+  /* 筛选胶囊：状态/成员/主讲人筛选统一形态 */
+  .chip {
+    @apply inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200;
+  }
+
+  .chip-active {
+    @apply bg-accent text-white shadow-sm;
+  }
+
+  .chip-idle {
+    @apply border border-line bg-paper text-muted hover:border-accent/40 hover:text-ink;
+  }
 }
 
-body {
-  background-color: #f5f2eb;
-  color: #374151;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f5f2eb;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d5d0c8;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #c96442;
-}
-
-::selection {
-  background-color: rgba(201, 100, 66, 0.15);
-  color: #1a1a1a;
-}
-
+/* ==========================================================================
+   工具类与体验细节
+   ========================================================================== */
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -51,5 +109,39 @@ body {
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* 纸纹网格背景：极淡的圆点纹理，给大面积留白增加质感 */
+  .paper-grain {
+    background-image: radial-gradient(circle, #c96442 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
+
+/* 滚动条：暖灰配色，与纸感底色一致 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f6f3ed;
+}
+::-webkit-scrollbar-thumb {
+  background: #cfc8bd;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c96442;
+}
+
+/* 尊重系统的「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

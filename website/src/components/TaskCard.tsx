@@ -75,10 +75,10 @@ export default function TaskCard({ task }: { task: Task }) {
       aria-expanded={open}
       aria-label={`${task.title}，${open ? "收起" : "查看"}进展`}
       title={open ? "点击收起进展" : "点击展开进展"}
-      className={`rounded-2xl bg-white border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c96442]/40 ${task.archived ? "border-dashed border-[#d5d0c8] opacity-90" : "border-[#e8e4db]"}`}
+      className={`rounded-2xl bg-paper border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-accent/5 hover:border-accent/20 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${task.archived ? "border-dashed border-line-strong opacity-90" : "border-line"}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-serif text-base font-semibold leading-snug text-[#1a1a1a]">
+        <h3 className="font-serif text-base font-semibold leading-snug text-ink">
           {task.title}
         </h3>
         <div className="flex items-center gap-2 shrink-0">
@@ -91,7 +91,7 @@ export default function TaskCard({ task }: { task: Task }) {
                 setEditing(true);
               }}
               title="编辑"
-              className="p-1 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+              className="p-1 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
             >
               <Pencil size={14} />
             </button>
@@ -99,9 +99,9 @@ export default function TaskCard({ task }: { task: Task }) {
         </div>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6560]">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
         <span className="flex items-center gap-1">
-          <CalendarClock size={13} className="text-[#c96442]" />
+          <CalendarClock size={13} className="text-accent" />
           {assigneeText}
         </span>
         <span className="flex items-center gap-1">
@@ -126,11 +126,11 @@ export default function TaskCard({ task }: { task: Task }) {
       {/* 操作栏：整栏挡住冒泡，点了归档/删除/添加进展不会顺带收起卡片 */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="mt-3 flex items-center gap-3 border-t border-[#f0ece4] pt-3"
+        className="mt-3 flex items-center gap-3 border-t border-wash pt-3"
       >
         <button
           onClick={toggleOpen}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#c96442] hover:text-[#b5573a] transition-colors"
+          className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
         >
           <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
           {open ? "收起进展" : "查看进展"}
@@ -138,7 +138,7 @@ export default function TaskCard({ task }: { task: Task }) {
         {!task.archived && (
           <button
             onClick={() => { setAdding((v) => !v); setOpen(true); }}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#6b6560] hover:text-[#c96442] transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent transition-colors"
           >
             <Plus size={14} />
             添加进展
@@ -147,7 +147,7 @@ export default function TaskCard({ task }: { task: Task }) {
         {task.archived ? (
           <button
             onClick={() => setArchived(task.id, false)}
-            className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-[#c96442] hover:text-[#b5573a] transition-colors"
+            className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
           >
             <ArchiveRestore size={13} />
             恢复
@@ -155,7 +155,7 @@ export default function TaskCard({ task }: { task: Task }) {
         ) : (
           <button
             onClick={() => setArchived(task.id, true)}
-            className="ml-auto inline-flex items-center gap-1 text-xs text-[#6b6560] hover:text-[#c96442] transition-colors"
+            className="ml-auto inline-flex items-center gap-1 text-xs text-muted hover:text-accent transition-colors"
           >
             <Archive size={13} />
             归档
@@ -163,7 +163,7 @@ export default function TaskCard({ task }: { task: Task }) {
         )}
         <button
           onClick={handleSoftRemove}
-          className="inline-flex items-center gap-1 text-xs text-[#9a9590] hover:text-red-500 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-faint hover:text-danger-ink transition-colors"
         >
           <Trash2 size={13} />
           删除
@@ -173,15 +173,15 @@ export default function TaskCard({ task }: { task: Task }) {
       {adding && !task.archived && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="mt-3 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-3"
+          className="mt-3 rounded-xl bg-paper border border-line p-3"
         >
           <div className="flex flex-wrap gap-2">
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg border border-[#e8e4db] bg-white px-2.5 py-1.5 text-xs text-[#1a1a1a] outline-none focus:border-[#c96442]/40" />
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-[#e8e4db] bg-white px-2.5 py-1.5 text-xs text-[#1a1a1a] outline-none focus:border-[#c96442]/40">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs text-ink outline-none focus:border-accent/40" />
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs text-ink outline-none focus:border-accent/40">
               {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
-            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="备注（可选）" className="flex-1 min-w-[140px] rounded-lg border border-[#e8e4db] bg-white px-2.5 py-1.5 text-xs text-[#1a1a1a] placeholder-[#9a9590] outline-none focus:border-[#c96442]/40" />
-            <button onClick={submit} className="rounded-lg bg-[#c96442] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#b5573a] transition-colors">保存</button>
+            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="备注（可选）" className="flex-1 min-w-[140px] rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs text-ink placeholder-faint outline-none focus:border-accent/40" />
+            <button onClick={submit} className="rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-deep transition-colors">保存</button>
           </div>
         </div>
       )}
@@ -190,14 +190,14 @@ export default function TaskCard({ task }: { task: Task }) {
         // 这里不加 stopPropagation：卡片展开后中心落在时间线上，
         // 拦掉的话"再点一次收起"就会失灵。整块都算卡片，点哪都能切。
         <div className="mt-3 pl-1">
-          <div className="relative border-l border-[#e8e4db] pl-4 space-y-3">
+          <div className="relative border-l border-line pl-4 space-y-3">
             {timeline.map((u, i) => (
               <div key={i} className="relative">
-                <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-[#c96442]" />
+                <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-accent" />
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-semibold text-[#6b6560]">{u.date}</span>
+                  <span className="text-xs font-semibold text-muted">{u.date}</span>
                   <StatusBadge status={u.status} />
-                  {u.note && <span className="text-xs text-[#9a9590]">（{u.note}）</span>}
+                  {u.note && <span className="text-xs text-faint">（{u.note}）</span>}
                 </div>
               </div>
             ))}

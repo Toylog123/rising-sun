@@ -6,7 +6,7 @@ import Toast from "@/components/Toast";
 
 export default function Layout() {
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5f2eb]">
+    <div className="flex min-h-[100dvh] flex-col bg-canvas">
       <Navbar />
       <main className="flex-1">
         <Outlet />

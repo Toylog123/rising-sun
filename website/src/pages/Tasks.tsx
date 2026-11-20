@@ -49,26 +49,21 @@ export default function Tasks() {
 
   const visibleMembers = member === "全部" ? groups : [member];
 
-  const chipCls = (active: boolean) =>
-    `rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
-      active
-        ? "bg-[#c96442] text-white shadow-sm"
-        : "bg-white border border-[#e8e4db] text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#1a1a1a]"
-    }`;
+  const chipCls = (active: boolean) => `chip ${active ? "chip-active" : "chip-idle"}`;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
-            <ListTodo size={16} />
+    <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+            <ListTodo size={22} />
           </div>
           <div>
-            <h1 className="font-serif text-3xl font-bold text-[#1a1a1a] leading-none">任务</h1>
-            <p className="mt-1 text-sm text-[#6b6560]">共 {visible.length} 项任务</p>
+            <h1 className="font-serif text-3xl font-bold leading-none tracking-heading text-ink">任务</h1>
+            <p className="mt-2 text-sm text-muted">共 {visible.length} 项任务 · 按成员分组查看进展</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() =>
               downloadText(
@@ -81,57 +76,50 @@ export default function Tasks() {
               )
             }
             title="导出全部任务 + 成员为 Markdown（可直接阅读）"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+            className="btn-secondary !px-3 !py-2"
           >
             <Download size={14} />
             导出
           </button>
-          <Link
-            to="/archive"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#1a1a1a] transition-colors"
-          >
+          <Link to="/archive" className="btn-secondary !px-3 !py-2">
             <Archive size={15} />
             归档
           </Link>
-          <Link
-            to="/new"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
-          >
+          <Link to="/new" className="btn-primary">
             <Plus size={15} />
             新建任务
           </Link>
         </div>
       </div>
 
-      <div className="mb-8 rounded-2xl bg-white border border-[#e8e4db] p-4 shadow-sm space-y-3">
+      <div className="surface mb-8 space-y-3.5 p-4 shadow-soft sm:p-5">
         <div className="relative">
-          <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9a9590]" />
+          <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
           <input
             type="text"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="搜索任务标题或负责人..."
-            className="w-full rounded-xl border border-[#e8e4db] bg-[#faf9f5] py-2.5 pl-10 pr-4 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10"
+            className="field w-full !py-2.5 !pl-10"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-10 shrink-0 text-xs font-semibold text-[#9a9590]">状态</span>
+          <span className="w-10 shrink-0 text-xs font-semibold text-faint">状态</span>
           {STATUS_OPTIONS.map((c) => (
             <button key={c} onClick={() => setStatusFilter(c)} className={chipCls(statusFilter === c)}>{c}</button>
           ))}
         </div>
-        <div className="h-px bg-[#f0ece4]" />
+        <div className="h-px bg-wash" />
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-10 shrink-0 text-xs font-semibold text-[#9a9590]">成员</span>
+          <span className="w-10 shrink-0 text-xs font-semibold text-faint">成员</span>
           {memberChips.map((c) => (
             <button key={c} onClick={() => setMember(c)} className={chipCls(member === c)}>{c}</button>
           ))}
         </div>
-        <div className="h-px bg-[#f0ece4]" />
       </div>
 
       {visible.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[#6b6560]">
+        <div className="flex flex-col items-center justify-center py-20 text-muted">
           <Search size={40} className="mb-4 opacity-20" />
           <p className="text-base">没有匹配的任务</p>
         </div>
@@ -143,9 +131,9 @@ export default function Tasks() {
             return (
               <div key={name}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Users size={18} className="text-[#c96442]" />
-                  <h2 className="font-serif text-xl font-bold text-[#1a1a1a]">{name}</h2>
-                  <span className="rounded-full bg-[#f0ece4] px-2 py-0.5 text-xs text-[#6b6560]">{list.length} 项</span>
+                  <Users size={18} className="text-accent" />
+                  <h2 className="font-serif text-xl font-bold text-ink">{name}</h2>
+                  <span className="rounded-full bg-wash px-2 py-0.5 text-xs text-muted">{list.length} 项</span>
                 </div>
                 {/* items-start：网格默认会把卡片拉伸到整行高度，
                     一张展开时间线会把同行的另一张也拉高，看着像一起展开了 */}

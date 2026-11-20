@@ -99,7 +99,7 @@ export function updatedAgoLabel(days: number): string {
 
 /** 提醒配色：越久越刺眼（阈值只影响颜色，不影响显示口径） */
 export const STALE_TONE: Record<StaleLevel, string> = {
-  fresh: "text-[#6b6560]",
+  fresh: "text-muted",
   warn: "text-amber-700",
   stale: "text-red-600 font-semibold",
 };

@@ -56,31 +56,31 @@ export default function AddTask() {
     navigate(`/tasks`);
   };
 
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
+  const label = "block text-sm font-medium text-ink mb-1.5";
   const field =
-    "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
+    "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/40 focus:ring-2 focus:ring-accent/10";
 
   return (
-    <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="mx-auto max-w-xl px-5 sm:px-8 py-12">
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1 text-sm text-[#6b6560] hover:text-[#c96442] transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-muted hover:text-accent transition-colors mb-6"
       >
         <ArrowLeft size={15} /> 返回
       </button>
 
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
+        <div className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-white shadow-brand">
           <Plus size={16} />
         </div>
-        <h1 className="font-serif text-2xl font-bold text-[#1a1a1a]">新建任务</h1>
+        <h1 className="font-serif text-2xl font-bold text-ink">新建任务</h1>
       </div>
 
-      <div className="rounded-2xl bg-white border border-[#e8e4db] p-6 space-y-5">
+      <div className="rounded-2xl bg-paper border border-line p-6 space-y-5">
         <div>
           <label className={label}>
             <span className="inline-flex items-center gap-1.5">
-              <GraduationCap size={14} className="text-[#c96442]" />
+              <GraduationCap size={14} className="text-accent" />
               指导老师
             </span>
           </label>
@@ -91,7 +91,7 @@ export default function AddTask() {
             groups={[{ label: "🎓 指导老师", icon: <Sparkles size={11} />, options: faculty }]}
             allowCustom
           />
-          <p className="mt-1.5 text-xs text-[#9a9590]">
+          <p className="mt-1.5 text-xs text-faint">
             当前课题组指导老师：{advisor || "未设置"}
           </p>
         </div>
@@ -99,27 +99,27 @@ export default function AddTask() {
         <div>
           <label className={label}>
             <span className="inline-flex items-center gap-1.5">
-              <Users size={14} className="text-[#c96442]" />
+              <Users size={14} className="text-accent" />
               协同成员
-              <span className="ml-1 text-xs font-normal text-[#9a9590]">
+              <span className="ml-1 text-xs font-normal text-faint">
                 （{assignees.length} 位）
               </span>
             </span>
           </label>
 
           {assignees.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-2.5">
+            <div className="mb-2 flex flex-wrap gap-1.5 rounded-xl bg-paper border border-line p-2.5">
               {assignees.map((a) => (
                 <span
                   key={a}
-                  className="inline-flex items-center gap-1 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-2.5 py-1 text-sm font-medium text-[#c96442]"
+                  className="inline-flex items-center gap-1 rounded-full bg-accent/10 border border-accent/20 px-2.5 py-1 text-sm font-medium text-accent"
                 >
                   <Check size={12} />
                   {a}
                   <button
                     type="button"
                     onClick={() => removeAssignee(a)}
-                    className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-[#c96442]/20 transition-colors"
+                    className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-accent/20 transition-colors"
                     title="移除"
                   >
                     <X size={12} />
@@ -142,7 +142,7 @@ export default function AddTask() {
             ]}
             allowCustom
           />
-          <p className="mt-1.5 text-xs text-[#9a9590]">
+          <p className="mt-1.5 text-xs text-faint">
             提示：可多次添加（每位成员都是协同成员，任意一位可添加进展）
           </p>
         </div>
@@ -194,14 +194,14 @@ export default function AddTask() {
         </div>
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-xl border border-danger-line bg-danger-wash p-3 text-sm text-danger-ink">
             {error}
           </div>
         )}
 
         <button
           onClick={submit}
-          className="w-full rounded-xl bg-[#c96442] px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-[#c96442]/20 transition-all hover:bg-[#b5573a]"
+          className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white shadow-md shadow-accent/20 transition-all hover:bg-accent-deep"
         >
           创建任务
         </button>

@@ -9,9 +9,9 @@ const ICON: Record<ToastKind, typeof CheckCircle2> = {
 };
 
 const STYLE: Record<ToastKind, string> = {
-  success: "bg-green-50 text-green-700 border-green-200",
-  error: "bg-red-50 text-red-700 border-red-200",
-  info: "bg-blue-50 text-blue-700 border-blue-200",
+  success: "bg-success-wash text-success-ink border-success-line",
+  error: "bg-danger-wash text-danger-ink border-danger-line",
+  info: "bg-info-wash text-info-ink border-info-line",
 };
 
 export default function Toast() {
@@ -41,9 +41,9 @@ export default function Toast() {
   const style = STYLE[toast.kind];
 
   return (
-    <div className="fixed top-20 right-4 z-[300] max-w-sm pointer-events-none">
+    <div className="pointer-events-none fixed right-4 top-20 z-[300] w-[calc(100%-2rem)] max-w-sm sm:right-6">
       <div
-        className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 shadow-lg ${style} pointer-events-auto animate-[slideIn_200ms_ease-out]`}
+        className={`flex animate-[slideIn_220ms_cubic-bezier(0.22,1,0.36,1)] items-start gap-3 rounded-control border px-4 py-3.5 shadow-lift ${style} pointer-events-auto`}
       >
         <Icon size={18} className="shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
@@ -54,7 +54,7 @@ export default function Toast() {
         </div>
         <button
           onClick={clearToast}
-          className="shrink-0 p-0.5 rounded hover:bg-black/5 transition-colors"
+          className="shrink-0 rounded-tag p-0.5 opacity-60 transition-all hover:bg-black/5 hover:opacity-100"
         >
           <X size={14} />
         </button>

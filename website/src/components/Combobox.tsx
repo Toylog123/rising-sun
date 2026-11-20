@@ -117,10 +117,10 @@ export default function Combobox({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <div
-        className={`flex items-center rounded-xl border bg-white transition-all ${
+        className={`flex items-center rounded-xl border bg-paper transition-all ${
           open
-            ? "border-[#c96442]/40 ring-2 ring-[#c96442]/10"
-            : "border-[#e8e4db] hover:border-[#c96442]/30"
+            ? "border-accent/40 ring-2 ring-accent/10"
+            : "border-line hover:border-accent/30"
         }`}
       >
         <input
@@ -141,7 +141,7 @@ export default function Combobox({
           }}
           onKeyDown={onKey}
           placeholder={placeholder}
-          className="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none"
+          className="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none"
         />
         <button
           type="button"
@@ -162,19 +162,19 @@ export default function Combobox({
               togglingRef.current = false;
             }, 200);
           }}
-          className="px-3 py-2.5 text-[#6b6560] hover:text-[#c96442] transition-colors"
+          className="px-3 py-2.5 text-muted hover:text-accent transition-colors"
           tabIndex={-1}
           title={open ? "收起候选" : "展开候选"}
         >
           <ChevronDown
             size={16}
-            className={`transition-transform duration-200 ${open ? "rotate-180 text-[#c96442]" : ""}`}
+            className={`transition-transform duration-200 ${open ? "rotate-180 text-accent" : ""}`}
           />
         </button>
       </div>
 
       {open && totalItems > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-y-auto rounded-xl border border-[#e8e4db] bg-white shadow-xl shadow-[#c96442]/5">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-y-auto rounded-xl border border-line bg-paper shadow-xl shadow-accent/5">
           {(() => {
             const groupsView = new Map<string, FlatItem[]>();
             const groupIcons = new Map<string, ReactNode>();
@@ -193,7 +193,7 @@ export default function Combobox({
                 {Array.from(groupsView.entries()).map(([gLabel, items]) => (
                   <div key={gLabel} className="py-1">
                     {gLabel && (
-                      <div className="px-3.5 pt-1.5 pb-1 text-xs font-semibold text-[#9a9590] flex items-center gap-1.5">
+                      <div className="px-3.5 pt-1.5 pb-1 text-xs font-semibold text-faint flex items-center gap-1.5">
                         {groupIcons.get(gLabel)}
                         {gLabel}
                       </div>
@@ -210,12 +210,12 @@ export default function Combobox({
                           onClick={() => choose(it.value)}
                           className={`flex w-full items-center justify-between px-3.5 py-2 text-sm transition-colors ${
                             isHighlight
-                              ? "bg-[#c96442]/10 text-[#1a1a1a]"
-                              : "text-[#4a4540] hover:bg-[#faf9f5]"
+                              ? "bg-accent/10 text-ink"
+                              : "text-body-strong hover:bg-paper"
                           }`}
                         >
-                          <span className={isSelected ? "font-medium text-[#c96442]" : ""}>{it.value}</span>
-                          {isSelected && <Check size={14} className="text-[#c96442]" />}
+                          <span className={isSelected ? "font-medium text-accent" : ""}>{it.value}</span>
+                          {isSelected && <Check size={14} className="text-accent" />}
                         </button>
                       );
                     })}
@@ -226,10 +226,10 @@ export default function Combobox({
                     type="button"
                     onMouseEnter={() => setHighlight(filtered.length)}
                     onClick={() => choose(query.trim())}
-                    className={`flex w-full items-center gap-2 border-t border-[#f0ece4] px-3.5 py-2.5 text-sm transition-colors ${
+                    className={`flex w-full items-center gap-2 border-t border-wash px-3.5 py-2.5 text-sm transition-colors ${
                       highlight === filtered.length
-                        ? "bg-[#c96442]/10 text-[#1a1a1a]"
-                        : "text-[#c96442] hover:bg-[#faf9f5]"
+                        ? "bg-accent/10 text-ink"
+                        : "text-accent hover:bg-paper"
                     }`}
                   >
                     <Plus size={14} />

@@ -67,17 +67,17 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-5xl h-[88vh] rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-5xl h-[88vh] rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-[#f0ece4]">
+        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-wash">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-[#c96442] text-white shrink-0">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-accent text-white shrink-0">
               <FileText size={14} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-[#1a1a1a] truncate">{attachment.name}</p>
-              <p className="text-xs text-[#9a9590]">{formatBytes(attachment.size)}</p>
+              <p className="text-sm font-medium text-ink truncate">{attachment.name}</p>
+              <p className="text-xs text-faint">{formatBytes(attachment.size)}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -85,7 +85,7 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
               href={dlUrl}
               download={attachment.name}
               title="下载 PDF"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-1.5 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-paper px-3 py-1.5 text-sm text-muted hover:border-accent/40 hover:text-accent transition-colors"
             >
               <Download size={14} />
               下载
@@ -95,14 +95,14 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
               target="_blank"
               rel="noopener noreferrer"
               title="在新标签页打开"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-1.5 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-paper px-3 py-1.5 text-sm text-muted hover:border-accent/40 hover:text-accent transition-colors"
             >
               <ExternalLink size={14} />
               新标签页
             </a>
             <button
               onClick={onClose}
-              className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors p-1"
+              className="text-faint hover:text-ink transition-colors p-1"
               title="关闭"
             >
               <X size={18} />
@@ -110,22 +110,22 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
           </div>
         </div>
 
-        <div className="relative flex-1 bg-[#f0ece4]">
+        <div className="relative flex-1 bg-wash">
           {viewState === "checking" ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#6b6560]">
-              <Loader2 size={22} className="animate-spin text-[#c96442]" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted">
+              <Loader2 size={22} className="animate-spin text-accent" />
               <p className="text-sm">正在检查文件…</p>
             </div>
           ) : viewState === "pending" ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-              <Clock size={28} className="text-[#9a9590]" />
-              <p className="text-sm text-[#6b6560]">
+              <Clock size={28} className="text-faint" />
+              <p className="text-sm text-muted">
                 Pages 还没把这个文件发布出来（GitHub Pages 重新构建通常需要一两分钟）
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setNonce((n) => n + 1)}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-paper px-3 py-2 text-sm text-muted hover:border-accent/40 hover:text-accent transition-colors"
                 >
                   <RefreshCw size={14} />
                   重新检查
@@ -133,7 +133,7 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
                 <a
                   href={dlUrl}
                   download={attachment.name}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white"
                 >
                   <Download size={14} />
                   直接下载
@@ -143,8 +143,8 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
           ) : !failed ? (
             <>
               {!loaded && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#6b6560]">
-                  <Loader2 size={22} className="animate-spin text-[#c96442]" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted">
+                  <Loader2 size={22} className="animate-spin text-accent" />
                   <p className="text-sm">正在加载 PDF…</p>
                 </div>
               )}
@@ -159,14 +159,14 @@ export default function PdfPreview({ attachment, onClose }: PdfPreviewProps) {
             </>
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-              <FileText size={28} className="text-[#9a9590]" />
-              <p className="text-sm text-[#6b6560]">
+              <FileText size={28} className="text-faint" />
+              <p className="text-sm text-muted">
                 预览失败（Pages 重新构建可能需要一两分钟），可以直接下载查看
               </p>
               <a
                 href={dlUrl}
                 download={attachment.name}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white"
               >
                 <Download size={14} />
                 下载 PDF

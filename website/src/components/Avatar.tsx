@@ -21,7 +21,7 @@ export default function Avatar({
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#c96442]/10 font-semibold text-[#c96442] ring-1 ring-[#c96442]/20 ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/10 font-semibold text-accent ring-1 ring-accent/20 ${className}`}
       style={{ width: size, height: size, fontSize: Math.max(11, Math.round(size * 0.34)) }}
     >
       {showImage ? (

@@ -15,13 +15,13 @@ export default function CollapsibleText({ text }: { text: string }) {
   const long = lines.length > PREVIEW_LINES;
 
   if (!long) {
-    return <p className="text-sm text-[#4a4540] whitespace-pre-wrap leading-relaxed">{text}</p>;
+    return <p className="text-sm text-body-strong whitespace-pre-wrap leading-relaxed">{text}</p>;
   }
 
   return (
     <div>
       <p
-        className={`text-sm text-[#4a4540] whitespace-pre-wrap leading-relaxed ${
+        className={`text-sm text-body-strong whitespace-pre-wrap leading-relaxed ${
           open ? "" : "line-clamp-4"
         }`}
       >
@@ -29,7 +29,7 @@ export default function CollapsibleText({ text }: { text: string }) {
       </p>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="mt-1 inline-flex items-center gap-1 text-xs text-[#c96442] hover:underline"
+        className="mt-1 inline-flex items-center gap-1 text-xs text-accent hover:underline"
       >
         {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         {open ? "收起" : `展开全文（${text.length} 字）`}

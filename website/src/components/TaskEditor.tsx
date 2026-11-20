@@ -90,8 +90,8 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
   };
 
   const field =
-    "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
+    "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/40 focus:ring-2 focus:ring-accent/10";
+  const label = "block text-sm font-medium text-ink mb-1.5";
 
   return (
     <div
@@ -99,17 +99,17 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
       onMouseDown={onBackdropMouseDown}
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0ece4]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-wash">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-[#c96442] text-white">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-accent text-white">
               <Pencil size={14} />
             </div>
-            <h2 className="font-serif text-lg font-bold text-[#1a1a1a]">编辑任务</h2>
+            <h2 className="font-serif text-lg font-bold text-ink">编辑任务</h2>
           </div>
-          <button onClick={requestClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
+          <button onClick={requestClose} className="text-faint hover:text-ink">
             <X size={18} />
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
           <div>
             <label className={label}>
               <span className="inline-flex items-center gap-1.5">
-                <GraduationCap size={14} className="text-[#c96442]" />
+                <GraduationCap size={14} className="text-accent" />
                 指导老师
               </span>
             </label>
@@ -145,25 +145,25 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
           <div>
             <label className={label}>
               <span className="inline-flex items-center gap-1.5">
-                <Users size={14} className="text-[#c96442]" />
+                <Users size={14} className="text-accent" />
                 成员
-                <span className="ml-1 text-xs font-normal text-[#9a9590]">（{assignees.length} 位）</span>
+                <span className="ml-1 text-xs font-normal text-faint">（{assignees.length} 位）</span>
               </span>
             </label>
 
             {assignees.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5 rounded-xl bg-[#faf9f5] border border-[#e8e4db] p-2.5">
+              <div className="mb-2 flex flex-wrap gap-1.5 rounded-xl bg-paper border border-line p-2.5">
                 {assignees.map((a) => (
                   <span
                     key={a}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-2.5 py-1 text-sm font-medium text-[#c96442]"
+                    className="inline-flex items-center gap-1 rounded-full bg-accent/10 border border-accent/20 px-2.5 py-1 text-sm font-medium text-accent"
                   >
                     <Check size={12} />
                     {a}
                     <button
                       type="button"
                       onClick={() => removeAssignee(a)}
-                      className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-[#c96442]/20 transition-colors"
+                      className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-accent/20 transition-colors"
                       title="移除"
                     >
                       <X size={12} />
@@ -199,7 +199,7 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-danger-line bg-danger-wash p-3 text-sm text-danger-ink">
               <div className="flex items-center gap-2">
                 <AlertCircle size={15} />
                 <span>{error}</span>
@@ -208,16 +208,16 @@ export default function TaskEditor({ open, task, onClose }: TaskEditorProps) {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f5] flex items-center gap-2">
+        <div className="px-6 py-4 border-t border-wash bg-paper flex items-center gap-2">
           <button
             onClick={requestClose}
-            className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+            className="rounded-xl px-4 py-2 text-sm text-muted hover:bg-wash transition-colors"
           >
             取消
           </button>
           <button
             onClick={submit}
-            className="ml-auto rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+            className="ml-auto rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
           >
             保存
           </button>

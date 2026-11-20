@@ -42,7 +42,7 @@ export default function VenuePicker({
     <div className="relative">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9a9590]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
           <input
             value={open ? q : selected ? `${selected.abbr}${selected.name !== selected.abbr ? ` — ${selected.name}` : ""}` : ""}
             onChange={(e) => {
@@ -64,16 +64,16 @@ export default function VenuePicker({
           <button
             type="button"
             onClick={() => onChange("", { name: "", kind })}
-            className="shrink-0 rounded-lg border border-[#e8e4db] px-2.5 py-2 text-xs text-[#6b6560] hover:border-[#c96442]/40"
+            className="shrink-0 rounded-lg border border-line px-2.5 py-2 text-xs text-muted hover:border-accent/40"
           >
             清除
           </button>
         )}
       </div>
       {open && (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-[#e8e4db] bg-white shadow-lg">
+        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-line bg-paper shadow-lg">
           {matches.length === 0 ? (
-            <li className="px-3 py-2 text-xs text-[#9a9590]">没有匹配的条目，可直接在下方手填全称</li>
+            <li className="px-3 py-2 text-xs text-faint">没有匹配的条目，可直接在下方手填全称</li>
           ) : (
             matches.map((v) => (
               <li key={v.key}>
@@ -85,15 +85,15 @@ export default function VenuePicker({
                     setOpen(false);
                     setQ("");
                   }}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-[#faf9f5]"
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-paper"
                 >
                   <span className="min-w-0">
-                    <span className="font-medium text-[#1a1a1a]">{v.abbr}</span>
+                    <span className="font-medium text-ink">{v.abbr}</span>
                     {v.name !== v.abbr && (
-                      <span className="ml-1.5 text-xs text-[#9a9590]">{v.name}</span>
+                      <span className="ml-1.5 text-xs text-faint">{v.name}</span>
                     )}
                   </span>
-                  <span className="shrink-0 text-xs text-[#c96442]">
+                  <span className="shrink-0 text-xs text-accent">
                     {v.tier1 ? "一类目录" : ""}
                     {!v.tier1 && v.ccf ? `CCF ${v.ccf}` : ""}
                     {!v.tier1 && !v.ccf && v.tj ? v.tj : ""}

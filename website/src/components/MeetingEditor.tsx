@@ -190,8 +190,8 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
   };
 
   const field =
-    "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
+    "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/40 focus:ring-2 focus:ring-accent/10";
+  const label = "block text-sm font-medium text-ink mb-1.5";
   const areaCls = `${field} min-h-[80px] resize-y leading-relaxed`;
 
   return (
@@ -200,21 +200,21 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
       onMouseDown={onBackdropMouseDown}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0ece4]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-wash">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-[#c96442] text-white">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-accent text-white">
               {isEdit ? <Pencil size={14} /> : <Plus size={14} />}
             </div>
-            <h2 className="font-serif text-lg font-bold text-[#1a1a1a]">
+            <h2 className="font-serif text-lg font-bold text-ink">
               {isEdit ? "编辑组会记录" : "新增组会记录"}
             </h2>
           </div>
           <button
             onClick={requestClose}
-            className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors"
+            className="text-faint hover:text-ink transition-colors"
           >
             <X size={18} />
           </button>
@@ -225,7 +225,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
-                  <Calendar size={14} className="text-[#c96442]" />
+                  <Calendar size={14} className="text-accent" />
                   组会日期
                 </span>
               </label>
@@ -239,7 +239,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
-                  <User size={14} className="text-[#c96442]" />
+                  <User size={14} className="text-accent" />
                   主讲人
                 </span>
               </label>
@@ -266,10 +266,10 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           <div>
             <label className={`${label} flex items-center gap-2`}>
               <span className="inline-flex items-center gap-1.5">
-                <FileText size={14} className="text-[#c96442]" />
+                <FileText size={14} className="text-accent" />
                 纪要（可选）
               </span>
-              <span className="ml-auto text-xs font-normal text-[#9a9590]">
+              <span className="ml-auto text-xs font-normal text-faint">
                 简要写：做了什么、关键结论
               </span>
             </label>
@@ -285,7 +285,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           <div>
             <label className={label}>
               <span className="inline-flex items-center gap-1.5">
-                <Paperclip size={14} className="text-[#c96442]" />
+                <Paperclip size={14} className="text-accent" />
                 汇报材料（PPT 导出的 PDF，可选）
               </span>
             </label>
@@ -302,15 +302,15 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="w-full rounded-xl border border-dashed border-[#e8e4db] bg-[#faf9f5] px-3.5 py-3 text-sm text-[#6b6560] hover:border-[#c96442]/50 hover:text-[#c96442] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              className="w-full rounded-xl border border-dashed border-line bg-paper px-3.5 py-3 text-sm text-muted hover:border-accent/50 hover:text-accent transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
               <Upload size={15} />
               {uploading ? "上传中…" : "选择 PDF 文件"}
             </button>
-            <p className="mt-1.5 text-xs text-[#9a9590]">
+            <p className="mt-1.5 text-xs text-faint">
               单个文件不超过 {formatBytes(MAX_ATTACHMENT_BYTES)}，保存时会连同记录一起推到 GitHub
             </p>
-            <p className="mt-1 text-xs text-[#9a9590]">
+            <p className="mt-1 text-xs text-faint">
               命名规范：{buildAttachmentName(speaker.trim(), topic.trim())}
             </p>
 
@@ -319,18 +319,18 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
                 {attachments.map((a) => (
                   <li
                     key={a.path}
-                    className="flex items-center gap-2 rounded-xl border border-[#f0ece4] bg-white px-3 py-2"
+                    className="flex items-center gap-2 rounded-xl border border-wash bg-paper px-3 py-2"
                   >
-                    <FileText size={14} className="text-[#c96442] shrink-0" />
-                    <span className="text-sm text-[#1a1a1a] truncate flex-1">{a.name}</span>
-                    <span className="text-xs text-[#9a9590] shrink-0">{formatBytes(a.size)}</span>
+                    <FileText size={14} className="text-accent shrink-0" />
+                    <span className="text-sm text-ink truncate flex-1">{a.name}</span>
+                    <span className="text-xs text-faint shrink-0">{formatBytes(a.size)}</span>
                     <button
                       type="button"
                       onClick={() =>
                         setAttachments((prev) => prev.filter((x) => x.path !== a.path))
                       }
                       title="移除"
-                      className="shrink-0 text-[#9a9590] hover:text-red-600 transition-colors"
+                      className="shrink-0 text-faint hover:text-danger-ink transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -344,19 +344,19 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
                 {pending.map((f, i) => (
                   <li
                     key={`${f.name}_${f.size}_${i}`}
-                    className="flex items-center gap-2 rounded-xl border border-[#c96442]/25 bg-[#faf9f5] px-3 py-2"
+                    className="flex items-center gap-2 rounded-xl border border-accent/25 bg-paper px-3 py-2"
                   >
-                    <FileText size={14} className="text-[#c96442] shrink-0" />
-                    <span className="text-sm text-[#1a1a1a] truncate flex-1">
+                    <FileText size={14} className="text-accent shrink-0" />
+                    <span className="text-sm text-ink truncate flex-1">
                       {buildAttachmentName(speaker.trim(), topic.trim())}
                     </span>
-                    <span className="text-xs text-[#9a9590] shrink-0">{formatBytes(f.size)}</span>
-                    <span className="shrink-0 text-xs text-[#c96442]">待上传</span>
+                    <span className="text-xs text-faint shrink-0">{formatBytes(f.size)}</span>
+                    <span className="shrink-0 text-xs text-accent">待上传</span>
                     <button
                       type="button"
                       onClick={() => setPending((prev) => prev.filter((_, j) => j !== i))}
                       title="移除"
-                      className="shrink-0 text-[#9a9590] hover:text-red-600 transition-colors"
+                      className="shrink-0 text-faint hover:text-danger-ink transition-colors"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -367,7 +367,7 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-danger-line bg-danger-wash p-3 text-sm text-danger-ink">
               <div className="flex items-center gap-2">
                 <AlertCircle size={15} />
                 <span>{error}</span>
@@ -376,11 +376,11 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f5] flex items-center gap-2">
+        <div className="px-6 py-4 border-t border-wash bg-paper flex items-center gap-2">
           {isEdit && (
             <button
               onClick={handleDelete}
-              className="rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="rounded-xl px-3 py-2 text-sm text-danger-ink hover:bg-danger-wash transition-colors"
             >
               删除
             </button>
@@ -388,14 +388,14 @@ export default function MeetingEditor({ open, initial, onClose }: MeetingEditorP
           <button
             onClick={requestClose}
             disabled={uploading}
-            className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors disabled:opacity-50"
+            className="rounded-xl px-4 py-2 text-sm text-muted hover:bg-wash transition-colors disabled:opacity-50"
           >
             取消
           </button>
           <button
             onClick={submit}
             disabled={uploading}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a] disabled:opacity-60"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep disabled:opacity-60"
           >
             {uploading ? (
               <>

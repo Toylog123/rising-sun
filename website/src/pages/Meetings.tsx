@@ -57,15 +57,15 @@ export default function Meetings() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12">
       <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#c96442] text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-white shadow-brand">
             <Users size={20} />
           </div>
           <div>
-            <h1 className="font-serif text-2xl font-bold text-[#1a1a1a]">组会记录</h1>
-            <p className="text-sm text-[#6b6560] mt-1">
+            <h1 className="font-serif text-2xl font-bold text-ink">组会记录</h1>
+            <p className="text-sm text-muted mt-1">
               每周组会的简要纪要与汇报材料 · 共 {meetings.length} 期
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function Meetings() {
           <Link
             to="/degree-requirements"
             title="学位授予与评阅要求、紧密相关成果范围目录"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-paper px-3 py-2 text-sm text-muted hover:border-accent/40 hover:text-accent transition-colors"
           >
             <GraduationCap size={14} />
             学位要求
@@ -82,7 +82,7 @@ export default function Meetings() {
           <button
             onClick={() => pull()}
             disabled={syncStatus === "pulling"}
-            className="rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 transition-colors disabled:opacity-50"
+            className="rounded-xl border border-line bg-paper px-3 py-2 text-sm text-muted hover:border-accent/40 transition-colors disabled:opacity-50"
           >
             {syncStatus === "pulling" ? "刷新中…" : "刷新"}
           </button>
@@ -94,14 +94,14 @@ export default function Meetings() {
               )
             }
             title="导出全部组会记录为 Markdown（可直接阅读）"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#e8e4db] bg-white px-3 py-2 text-sm text-[#6b6560] hover:border-[#c96442]/40 hover:text-[#c96442] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-paper px-3 py-2 text-sm text-muted hover:border-accent/40 hover:text-accent transition-colors"
           >
             <Download size={14} />
             导出
           </button>
           <button
             onClick={openAdd}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
           >
             <Plus size={15} />
             新增组会
@@ -111,7 +111,7 @@ export default function Meetings() {
 
       {/* 同步失败提示：拉不到远端时要说清楚，而不是让页面看起来就是空的 */}
       {syncError && (
-        <div className="mb-5 rounded-xl border border-[#e8b4a4] bg-[#fdf3ef] px-4 py-3 text-sm text-[#a1452a] flex items-center gap-2 flex-wrap">
+        <div className="mb-5 rounded-xl border border-danger-line bg-danger-wash px-4 py-3 text-sm text-danger-ink flex items-center gap-2 flex-wrap">
           <AlertCircle size={15} className="shrink-0" />
           <span className="flex-1">同步失败：{syncError}</span>
           <button
@@ -126,13 +126,13 @@ export default function Meetings() {
       {/* 按主讲人筛选：一眼看清谁汇报过几次、传了几份材料 */}
       {speakerStats.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[#9a9590] mr-1">按主讲人：</span>
+          <span className="text-xs text-faint mr-1">按主讲人：</span>
           <button
             onClick={() => setSpeakerFilter(null)}
             className={`rounded-full px-3 py-1 text-xs transition-colors ${
               speakerFilter === null
-                ? "bg-[#c96442] text-white"
-                : "border border-[#e8e4db] bg-white text-[#6b6560] hover:border-[#c96442]/40"
+                ? "bg-accent text-white"
+                : "border border-line bg-paper text-muted hover:border-accent/40"
             }`}
           >
             全部 {sorted.length}
@@ -144,8 +144,8 @@ export default function Meetings() {
               title={`最近一次：${st.last}`}
               className={`rounded-full px-3 py-1 text-xs transition-colors ${
                 speakerFilter === name
-                  ? "bg-[#c96442] text-white"
-                  : "border border-[#e8e4db] bg-white text-[#6b6560] hover:border-[#c96442]/40"
+                  ? "bg-accent text-white"
+                  : "border border-line bg-paper text-muted hover:border-accent/40"
               }`}
             >
               {name} {st.count}
@@ -158,14 +158,14 @@ export default function Meetings() {
       )}
 
       {visible.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-[#e8e4db] px-6 py-16 text-center">
-          <Users size={32} className="mx-auto text-[#9a9590]" />
-          <p className="mt-3 text-sm text-[#6b6560]">
+        <div className="rounded-2xl bg-paper border border-line px-6 py-16 text-center">
+          <Users size={32} className="mx-auto text-faint" />
+          <p className="mt-3 text-sm text-muted">
             {speakerFilter ? `「${speakerFilter}」还没有组会记录` : "还没有组会记录"}
           </p>
           <button
             onClick={openAdd}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white"
           >
             <Plus size={15} />
             添加第一期组会
@@ -176,13 +176,13 @@ export default function Meetings() {
           {visible.map((m) => (
             <article
               key={m.id}
-              className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
+              className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-[#6b6560]">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                     <span className="inline-flex items-center gap-1">
-                      <Calendar size={12} className="text-[#c96442]" />
+                      <Calendar size={12} className="text-accent" />
                       {m.date}
                     </span>
                     <span className="inline-flex items-center gap-1">
@@ -190,13 +190,13 @@ export default function Meetings() {
                       主讲：{m.speaker}
                     </span>
                   </div>
-                  <h2 className="mt-1 font-serif text-lg font-semibold text-[#1a1a1a] leading-snug">
+                  <h2 className="mt-1 font-serif text-lg font-semibold text-ink leading-snug">
                     {m.topic}
                   </h2>
                 </div>
                 <button
                   onClick={() => openEdit(m)}
-                  className="shrink-0 p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+                  className="shrink-0 p-1.5 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
                   title="编辑"
                 >
                   <Pencil size={14} />
@@ -204,8 +204,8 @@ export default function Meetings() {
               </div>
 
               {m.notes && (
-                <div className="mt-3 pt-3 border-t border-[#f0ece4]">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#9a9590] mb-1">
+                <div className="mt-3 pt-3 border-t border-wash">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-faint mb-1">
                     <FileText size={12} />
                     纪要
                   </div>
@@ -214,8 +214,8 @@ export default function Meetings() {
               )}
 
               {m.attachments && m.attachments.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-[#f0ece4]">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#9a9590] mb-2">
+                <div className="mt-3 pt-3 border-t border-wash">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-faint mb-2">
                     <Paperclip size={12} />
                     汇报材料
                   </div>
@@ -225,11 +225,11 @@ export default function Meetings() {
                         <button
                           onClick={() => setPreview(a)}
                           title="点击预览 PDF"
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4db] bg-[#faf9f5] px-2.5 py-1.5 text-xs text-[#4a4540] hover:border-[#c96442]/50 hover:text-[#c96442] transition-colors max-w-[260px]"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-paper px-2.5 py-1.5 text-xs text-body-strong hover:border-accent/50 hover:text-accent transition-colors max-w-[260px]"
                         >
-                          <Eye size={12} className="shrink-0 text-[#c96442]" />
+                          <Eye size={12} className="shrink-0 text-accent" />
                           <span className="truncate">{a.name}</span>
-                          <span className="shrink-0 text-[#9a9590]">{formatBytes(a.size)}</span>
+                          <span className="shrink-0 text-faint">{formatBytes(a.size)}</span>
                         </button>
                       </li>
                     ))}

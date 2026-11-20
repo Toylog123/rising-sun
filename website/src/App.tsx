@@ -16,7 +16,7 @@ const DegreeRequirements = lazy(() => import("@/pages/DegreeRequirements"));
 
 function PageLoading() {
   return (
-    <div className="py-16 text-center text-sm text-[#9a9590]">正在加载选刊手册…</div>
+    <div className="py-16 text-center text-sm text-faint">正在加载选刊手册…</div>
   );
 }
 

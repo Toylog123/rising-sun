@@ -12,11 +12,11 @@ import Avatar from "@/components/Avatar";
 import { DegreeProgress } from "@/components/DegreeBoard";
 
 const STATUS_BG: Record<string, string> = {
-  green: "bg-green-50 text-green-700 border-green-200",
-  amber: "bg-amber-50 text-amber-700 border-amber-200",
-  red: "bg-red-50 text-red-700 border-red-200",
-  gray: "bg-[#f0ece4] text-[#6b6560] border-[#e8e4db]",
-  blue: "bg-blue-50 text-blue-700 border-blue-200",
+  green: "bg-success-wash text-success-ink border-success-line",
+  amber: "bg-warning-wash text-warning-ink border-warning-line",
+  red: "bg-danger-wash text-danger-ink border-danger-line",
+  gray: "bg-wash text-muted border-line",
+  blue: "bg-info-wash text-info-ink border-info-line",
 };
 
 export default function Students() {
@@ -72,49 +72,43 @@ export default function Students() {
 
   return (
     <div className="font-sans">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#faf9f5] via-[#f5f0e6] to-[#f0ece4]">
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: "radial-gradient(circle, #c96442 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+      <section className="relative overflow-hidden bg-gradient-to-br from-paper via-wash to-wash">
+        <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.035]" />
+        <div className="relative mx-auto max-w-5xl px-5 sm:px-8 py-14 sm:py-16">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#c96442] text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-white shadow-brand">
                 <Users size={20} />
               </div>
               <div>
-                <h1 className="font-serif text-3xl font-bold text-[#1a1a1a]">课题组成员</h1>
-                <p className="text-sm text-[#6b6560] mt-1">
+                <h1 className="font-serif text-3xl font-bold text-ink">课题组成员</h1>
+                <p className="text-sm text-muted mt-1">
                   共 {total} 人 · 在读 {active} · 已毕业 {alumni} · 指导老师 {advisor || "—"}
                 </p>
               </div>
             </div>
             <button
               onClick={openAdd}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
             >
               <Plus size={15} />
               添加成员
             </button>
           </div>
-          <p className="mt-4 text-[15px] text-[#4a4540] leading-relaxed max-w-3xl">
+          <p className="mt-4 text-[15px] text-body-strong leading-relaxed max-w-3xl">
             课题组由 1 位指导老师与 {active} 位在读研究生组成，研究方向涵盖芯片设计自动化、AI for EDA 与工程变更优化（ECO）。
           </p>
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section className="mx-auto max-w-5xl px-5 sm:px-8 py-12">
         {sorted.length === 0 ? (
-          <div className="rounded-2xl bg-white border border-[#e8e4db] px-6 py-16 text-center">
-            <Users size={32} className="mx-auto text-[#9a9590]" />
-            <p className="mt-3 text-sm text-[#6b6560]">还没有学生档案</p>
+          <div className="rounded-2xl bg-paper border border-line px-6 py-16 text-center">
+            <Users size={32} className="mx-auto text-faint" />
+            <p className="mt-3 text-sm text-muted">还没有学生档案</p>
             <button
               onClick={openAdd}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white"
             >
               <Plus size={15} />
               添加第一个学生
@@ -128,22 +122,22 @@ export default function Students() {
               if (!teacher) return null;
               return (
                 <section>
-                  <h2 className="font-serif text-lg font-bold text-[#1a1a1a] mb-3 flex items-center gap-2">
-                    <GraduationCap size={18} className="text-[#c96442]" />
+                  <h2 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
+                    <GraduationCap size={18} className="text-accent" />
                     指导老师
                   </h2>
                   <article
                     key={teacher.name}
-                    className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
+                    className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
                   >
                     <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                       <div className="flex items-center gap-3 flex-wrap">
                         <Avatar name={teacher.name} src={teacher.avatar} size={52} />
-                        <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
+                        <h3 className="font-serif text-xl font-bold text-ink">
                           {teacher.name}
                         </h3>
                         {teacher.title && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs font-medium text-[#c96442]">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
                             {teacher.title}
                           </span>
                         )}
@@ -152,14 +146,14 @@ export default function Students() {
                         <button
                           onClick={() => openEdit(teacher)}
                           title="编辑"
-                          className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+                          className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           onClick={() => handleRemove(teacher)}
                           title="移除"
-                          className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-md text-muted hover:text-danger-ink hover:bg-danger-wash transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -168,7 +162,7 @@ export default function Students() {
 
                     {teacher.researchAreas && teacher.researchAreas.length > 0 && (
                       <div className="mt-3">
-                        <p className="flex items-center gap-1 text-xs font-semibold text-[#9a9590] mb-1.5">
+                        <p className="flex items-center gap-1 text-xs font-semibold text-faint mb-1.5">
                           <FlaskConical size={12} />
                           研究方向
                         </p>
@@ -176,7 +170,7 @@ export default function Students() {
                           {teacher.researchAreas.map((r) => (
                             <span
                               key={r}
-                              className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs text-[#c96442]"
+                              className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs text-accent"
                             >
                               {r}
                             </span>
@@ -186,7 +180,7 @@ export default function Students() {
                     )}
 
                     {teacher.bio && (
-                      <p className="mt-3 text-sm text-[#1a1a1a] leading-relaxed">
+                      <p className="mt-3 text-sm text-ink leading-relaxed">
                         {teacher.bio}
                       </p>
                     )}
@@ -195,7 +189,7 @@ export default function Students() {
                       <div className="mt-3">
                         <a
                           href={`mailto:${teacher.email}`}
-                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
                         >
                           <Mail size={12} /> {teacher.email}
                         </a>
@@ -208,8 +202,8 @@ export default function Students() {
 
             {/* 学生（列表） */}
             <section>
-              <h2 className="font-serif text-lg font-bold text-[#1a1a1a] mb-3 flex items-center gap-2">
-                <Users size={18} className="text-[#c96442]" />
+              <h2 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
+                <Users size={18} className="text-accent" />
                 在读研究生
               </h2>
               <div className="space-y-4">
@@ -220,13 +214,13 @@ export default function Students() {
                   return (
                     <article
                       key={s.name}
-                      className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all hover:shadow-md hover:border-[#c96442]/30"
+                      className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                         <div>
                           <div className="flex items-center gap-3 flex-wrap">
                             <Avatar name={s.name} src={s.avatar} size={48} />
-                            <h3 className="font-serif text-xl font-bold text-[#1a1a1a]">
+                            <h3 className="font-serif text-xl font-bold text-ink">
                               {s.name}
                             </h3>
                             <span
@@ -235,18 +229,18 @@ export default function Students() {
                               {s.status}
                             </span>
                             {s.enrolledAt && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#faf9f5] border border-[#e8e4db] text-xs text-[#1a1a1a] font-medium">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-paper border border-line text-xs text-ink font-medium">
                                 {grade.label}
                               </span>
                             )}
                             {s.advisor && (
-                              <span className="text-xs text-[#6b6560]">
+                              <span className="text-xs text-muted">
                                 · 导师 {s.advisor}
                               </span>
                             )}
                           </div>
                           {s.enrolledAt && (
-                            <p className="mt-1 inline-flex items-center gap-1 text-xs text-[#6b6560]">
+                            <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted">
                               <Calendar size={12} />
                               {s.enrolledAt} 入校
                             </p>
@@ -256,14 +250,14 @@ export default function Students() {
                           <button
                             onClick={() => openEdit(s)}
                             title="编辑"
-                            className="p-1.5 rounded-md text-[#6b6560] hover:text-[#c96442] hover:bg-[#faf9f5] transition-colors"
+                            className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
                             onClick={() => handleRemove(s)}
                             title="移除"
-                            className="p-1.5 rounded-md text-[#6b6560] hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-1.5 rounded-md text-muted hover:text-danger-ink hover:bg-danger-wash transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -272,7 +266,7 @@ export default function Students() {
 
                       {s.researchAreas && s.researchAreas.length > 0 && (
                         <div className="mt-3">
-                          <p className="flex items-center gap-1 text-xs font-semibold text-[#9a9590] mb-1.5">
+                          <p className="flex items-center gap-1 text-xs font-semibold text-faint mb-1.5">
                             <FlaskConical size={12} />
                             研究方向
                           </p>
@@ -280,7 +274,7 @@ export default function Students() {
                             {s.researchAreas.map((r) => (
                               <span
                                 key={r}
-                                className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#c96442]/10 border border-[#c96442]/20 text-xs text-[#c96442]"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs text-accent"
                               >
                                 {r}
                               </span>
@@ -290,7 +284,7 @@ export default function Students() {
                       )}
 
                       {s.bio && (
-                        <p className="mt-3 text-sm text-[#1a1a1a] leading-relaxed">
+                        <p className="mt-3 text-sm text-ink leading-relaxed">
                           {s.bio}
                         </p>
                       )}
@@ -303,7 +297,7 @@ export default function Students() {
                             {s.email && (
                               <a
                                 href={`mailto:${s.email}`}
-                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
                               >
                                 <Mail size={12} /> {s.email}
                               </a>
@@ -313,7 +307,7 @@ export default function Students() {
                                 href={s.github}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
                               >
                                 <Github size={12} /> GitHub
                               </a>
@@ -323,28 +317,28 @@ export default function Students() {
                                 href={s.homepage}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-[#6b6560] bg-[#faf9f5] hover:bg-[#f0ece4] transition-colors"
+                                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
                               >
                                 <ExternalLink size={12} /> 主页
                               </a>
                             )}
                           </>
                         ) : (
-                          <span className="text-xs text-[#9a9590]">暂无联系方式</span>
+                          <span className="text-xs text-faint">暂无联系方式</span>
                         )}
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-[#f0ece4] flex items-center justify-between">
-                        <div className="flex items-center gap-4 text-xs text-[#6b6560]">
+                      <div className="mt-4 pt-3 border-t border-wash flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-xs text-muted">
                           <span>
-                            <strong className="text-[#1a1a1a]">{stat.total}</strong> 项任务
+                            <strong className="text-ink">{stat.total}</strong> 项任务
                           </span>
-                          <span className="text-amber-800 font-semibold">进行中 {stat.active}</span>
+                          <span className="text-warning-ink font-semibold">进行中 {stat.active}</span>
                           <span>已完成 {stat.done}</span>
                         </div>
                         <Link
                           to={`/tasks?member=${encodeURIComponent(s.name)}`}
-                          className="inline-flex items-center gap-0.5 text-xs text-[#c96442] hover:text-[#b5573a] transition-colors"
+                          className="inline-flex items-center gap-0.5 text-xs text-accent hover:text-accent-deep transition-colors"
                         >
                           查看任务
                           <ArrowRight size={11} />
@@ -358,7 +352,7 @@ export default function Students() {
           </div>
         )}
 
-        <p className="mt-6 text-xs text-[#9a9590]">
+        <p className="mt-6 text-xs text-faint">
           提示：年级根据入校时间按学年自动计算（每年 9 月起算）。任何写入都会同步到 GitHub 仓库的 <code>tasks.json</code>。
         </p>
       </section>

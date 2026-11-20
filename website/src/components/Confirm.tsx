@@ -27,40 +27,40 @@ export default function Confirm() {
       onClick={() => resolve(false)}
     >
       <div
-        className="relative w-full max-w-sm rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden"
+        className="relative w-full max-w-sm rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3 px-6 pt-5 pb-3">
           <div
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-              isDanger ? "bg-red-50 text-red-600" : "bg-[#c96442]/10 text-[#c96442]"
+              isDanger ? "bg-danger-wash text-danger-ink" : "bg-accent/10 text-accent"
             }`}
           >
             <Icon size={18} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-serif text-base font-semibold text-[#1a1a1a] leading-snug">
+            <h3 className="font-serif text-base font-semibold text-ink leading-snug">
               {spec.title}
             </h3>
             {spec.description && (
-              <p className="mt-1.5 text-sm text-[#6b6560] leading-relaxed whitespace-pre-line">
+              <p className="mt-1.5 text-sm text-muted leading-relaxed whitespace-pre-line">
                 {spec.description}
               </p>
             )}
           </div>
           <button
             onClick={() => resolve(false)}
-            className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors shrink-0"
+            className="text-faint hover:text-ink transition-colors shrink-0"
             title="关闭"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-3 bg-[#faf9f5] border-t border-[#f0ece4]">
+        <div className="flex items-center justify-end gap-2 px-6 py-3 bg-paper border-t border-wash">
           <button
             onClick={() => resolve(false)}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-muted hover:bg-wash transition-colors"
           >
             {spec.cancelText ?? "取消"}
           </button>
@@ -69,7 +69,7 @@ export default function Confirm() {
             className={`rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition-all ${
               isDanger
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-[#c96442] hover:bg-[#b5573a]"
+                : "bg-accent hover:bg-accent-deep"
             }`}
           >
             {spec.confirmText ?? "确认"}

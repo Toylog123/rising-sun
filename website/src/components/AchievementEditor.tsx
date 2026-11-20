@@ -259,10 +259,10 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
   };
 
   const field =
-    "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
-  const hint = "mt-1.5 text-xs text-[#9a9590]";
-  const check = "inline-flex items-center gap-1.5 text-sm text-[#6b6560]";
+    "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/40 focus:ring-2 focus:ring-accent/10";
+  const label = "block text-sm font-medium text-ink mb-1.5";
+  const hint = "mt-1.5 text-xs text-faint";
+  const check = "inline-flex items-center gap-1.5 text-sm text-muted";
 
   return (
     <div
@@ -270,19 +270,19 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
       onMouseDown={onBackdropMouseDown}
     >
       <div
-        className="relative w-full max-w-2xl rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0ece4]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-wash">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-[#c96442] text-white">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-accent text-white">
               {isEdit ? <Pencil size={14} /> : <Plus size={14} />}
             </div>
-            <h2 className="font-serif text-lg font-bold text-[#1a1a1a]">
+            <h2 className="font-serif text-lg font-bold text-ink">
               {isEdit ? "编辑成果" : "新增成果"}
             </h2>
           </div>
-          <button onClick={requestClose} className="text-[#9a9590] hover:text-[#1a1a1a]">
+          <button onClick={requestClose} className="text-faint hover:text-ink">
             <X size={18} />
           </button>
         </div>
@@ -302,8 +302,8 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                     onClick={() => setCategory(c.key)}
                     className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
                       active
-                        ? "bg-[#c96442] text-white border-[#c96442]"
-                        : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                        ? "bg-accent text-white border-accent"
+                        : "bg-paper text-muted border-line hover:border-accent/40"
                     }`}
                   >
                     <Icon size={15} />
@@ -315,11 +315,11 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
           </div>
 
           {/* 归属人 */}
-          <div className="rounded-xl border border-[#f0ece4] bg-[#faf9f5] p-3.5 space-y-3">
+          <div className="rounded-xl border border-wash bg-paper p-3.5 space-y-3">
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
-                  <UserCheck size={14} className="text-[#c96442]" />
+                  <UserCheck size={14} className="text-accent" />
                   成果归属人
                 </span>
               </label>
@@ -340,12 +340,12 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                 </p>
               )}
             </div>
-            <label className="flex items-center gap-2 text-sm text-[#6b6560]">
+            <label className="flex items-center gap-2 text-sm text-muted">
               <input
                 type="checkbox"
                 checked={graduate}
                 onChange={(e) => setGraduate(e.target.checked)}
-                className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                className="h-4 w-4 rounded border-line text-accent"
               />
               计入本人毕业要求统计
             </label>
@@ -355,7 +355,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
-                  <Calendar size={14} className="text-[#c96442]" />
+                  <Calendar size={14} className="text-accent" />
                   年份
                 </span>
               </label>
@@ -372,7 +372,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
             <div>
               <label className={label}>
                 <span className="inline-flex items-center gap-1.5">
-                  <Users size={14} className="text-[#c96442]" />
+                  <Users size={14} className="text-accent" />
                   {category === "专利" ? "发明人" : category === "比赛" ? "获奖成员" : "作者"}
                   （用 、 分隔）
                 </span>
@@ -403,7 +403,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
               <div>
                 <label className={label}>
                   <span className="inline-flex items-center gap-1.5">
-                    <FileText size={14} className="text-[#c96442]" />
+                    <FileText size={14} className="text-accent" />
                     刊物类型
                   </span>
                 </label>
@@ -418,8 +418,8 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                       }}
                       className={`rounded-xl border px-3 py-2 text-sm transition-all ${
                         paperVenueKind === k
-                          ? "bg-[#c96442] text-white border-[#c96442]"
-                          : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                          ? "bg-accent text-white border-accent"
+                          : "bg-paper text-muted border-line hover:border-accent/40"
                       }`}
                     >
                       {k}
@@ -431,7 +431,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
               <div>
                 <label className={label}>
                   <span className="inline-flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-[#c96442]" />
+                    <Sparkles size={14} className="text-accent" />
                     从成果目录选择（决定等级判定）
                   </span>
                 </label>
@@ -452,7 +452,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
               <div>
                 <label className={label}>
                   <span className="inline-flex items-center gap-1.5">
-                    <FileText size={14} className="text-[#c96442]" />
+                    <FileText size={14} className="text-accent" />
                     会议 / 期刊全称（不在目录内时手填）
                   </span>
                 </label>
@@ -504,7 +504,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                     type="checkbox"
                     checked={coAuthor}
                     onChange={(e) => setCoAuthor(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                    className="h-4 w-4 rounded border-line text-accent"
                   />
                   与他人共同署名（仅限一人使用）
                 </label>
@@ -513,7 +513,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                     type="checkbox"
                     checked={bestPaper}
                     onChange={(e) => setBestPaper(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                    className="h-4 w-4 rounded border-line text-accent"
                   />
                   CCF A/B 会议最佳论文（×1.5）
                 </label>
@@ -522,7 +522,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                     type="checkbox"
                     checked={largeConference}
                     onChange={(e) => setLargeConference(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#e8e4db] text-[#c96442]"
+                    className="h-4 w-4 rounded border-line text-accent"
                   />
                   当年录用 ≥500 篇的会议（×0.7）
                 </label>
@@ -646,7 +646,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
                 <div>
                   <label className={label}>
                     <span className="inline-flex items-center gap-1.5">
-                      <GraduationCap size={14} className="text-[#c96442]" />
+                      <GraduationCap size={14} className="text-accent" />
                       指导老师
                     </span>
                   </label>
@@ -664,7 +664,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
           <div>
             <label className={label}>
               <span className="inline-flex items-center gap-1.5">
-                <Link2 size={14} className="text-[#c96442]" />
+                <Link2 size={14} className="text-accent" />
                 链接（可选）
               </span>
             </label>
@@ -687,7 +687,7 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-danger-line bg-danger-wash p-3 text-sm text-danger-ink">
               <div className="flex items-center gap-2">
                 <AlertCircle size={15} />
                 <span>{error}</span>
@@ -696,24 +696,24 @@ export default function AchievementEditor({ open, initial, onClose }: Achievemen
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f5] flex items-center gap-2">
+        <div className="px-6 py-4 border-t border-wash bg-paper flex items-center gap-2">
           {isEdit && (
             <button
               onClick={handleDelete}
-              className="rounded-xl px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              className="rounded-xl px-3 py-2 text-sm text-danger-ink hover:bg-danger-wash transition-colors"
             >
               删除
             </button>
           )}
           <button
             onClick={requestClose}
-            className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+            className="rounded-xl px-4 py-2 text-sm text-muted hover:bg-wash transition-colors"
           >
             取消
           </button>
           <button
             onClick={submit}
-            className="ml-auto rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+            className="ml-auto rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
           >
             保存
           </button>

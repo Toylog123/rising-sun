@@ -143,8 +143,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
   };
 
   const field =
-    "w-full rounded-xl border border-[#e8e4db] bg-white px-3.5 py-2.5 text-sm text-[#1a1a1a] placeholder-[#9a9590] outline-none transition-all focus:border-[#c96442]/40 focus:ring-2 focus:ring-[#c96442]/10";
-  const label = "block text-sm font-medium text-[#1a1a1a] mb-1.5";
+    "w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink placeholder-faint outline-none transition-all focus:border-accent/40 focus:ring-2 focus:ring-accent/10";
+  const label = "block text-sm font-medium text-ink mb-1.5";
   const areaCls = `${field} min-h-[60px] resize-y leading-relaxed`;
 
   return (
@@ -153,21 +153,21 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
       onMouseDown={onBackdropMouseDown}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl bg-white border border-[#e8e4db] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg rounded-2xl bg-paper border border-line shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0ece4]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-wash">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-[#c96442] text-white">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-accent text-white">
               {isEdit ? <Pencil size={14} /> : <Plus size={14} />}
             </div>
-            <h2 className="font-serif text-lg font-bold text-[#1a1a1a]">
+            <h2 className="font-serif text-lg font-bold text-ink">
               {isEdit ? "编辑成员" : "添加成员"}
             </h2>
           </div>
           <button
             onClick={requestClose}
-            className="text-[#9a9590] hover:text-[#1a1a1a] transition-colors"
+            className="text-faint hover:text-ink transition-colors"
           >
             <X size={18} />
           </button>
@@ -183,8 +183,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                   onClick={() => setRole("student")}
                   className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
                     role === "student"
-                      ? "bg-[#c96442] text-white border-[#c96442]"
-                      : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                      ? "bg-accent text-white border-accent"
+                      : "bg-paper text-muted border-line hover:border-accent/40"
                   }`}
                 >
                   <User size={14} />
@@ -195,8 +195,8 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                   onClick={() => setRole("teacher")}
                   className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
                     role === "teacher"
-                      ? "bg-[#c96442] text-white border-[#c96442]"
-                      : "bg-white text-[#6b6560] border-[#e8e4db] hover:border-[#c96442]/40"
+                      ? "bg-accent text-white border-accent"
+                      : "bg-paper text-muted border-line hover:border-accent/40"
                   }`}
                 >
                   <GraduationCap size={14} />
@@ -217,7 +217,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
               autoFocus={!isEdit}
             />
             {isEdit && (
-              <p className="mt-1 text-xs text-[#9a9590]">姓名为唯一标识，不支持修改</p>
+              <p className="mt-1 text-xs text-faint">姓名为唯一标识，不支持修改</p>
             )}
           </div>
 
@@ -232,7 +232,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                 className={field}
               />
             </div>
-            <p className="mt-1 text-xs text-[#9a9590]">
+            <p className="mt-1 text-xs text-faint">
               留空则自动显示姓名首字；填入有效地址会显示照片，加载失败会回退。
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                 <div>
                   <label className={label}>
                     <span className="inline-flex items-center gap-1.5">
-                      <Calendar size={14} className="text-[#c96442]" />
+                      <Calendar size={14} className="text-accent" />
                       入校时间
                     </span>
                   </label>
@@ -283,7 +283,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                 <div>
                   <label className={label}>
                     <span className="inline-flex items-center gap-1.5">
-                      <GraduationCap size={14} className="text-[#c96442]" />
+                      <GraduationCap size={14} className="text-accent" />
                       学科
                     </span>
                   </label>
@@ -314,7 +314,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
                   </select>
                 </div>
               </div>
-              <p className="text-xs text-[#9a9590]">学科与学位层次决定毕业要求按哪一套目录判定。</p>
+              <p className="text-xs text-faint">学科与学位层次决定毕业要求按哪一套目录判定。</p>
             </>
           )}
 
@@ -360,7 +360,7 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
           </div>
 
           {error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-danger-line bg-danger-wash p-3 text-sm text-danger-ink">
               <div className="flex items-center gap-2">
                 <AlertCircle size={15} />
                 <span>{error}</span>
@@ -369,16 +369,16 @@ export default function StudentEditor({ open, initial, onClose }: StudentEditorP
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[#f0ece4] bg-[#faf9f5] flex items-center gap-2">
+        <div className="px-6 py-4 border-t border-wash bg-paper flex items-center gap-2">
           <button
             onClick={onClose}
-            className="rounded-xl px-4 py-2 text-sm text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+            className="rounded-xl px-4 py-2 text-sm text-muted hover:bg-wash transition-colors"
           >
             取消
           </button>
           <button
             onClick={submit}
-            className="ml-auto rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#b5573a]"
+            className="ml-auto rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
           >
             保存
           </button>

@@ -69,16 +69,16 @@ export default function Home() {
     <div className="font-sans">
       {/* 同步状态横幅 */}
       {syncStatus === "pulling" && (
-        <div className="bg-amber-50 border-b border-amber-200">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-amber-800">
-            <RefreshCw size={13} className="animate-spin shrink-0" />
+        <div className="border-b border-warning-line bg-warning-wash">
+          <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2 text-xs text-warning-ink sm:px-6 lg:px-8">
+            <RefreshCw size={13} className="shrink-0 animate-spin" />
             <span>正在拉取最新任务数据…</span>
           </div>
         </div>
       )}
       {syncStatus === "error" && (
-        <div className="bg-red-50 border-b border-red-200">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-red-700">
+        <div className="border-b border-danger-line bg-danger-wash">
+          <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2 text-xs text-danger-ink sm:px-6 lg:px-8">
             <AlertCircle size={13} className="shrink-0" />
             <span className="flex-1">同步失败：{syncError}</span>
             <button onClick={() => pull()} className="font-medium underline hover:no-underline">重试</button>
@@ -86,27 +86,22 @@ export default function Home() {
         </div>
       )}
       {!ghToken && syncStatus === "ready" && (
-        <div className="bg-[#faf9f5] border-b border-[#e8e4db]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-2 text-xs text-[#6b6560]">
+        <div className="border-b border-line bg-paper">
+          <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-2 text-xs text-muted sm:px-6 lg:px-8">
             <CloudOff size={13} className="shrink-0" />
             <span className="flex-1">未配置 PAT，目前为只读浏览 · 数据 {timeAgo(lastSyncedAt)} 拉取</span>
-            <Link to="/tasks" className="font-medium text-[#c96442] hover:underline">前往设置 →</Link>
+            <Link to="/tasks" className="font-medium text-accent hover:underline">前往设置 →</Link>
           </div>
         </div>
       )}
 
-      {/* Hero 宣传区 */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#faf9f5] via-[#f5f0e6] to-[#f0ece4]">
-        <div className="absolute inset-0 opacity-[0.025]" style={{
-          backgroundImage: "radial-gradient(circle, #c96442 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }} />
-        {/* 背景水印：直接复用左上角那个 logo.svg，不再另画图形。
-            该 SVG 是透明底 + 实色描边，正好可以当 CSS mask 用，
-            于是颜色完全由 CSS 渐变控制，不必改动 logo.svg 本体，
-            品牌图形本身也永远不会和导航栏里的那张走偏。 */}
+      {/* ================= Hero ================= */}
+      <section className="relative overflow-hidden border-b border-line bg-gradient-to-br from-paper via-wash to-wash">
+        <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.035]" />
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[420px] w-[420px] rounded-full bg-accent/[0.06] blur-3xl" />
+        {/* 背景水印复用 logo.svg 作 mask，颜色由 CSS 渐变控制，品牌图形不会走偏 */}
         <div
-          className="pointer-events-none absolute -right-[10%] top-1/2 h-[400px] w-[430px] -translate-y-1/2 opacity-[0.20] hidden xl:block"
+          className="pointer-events-none absolute -right-[8%] top-1/2 hidden h-[420px] w-[450px] -translate-y-1/2 opacity-[0.22] xl:block"
           aria-hidden="true"
           style={{
             WebkitMaskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
@@ -120,80 +115,86 @@ export default function Home() {
             background: "linear-gradient(170deg, #FDE68A 0%, #FBBF24 42%, #F97316 100%)",
           }}
         />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="relative mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
           <div className="max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/70 border border-[#e8e4db] px-3 py-1 text-xs text-[#6b6560] shadow-sm">
-                <FlaskConical size={12} className="text-[#c96442]" />
-                芯片设计自动化 · EDA
-              </div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-3 py-1 text-xs font-medium text-[#c96442]">
-                <Sparkles size={12} />
-                成立于 2025
-              </div>
+            <div className="mb-7 flex flex-wrap items-center gap-2">
+              <span className="eyebrow"><FlaskConical size={12} className="text-accent" />芯片设计自动化 · EDA</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                <Sparkles size={12} />成立于 2025
+              </span>
               {advisor && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#c96442]/10 border border-[#c96442]/20 px-3 py-1 text-xs font-medium text-[#c96442]">
-                  <GraduationCap size={13} />
-                  指导老师 · {advisor}
-                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                  <GraduationCap size={13} />指导老师 · {advisor}
+                </span>
               )}
             </div>
-            <h1 className="font-serif text-5xl sm:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tight">
+            <h1 className="font-serif text-5xl font-black leading-[1.15] tracking-heading text-ink sm:text-7xl">
               Rising Sun
-              <span className="block mt-2 text-xl sm:text-2xl font-light text-[#6b6560] tracking-widest">
+              <span className="mt-3 block text-xl font-normal tracking-wider2 text-muted sm:text-2xl">
                 芯片设计自动化课题组
               </span>
             </h1>
-            <p className="mt-6 text-base sm:text-lg text-[#4a4540] leading-relaxed max-w-2xl">
-              我们是一个年轻的课题组，成立于 2025 年，专注于<strong className="text-[#1a1a1a] font-semibold">芯片设计自动化（EDA）</strong>方向。
+            <div className="mt-6 h-0.5 w-14 rounded-full bg-accent" />
+            <p className="mt-6 max-w-2xl text-base leading-[1.9] text-body-strong sm:text-lg">
+              我们是一个年轻的课题组，成立于 2025 年，专注于
+              <strong className="font-semibold text-ink">芯片设计自动化（EDA）</strong>方向。
               围绕物理设计、布局布线、工程变更优化（ECO）等关键环节，结合机器学习与运筹优化方法，
               探索更智能、更高效的 EDA 算法与工具。
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/students" className="inline-flex items-center gap-2 rounded-full bg-[#c96442] px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-[#c96442]/20 transition-all hover:bg-[#b5573a] hover:shadow-lg hover:shadow-[#c96442]/30">
-                <Users size={16} />
-                了解组员
-                <ArrowRight size={14} />
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link to="/students" className="btn-primary !px-6 !py-2.5">
+                <Users size={16} />了解组员<ArrowRight size={14} />
               </Link>
-              <Link to="/meetings" className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-6 py-2.5 text-sm font-medium text-[#1a1a1a] transition-all hover:border-[#c96442]/30 hover:shadow-md">
-                <Calendar size={16} />
-                组会记录
+              <Link to="/meetings" className="btn-secondary !rounded-full !px-6 !py-2.5">
+                <Calendar size={16} />组会记录
               </Link>
-              <Link to="/tasks" className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-6 py-2.5 text-sm font-medium text-[#1a1a1a] transition-all hover:border-[#c96442]/30 hover:shadow-md">
-                <BookOpen size={16} />
-                研究进展
+              <Link to="/tasks" className="btn-secondary !rounded-full !px-6 !py-2.5">
+                <BookOpen size={16} />研究进展
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 研究方向 */}
-      <section className="bg-[#faf9f5] border-t border-[#e8e4db]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8e4db] px-3 py-1 text-xs text-[#6b6560] mb-3 shadow-sm">
-              <FlaskConical size={12} className="text-[#c96442]" />
-              研究方向
-            </div>
-            <h2 className="font-serif text-3xl font-bold text-[#1a1a1a]">我们在做什么</h2>
-            <p className="mt-3 text-sm text-[#6b6560] max-w-2xl mx-auto">
+      {/* ================= 研究方向：编辑式错位排版，避免三条等宽卡片 ================= */}
+      <section className="border-b border-line bg-paper">
+        <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
+          <div className="mb-10 max-w-2xl">
+            <span className="eyebrow mb-4"><FlaskConical size={12} className="text-accent" />研究方向</span>
+            <h2 className="font-serif text-3xl font-bold tracking-heading text-ink sm:text-4xl">我们在做什么</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
               从算法到工具，从理论到工程 —— 我们围绕芯片设计自动化的关键难题展开研究。
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {DIRECTIONS.map((d) => {
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* 头条方向：横向特写 + 巨型序号，承担视觉重心 */}
+            <article className="surface group relative overflow-hidden p-7 transition-all duration-300 hover:border-accent/30 hover:shadow-lift lg:col-span-2">
+              <div className="pointer-events-none absolute -right-6 -top-10 font-serif text-[180px] font-black leading-none text-accent/[0.05]">01</div>
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+                  <Cpu size={22} />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-ink sm:text-2xl">{DIRECTIONS[0].title}</h3>
+                  <p className="mt-3 max-w-2xl text-sm leading-[1.9] text-body-strong">{DIRECTIONS[0].desc}</p>
+                </div>
+              </div>
+            </article>
+
+            {/* 另两条方向：带序号的小卡片 */}
+            {DIRECTIONS.slice(1).map((d, i) => {
               const Icon = d.icon;
               return (
-                <article
-                  key={d.title}
-                  className="rounded-2xl bg-white border border-[#e8e4db] p-6 transition-all hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/30"
-                >
-                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#c96442]/10 text-[#c96442] mb-4">
-                    <Icon size={20} />
+                <article key={d.title} className="surface group relative overflow-hidden p-6 transition-all duration-300 hover:border-accent/30 hover:shadow-lift">
+                  <div className="pointer-events-none absolute -bottom-6 right-2 font-serif text-[110px] font-black leading-none text-accent/[0.05]">0{i + 2}</div>
+                  <div className="relative">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-accent-wash text-accent">
+                      <Icon size={20} />
+                    </div>
+                    <h3 className="font-serif text-lg font-bold text-ink">{d.title}</h3>
+                    <p className="mt-2 text-sm leading-[1.9] text-body-strong">{d.desc}</p>
                   </div>
-                  <h3 className="font-serif text-lg font-bold text-[#1a1a1a]">{d.title}</h3>
-                  <p className="mt-2 text-sm text-[#4a4540] leading-relaxed">{d.desc}</p>
                 </article>
               );
             })}
@@ -201,96 +202,91 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 成员进度概览 */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
-            <Users size={16} />
+      {/* ================= 成员进度概览 ================= */}
+      <section className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mb-8 flex items-end gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+            <Users size={17} />
           </div>
-          <div>
-            <h2 className="font-serif text-2xl font-bold text-[#1a1a1a]">成员进度概览</h2>
-            <p className="text-sm text-[#6b6560]">指导老师 {advisor} · 组员 {members.length} 人</p>
+          <div className="flex-1">
+            <h2 className="font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">成员进度概览</h2>
+            <p className="mt-0.5 text-sm text-muted">指导老师 {advisor} · 组员 {members.length} 人</p>
           </div>
-          <Link
-            to="/students"
-            className="ml-auto inline-flex items-center gap-1 text-sm text-[#c96442] hover:text-[#b5573a] transition-colors"
-          >
-            查看全部
-            <ArrowRight size={14} />
+          <Link to="/students" className="group inline-flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-deep">
+            查看全部<ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {members.map((m) => {
-            const s = statOf(m);
-            return (
-              <Link
-                key={m}
-                to={`/tasks?member=${encodeURIComponent(m)}`}
-                className="rounded-2xl bg-white border border-[#e8e4db] p-5 transition-all duration-300 hover:shadow-lg hover:shadow-[#c96442]/5 hover:border-[#c96442]/20"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-serif text-lg font-semibold text-[#1a1a1a]">{m}</span>
-                  <span className="text-xs text-[#6b6560]">{s.total} 项任务</span>
-                </div>
-                {/* 堆叠色带：按 进行中/挂起/已完成 各占比例分段。
-                    原来的"已完成 / 总数"进度条在所有任务都是进行中时会恒为 0，
-                    一条永远空着的进度条比没有更糟。 */}
-                <div
-                  className="mt-3 flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-[#f0ece4]"
-                  role="img"
-                  aria-label={
-                    s.total > 0
-                      ? `共 ${s.total} 项：已完成 ${s.done}、进行中 ${s.active}、挂起 ${s.hold}`
-                      : "暂无任务"
-                  }
+
+        {members.length === 0 ? (
+          <div className="surface px-6 py-14 text-center text-sm text-muted">暂无成员任务数据</div>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {members.map((m) => {
+              const s = statOf(m);
+              return (
+                <Link
+                  key={m}
+                  to={`/tasks?member=${encodeURIComponent(m)}`}
+                  className="surface group p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/25 hover:shadow-lift"
                 >
-                  {s.done > 0 && (
-                    <div className="h-full bg-green-400" style={{ width: `${pctOf(s.done, s.total)}%` }} />
-                  )}
-                  {s.active > 0 && (
-                    <div className="h-full bg-amber-400" style={{ width: `${pctOf(s.active, s.total)}%` }} />
-                  )}
-                  {s.hold > 0 && (
-                    <div className="h-full bg-red-400" style={{ width: `${pctOf(s.hold, s.total)}%` }} />
-                  )}
-                </div>
-                {/* 计数只渲染非零项——"挂起 0 / 已完成 0"这类冗余零只会稀释信息 */}
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                  {s.total === 0 ? (
-                    <span className="text-[#9a9590]">暂无任务</span>
-                  ) : (
-                    <>
-                      {s.active > 0 && <span className="text-amber-600 font-semibold">进行中 {s.active}</span>}
-                      {s.hold > 0 && <span className="text-red-500 font-semibold">挂起 {s.hold}</span>}
-                      {s.done > 0 && <span className="text-green-600 font-semibold">已完成 {s.done}</span>}
-                    </>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-wash font-serif text-sm font-bold text-accent ring-1 ring-accent/20">
+                        {m.slice(0, 1)}
+                      </span>
+                      <span className="font-serif text-base font-semibold text-ink">{m}</span>
+                    </div>
+                    <span className="text-xs text-faint">{s.total} 项</span>
+                  </div>
+                  {/* 堆叠色带：进行中 / 挂起 / 已完成 按比例分段，空条比没有更糟 */}
+                  <div
+                    className="mt-4 flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-wash"
+                    role="img"
+                    aria-label={s.total > 0 ? `共 ${s.total} 项：已完成 ${s.done}、进行中 ${s.active}、挂起 ${s.hold}` : "暂无任务"}
+                  >
+                    {s.done > 0 && <div className="h-full bg-success-ink/80" style={{ width: `${pctOf(s.done, s.total)}%` }} />}
+                    {s.active > 0 && <div className="h-full bg-warning-ink/80" style={{ width: `${pctOf(s.active, s.total)}%` }} />}
+                    {s.hold > 0 && <div className="h-full bg-danger-ink/80" style={{ width: `${pctOf(s.hold, s.total)}%` }} />}
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    {s.total === 0 ? (
+                      <span className="text-faint">暂无任务</span>
+                    ) : (
+                      <>
+                        {s.active > 0 && <span className="font-semibold text-warning-ink">进行中 {s.active}</span>}
+                        {s.hold > 0 && <span className="font-semibold text-danger-ink">挂起 {s.hold}</span>}
+                        {s.done > 0 && <span className="font-semibold text-success-ink">已完成 {s.done}</span>}
+                      </>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      {/* 最近进展 */}
-      <section className="bg-[#faf9f5] border-t border-[#e8e4db]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#c96442] text-white">
-              <TrendingUp size={16} />
+      {/* ================= 最近进展 ================= */}
+      <section className="border-t border-line bg-paper">
+        <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-16">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+              <TrendingUp size={17} />
             </div>
-            <h2 className="font-serif text-2xl font-bold text-[#1a1a1a]">最近进展</h2>
+            <h2 className="font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">最近进展</h2>
           </div>
-          <div className="rounded-2xl bg-white border border-[#e8e4db] divide-y divide-[#f0ece4]">
-            {feed.map(({ t, u }) => (
-              <div key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
-                <span className="text-xs font-semibold text-[#6b6560] w-24 shrink-0">{u!.date}</span>
-                <span className="text-sm font-medium text-[#1a1a1a]">
+          <div className="surface divide-y divide-wash overflow-hidden">
+            {feed.length === 0 ? (
+              <p className="px-5 py-10 text-center text-sm text-faint">暂无进展记录</p>
+            ) : feed.map(({ t, u }) => (
+              <div key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5 transition-colors hover:bg-wash/40">
+                <span className="w-20 shrink-0 font-mono text-xs text-faint">{u!.date}</span>
+                <span className="text-sm font-medium text-ink">
                   {t.assignees.length === 1 ? t.assignees[0] : `${t.assignees.slice(0, 2).join("、")}${t.assignees.length > 2 ? " 等" : ""}`}
                 </span>
-                <span className="text-sm text-[#6b6560] flex-1 min-w-[160px]">{t.title}</span>
+                <span className="min-w-[160px] flex-1 text-sm text-muted">{t.title}</span>
                 <StatusBadge status={u!.status} />
-                {u!.note && <span className="text-xs text-[#9a9590] w-full sm:w-auto">（{u!.note}）</span>}
+                {u!.note && <span className="w-full text-xs text-faint sm:w-auto">（{u!.note}）</span>}
               </div>
             ))}
           </div>

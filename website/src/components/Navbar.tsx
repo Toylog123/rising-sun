@@ -26,7 +26,7 @@ function ClearCacheButton() {
     <button
       onClick={handleClick}
       title="清空本地缓存 + 重新拉取"
-      className="inline-flex items-center justify-center p-2 rounded-full text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4] transition-colors"
+      className="icon-btn h-8 w-8"
     >
       <RefreshCw size={15} className={spinning ? "animate-spin" : ""} />
     </button>
@@ -57,11 +57,11 @@ function CommitButton() {
       onClick={() => pushAll()}
       disabled={isPushing}
       title={isError ? `上次失败，点重试提交 ${dirtyCount} 项` : `提交 ${dirtyCount} 项未同步的改动`}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm transition-all ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm transition-all hover:-translate-y-0.5 ${
         isError
-          ? "bg-red-600 text-white hover:bg-red-700"
-          : "bg-amber-500 text-white hover:bg-amber-600"
-      } disabled:opacity-70`}
+          ? "bg-danger-ink text-white hover:brightness-110"
+          : "bg-accent text-white hover:bg-accent-deep"
+      } disabled:opacity-70 disabled:hover:translate-y-0`}
     >
       {isPushing ? (
         <>
@@ -105,11 +105,11 @@ function SyncIndicator() {
 
   const config = (() => {
     if (!ghToken) {
-      return { color: "bg-[#9a9590]", icon: CloudOff, label: "未配置", title: "未配置 PAT（只读），点击设置" };
+      return { color: "bg-faint", icon: CloudOff, label: "未配置", title: "未配置 PAT（只读），点击设置" };
     }
     if (dirtyCount > 0) {
       return {
-        color: "bg-amber-500",
+        color: "bg-warning-wash0",
         icon: Upload,
         label: `未提交 ${dirtyCount}`,
         title: pullNotice
@@ -118,16 +118,16 @@ function SyncIndicator() {
       };
     }
     if (syncStatus === "pulling") {
-      return { color: "bg-amber-500 animate-pulse", icon: CloudDownload, label: "拉取", title: "拉取中…" };
+      return { color: "bg-warning-wash0 animate-pulse", icon: CloudDownload, label: "拉取", title: "拉取中…" };
     }
     if (syncStatus === "pushing") {
-      return { color: "bg-amber-500 animate-pulse", icon: CloudUpload, label: "推送", title: "推送中…" };
+      return { color: "bg-warning-wash0 animate-pulse", icon: CloudUpload, label: "推送", title: "推送中…" };
     }
     if (syncStatus === "error") {
       const errorMsg = countdown ?? syncError ?? "同步失败";
-      return { color: "bg-red-500", icon: CloudOff, label: countdown ? "限速" : "失败", title: `同步失败：${errorMsg}` };
+      return { color: "bg-danger-wash0", icon: CloudOff, label: countdown ? "限速" : "失败", title: `同步失败：${errorMsg}` };
     }
-    return { color: "bg-green-500", icon: CloudDownload, label: timeAgo(lastSyncedAt), title: `已同步 · ${timeAgo(lastSyncedAt)}` };
+    return { color: "bg-success-wash0", icon: CloudDownload, label: timeAgo(lastSyncedAt), title: `已同步 · ${timeAgo(lastSyncedAt)}` };
   })();
 
   const Icon = config.icon;
@@ -136,10 +136,10 @@ function SyncIndicator() {
     <button
       onClick={() => pullNow()}
       title={config.title}
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-muted hover:bg-wash hover:text-ink transition-colors"
     >
       <span className={`h-2 w-2 rounded-full ${config.color}`} />
-      <Icon size={14} className="text-[#6b6560]" />
+      <Icon size={14} className="text-muted" />
       <span className="hidden lg:inline whitespace-nowrap">{config.label}</span>
     </button>
   );
@@ -152,65 +152,61 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-[#faf9f5]/80 backdrop-blur-lg border-b border-[#e8e4db] relative w-full">
-        <div className="w-full px-6 sm:px-8 lg:px-12">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16 gap-6">
-            {/* 左：品牌（贴左），logo 图片自带 Rising Sun 文字，直接放大显示 */}
-            <Link
-              to="/"
-              className="flex items-center shrink-0 group"
+      <nav className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-5 sm:px-8">
+          {/* 左：品牌。logo 自带 Rising Sun 字样，去掉多余阴影，靠干净的字标建立质感 */}
+          <Link to="/" className="group flex shrink-0 items-center" aria-label="Rising Sun 首页">
+            {/* BASE_URL 兼容 GitHub Pages 子路径部署（/rising-sun/） */}
+            <img
+              src={import.meta.env.BASE_URL + "logo.svg"}
+              alt="Rising Sun"
+              className="h-10 w-auto transition-transform duration-300 group-hover:scale-[1.03] sm:h-11"
+            />
+          </Link>
+
+          {/* 中：栏目导航，绝对居中于整条导航栏 */}
+          <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
+            {navLinks.map((link) => {
+              const isActive = location.pathname === link.to;
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`chip ${isActive ? "chip-active" : "chip-idle"}`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* 右：工具区，统一收进半透明的工具条里 */}
+          <div className="flex items-center gap-0.5 rounded-full border border-line bg-canvas/70 p-1">
+            <CommitButton />
+            <div className="mx-0.5 hidden h-5 w-px bg-line lg:block" />
+            <div className="hidden lg:block"><SyncIndicator /></div>
+            <PushHistory />
+            <ClearCacheButton />
+            <button
+              onClick={() => setTokenOpen(true)}
+              title="GitHub 同步设置"
+              className="icon-btn h-8 w-8"
             >
-              {/* BASE_URL 兼容 GitHub Pages 子路径部署（/rising-sun/） */}
-              <img
-                src={import.meta.env.BASE_URL + "logo.svg"}
-                alt="Rising Sun"
-                className="h-11 w-auto rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
-              />
-            </Link>
-
-            {/* 中：栏目导航（grid 第 2 列 = 整个 nav 水平正中央） */}
-            <div className="hidden md:flex items-center justify-center gap-1">
-              {navLinks.map((link) => {
-                const isActive = location.pathname === link.to;
-                return (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      isActive
-                        ? "bg-[#c96442] text-white shadow-sm"
-                        : "text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4]"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* 右：工具区（推至最右） */}
-            <div className="flex items-center justify-end gap-1">
-              <CommitButton />
-              <div className="hidden md:block w-px h-6 bg-[#e8e4db] mx-1" />
-              <SyncIndicator />
-              <PushHistory />
-              <ClearCacheButton />
-              <button
-                onClick={() => setTokenOpen(true)}
-                title="GitHub 同步设置"
-                className="inline-flex items-center justify-center h-8 w-8 rounded-full text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4] transition-colors"
-              >
-                <Settings size={16} />
-              </button>
-            </div>
-            <button className="md:hidden text-[#6b6560] hover:text-[#1a1a1a] transition-colors" onClick={() => setMobileOpen(!mobileOpen)}>
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+              <Settings size={16} />
             </button>
           </div>
+          <button
+            aria-label={mobileOpen ? "关闭菜单" : "打开菜单"}
+            className="icon-btn h-9 w-9 md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
         {mobileOpen && (
-          <div className="md:hidden border-t border-[#e8e4db] bg-[#faf9f5]/95 backdrop-blur-lg">
-            <div className="px-4 py-2 space-y-1">
+          <div className="animate-rise border-t border-line bg-paper/95 shadow-soft backdrop-blur-xl md:hidden">
+            <div className="mx-auto max-w-[1400px] space-y-1 px-5 py-3 sm:px-8">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.to;
                 return (
@@ -218,19 +214,22 @@ export default function Navbar() {
                     key={link.to}
                     to={link.to}
                     onClick={() => setMobileOpen(false)}
-                    className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive ? "bg-[#c96442] text-white" : "text-[#6b6560] hover:text-[#1a1a1a] hover:bg-[#f0ece4]"}`}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`flex items-center rounded-control px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                      isActive ? "bg-accent text-white shadow-sm" : "text-muted hover:bg-wash hover:text-ink"
+                    }`}
                   >
                     {link.label}
                   </Link>
                 );
               })}
-              <div className="flex items-center gap-2 px-4 py-2 border-t border-[#f0ece4] mt-2 pt-3 flex-wrap">
+              <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-line px-1 pt-3">
                 <CommitButton />
                 <SyncIndicator />
                 <PushHistory />
                 <button
                   onClick={() => { setMobileOpen(false); setTokenOpen(true); }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-[#6b6560] hover:bg-[#f0ece4] transition-colors"
+                  className="chip chip-idle !px-3 !py-1.5 !text-xs"
                 >
                   <Settings size={13} />
                   同步设置
