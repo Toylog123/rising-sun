@@ -80,11 +80,13 @@ export default {
         tag: "0.5rem",
       },
 
-      // 克制的阴影：只用暖色低透明度的柔光，不用冷灰重投影
+      // 暖色柔光阴影：分层叠加，让纸面卡片有真实的浮起质感
       boxShadow: {
-        soft: "0 1px 2px rgba(60, 46, 36, 0.04), 0 4px 16px rgba(60, 46, 36, 0.05)",
-        lift: "0 2px 4px rgba(60, 46, 36, 0.05), 0 12px 32px rgba(60, 46, 36, 0.09)",
-        brand: "0 6px 20px rgba(201, 100, 66, 0.22)",
+        soft: "0 1px 2px rgba(80, 50, 30, 0.05), 0 4px 14px rgba(80, 50, 30, 0.06)",
+        lift: "0 4px 10px rgba(80, 50, 30, 0.07), 0 18px 40px rgba(80, 50, 30, 0.12)",
+        brand: "0 8px 22px rgba(201, 100, 66, 0.30)",
+        // 纸面上缘高光：模拟纸张受光的细白边
+        hairline: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
       },
 
       letterSpacing: {

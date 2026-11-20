@@ -97,11 +97,14 @@ export default function Home() {
 
       {/* ================= Hero ================= */}
       <section className="relative overflow-hidden border-b border-line bg-gradient-to-br from-paper via-wash to-wash">
-        <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.035]" />
-        <div className="pointer-events-none absolute -right-40 -top-40 h-[420px] w-[420px] rounded-full bg-accent/[0.06] blur-3xl" />
+        <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.05]" />
+        {/* 顶部赤陶装饰线：一条渐隐的品牌色细线，强化页面的编辑气质 */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+        <div className="pointer-events-none absolute -right-40 -top-40 h-[420px] w-[420px] rounded-full bg-accent/[0.09] blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/4 h-64 w-64 rounded-full bg-warning-wash/70 blur-3xl" />
         {/* 背景水印复用 logo.svg 作 mask，颜色由 CSS 渐变控制，品牌图形不会走偏 */}
         <div
-          className="pointer-events-none absolute -right-[8%] top-1/2 hidden h-[420px] w-[450px] -translate-y-1/2 opacity-[0.22] xl:block"
+          className="pointer-events-none absolute -right-[8%] top-1/2 hidden h-[420px] w-[450px] -translate-y-1/2 opacity-[0.32] xl:block"
           aria-hidden="true"
           style={{
             WebkitMaskImage: `url(${import.meta.env.BASE_URL}logo.svg)`,
@@ -134,7 +137,12 @@ export default function Home() {
                 芯片设计自动化课题组
               </span>
             </h1>
-            <div className="mt-6 h-0.5 w-14 rounded-full bg-accent" />
+            {/* 编辑式分隔线：实线 + 圆点，比单条短线更有设计感 */}
+            <div className="mt-7 flex items-center gap-2.5">
+              <span className="h-[3px] w-16 rounded-full bg-accent" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent/50" />
+              <span className="h-px w-10 bg-line-strong" />
+            </div>
             <p className="mt-6 max-w-2xl text-base leading-[1.9] text-body-strong sm:text-lg">
               我们是一个年轻的课题组，成立于 2025 年，专注于
               <strong className="font-semibold text-ink">芯片设计自动化（EDA）</strong>方向。
@@ -161,7 +169,7 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
           <div className="mb-10 max-w-2xl">
             <span className="eyebrow mb-4"><FlaskConical size={12} className="text-accent" />研究方向</span>
-            <h2 className="font-serif text-3xl font-bold tracking-heading text-ink sm:text-4xl">我们在做什么</h2>
+            <h2 className="section-mark font-serif text-3xl font-bold tracking-heading text-ink sm:text-4xl">我们在做什么</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
               从算法到工具，从理论到工程 —— 我们围绕芯片设计自动化的关键难题展开研究。
             </p>
@@ -170,9 +178,9 @@ export default function Home() {
           <div className="grid gap-5 lg:grid-cols-2">
             {/* 头条方向：横向特写 + 巨型序号，承担视觉重心 */}
             <article className="surface group relative overflow-hidden p-7 transition-all duration-300 hover:border-accent/30 hover:shadow-lift lg:col-span-2">
-              <div className="pointer-events-none absolute -right-6 -top-10 font-serif text-[180px] font-black leading-none text-accent/[0.05]">01</div>
+              <div className="pointer-events-none absolute -right-6 -top-10 font-serif text-[180px] font-black leading-none text-accent/[0.09]">01</div>
               <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
                   <Cpu size={22} />
                 </div>
                 <div>
@@ -187,9 +195,9 @@ export default function Home() {
               const Icon = d.icon;
               return (
                 <article key={d.title} className="surface group relative overflow-hidden p-6 transition-all duration-300 hover:border-accent/30 hover:shadow-lift">
-                  <div className="pointer-events-none absolute -bottom-6 right-2 font-serif text-[110px] font-black leading-none text-accent/[0.05]">0{i + 2}</div>
+                  <div className="pointer-events-none absolute -bottom-6 right-2 font-serif text-[110px] font-black leading-none text-accent/[0.10]">0{i + 2}</div>
                   <div className="relative">
-                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-accent-wash text-accent">
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-accent-wash text-accent ring-1 ring-inset ring-accent/15">
                       <Icon size={20} />
                     </div>
                     <h3 className="font-serif text-lg font-bold text-ink">{d.title}</h3>
@@ -205,11 +213,11 @@ export default function Home() {
       {/* ================= 成员进度概览 ================= */}
       <section className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
         <div className="mb-8 flex items-end gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+          <div className="flex h-9 w-9 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
             <Users size={17} />
           </div>
           <div className="flex-1">
-            <h2 className="font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">成员进度概览</h2>
+            <h2 className="section-mark font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">成员进度概览</h2>
             <p className="mt-0.5 text-sm text-muted">指导老师 {advisor} · 组员 {members.length} 人</p>
           </div>
           <Link to="/students" className="group inline-flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent-deep">
@@ -270,10 +278,10 @@ export default function Home() {
       <section className="border-t border-line bg-paper">
         <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-16">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+            <div className="flex h-9 w-9 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
               <TrendingUp size={17} />
             </div>
-            <h2 className="font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">最近进展</h2>
+            <h2 className="section-mark font-serif text-2xl font-bold tracking-heading text-ink sm:text-3xl">最近进展</h2>
           </div>
           <div className="surface divide-y divide-wash overflow-hidden">
             {feed.length === 0 ? (

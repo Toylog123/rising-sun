@@ -55,7 +55,7 @@ export default function Tasks() {
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+          <div className="flex h-12 w-12 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
             <ListTodo size={22} />
           </div>
           <div>

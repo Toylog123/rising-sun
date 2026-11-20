@@ -70,7 +70,7 @@ export default function AddTask() {
       </button>
 
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+        <div className="flex h-10 w-10 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
           <Plus size={16} />
         </div>
         <h1 className="font-serif text-2xl font-bold text-ink">新建任务</h1>

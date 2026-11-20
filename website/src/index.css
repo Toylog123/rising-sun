@@ -48,13 +48,13 @@
    组件层：全站复用的「纸感」基础构件
    ========================================================================== */
 @layer components {
-  /* 通用卡片：白纸浮起、柔和描边、克制的悬停抬升 */
+  /* 通用卡片：白纸浮起 + 上缘高光 + 分层柔光，纸感更立体 */
   .surface {
-    @apply rounded-card border border-line bg-paper;
+    @apply rounded-card border border-line bg-paper shadow-soft shadow-hairline;
   }
 
   .surface-hover {
-    @apply transition-all duration-300 hover:border-accent/30 hover:shadow-soft;
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lift;
   }
 
   /* 区块眉标（section eyebrow）：小图标 + 标签的统一胶囊 */
@@ -62,9 +62,18 @@
     @apply inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1 text-xs text-muted shadow-sm;
   }
 
+  /* 章节标题左侧的赤陶竖条：为各页面建立统一的编辑式视觉锚点 */
+  .section-mark {
+    @apply relative pl-4;
+  }
+  .section-mark::before {
+    content: "";
+    @apply absolute left-0 top-[0.22em] h-[0.78em] w-[3px] rounded-full bg-accent;
+  }
+
   /* 主按钮 / 次按钮：统一圆角、内距、字重与悬停反馈 */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-control bg-accent px-4 py-2 text-sm font-medium text-white shadow-brand transition-all duration-200 hover:bg-accent-deep hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 rounded-control bg-gradient-to-br from-accent to-accent-deep px-4 py-2 text-sm font-medium text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15 transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
   }
 
   .btn-secondary {
@@ -91,7 +100,7 @@
   }
 
   .chip-active {
-    @apply bg-accent text-white shadow-sm;
+    @apply bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand;
   }
 
   .chip-idle {

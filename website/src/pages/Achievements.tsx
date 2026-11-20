@@ -308,7 +308,7 @@ export default function Achievements() {
         <div className="relative mx-auto max-w-5xl px-5 sm:px-8 py-14 sm:py-16">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-control bg-accent text-white shadow-brand">
+              <div className="flex h-10 w-10 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
                 <Award size={20} />
               </div>
               <div>
