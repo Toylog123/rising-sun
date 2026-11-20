@@ -121,11 +121,11 @@ export default function Home() {
                 芯片设计自动化课题组
               </span>
             </h1>
-            {/* 编辑式分隔线：实线 + 圆点，比单条短线更有设计感 */}
-            <div className="rise-in mt-7 flex items-center gap-2.5" style={{ animationDelay: "160ms" }}>
-              <span className="h-[3px] w-16 rounded-full bg-accent" />
-              <span className="h-1.5 w-1.5 rounded-full bg-accent/50" />
-              <span className="h-px w-10 bg-line-strong" />
+            {/* 编辑式分隔线：左右镜像对称，两侧细线由外向内渐深，中间点缀圆点 */}
+            <div className="rise-in mt-7 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
+              <span className="h-px w-16 bg-gradient-to-r from-transparent to-accent/60" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+              <span className="h-px w-16 bg-gradient-to-l from-transparent to-accent/60" />
             </div>
             <p className="rise-in mt-6 max-w-2xl text-base leading-[1.9] text-body-strong sm:text-lg" style={{ animationDelay: "220ms" }}>
               我们是一个年轻的课题组，成立于 2025 年，专注于
