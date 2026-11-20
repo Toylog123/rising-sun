@@ -178,7 +178,7 @@ export default function Home() {
           <div className="grid gap-5 lg:grid-cols-2">
             {/* 头条方向：横向特写 + 巨型序号，承担视觉重心 */}
             <article className="surface group relative overflow-hidden p-7 transition-all duration-300 hover:border-accent/30 hover:shadow-lift lg:col-span-2">
-              <div className="pointer-events-none absolute -right-6 -top-10 font-serif text-[180px] font-black leading-none text-accent/[0.09]">01</div>
+              <div className="pointer-events-none absolute right-7 top-1/2 -translate-y-1/2 font-serif text-[120px] font-black leading-none text-accent/[0.13] sm:text-[140px]">01</div>
               <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
                   <Cpu size={22} />
@@ -195,7 +195,7 @@ export default function Home() {
               const Icon = d.icon;
               return (
                 <article key={d.title} className="surface group relative overflow-hidden p-6 transition-all duration-300 hover:border-accent/30 hover:shadow-lift">
-                  <div className="pointer-events-none absolute -bottom-6 right-2 font-serif text-[110px] font-black leading-none text-accent/[0.10]">0{i + 2}</div>
+                  <div className="pointer-events-none absolute right-5 top-4 font-serif text-[84px] font-black leading-none text-accent/[0.13]">0{i + 2}</div>
                   <div className="relative">
                     <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-control bg-accent-wash text-accent ring-1 ring-inset ring-accent/15">
                       <Icon size={20} />
