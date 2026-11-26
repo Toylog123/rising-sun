@@ -27,7 +27,7 @@ import {
   type GradeId,
 } from "@/data/venueGrades";
 import { findRequirement } from "@/data/degreeRequirements";
-import { useTaskStore } from "@/store/tasks";
+import { useTaskStore, type Student } from "@/store/tasks";
 import { useAchievementStore } from "@/store/achievements";
 import { auditCandidate } from "@/lib/degreeAudit";
 import DegreeBoard from "@/components/DegreeBoard";
@@ -72,27 +72,76 @@ function Section({
   );
 }
 
-/** 学位达成详情：默认收起，点击展开 DegreeBoard；学生对象按姓名从 store 取，保证与卡片入口一致 */
-function DegreeDetails({ studentName }: { studentName: string }) {
+/** 单个学生的学位达成状态：摘要常显，判定详情默认收起；对每个学生都按同一套规则审计 */
+function StudentAuditCard({ student }: { student: Student }) {
   const [open, setOpen] = useState(false);
-  const student = useTaskStore((s) => s.members).find((m) => m.name === studentName);
-  if (!student) return null;
+  const achievements = useAchievementStore((s) => s.achievements);
+  const audit = useMemo(() => {
+    if (!student.program || !student.degree) return null;
+    return auditCandidate(
+      { name: student.name, program: student.program, degree: student.degree },
+      achievements,
+    );
+  }, [achievements, student.name, student.program, student.degree]);
+  const paperCount = audit?.papers.filter((p) => p.level !== "非目录" && p.credited).length ?? 0;
+
   return (
-    <div className="border-t border-line">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-5 py-3 text-left transition-colors hover:bg-wash/50"
-      >
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent">
-          {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          {open ? "收起判定详情" : "展开判定详情"}
-        </span>
-        <span className="text-[11px] text-faint">基本要求 / 公开评审通道 / 逐篇等级</span>
-      </button>
-      {open && (
-        <div className="border-t border-line bg-paper px-5 py-4">
-          <DegreeBoard student={student} />
+    <div className="overflow-hidden rounded-2xl border border-line bg-paper">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-wash text-accent ring-1 ring-inset ring-accent/15">
+            <Award size={19} />
+          </div>
+          <div>
+            <p className="font-serif text-base font-semibold text-ink">
+              {student.name} · {student.degree ?? "硕士"}毕业要求
+            </p>
+            <p className="mt-0.5 text-xs text-muted">{student.program ?? "集成电路科学与工程"}</p>
+          </div>
         </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-wash px-2.5 py-1 text-xs text-muted">
+          <FileText size={12} />目录内成果 {paperCount} 篇
+        </span>
+      </div>
+      {audit ? (
+        <>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line px-5 py-3 text-xs">
+            <span className="inline-flex items-center gap-1 text-muted">
+              {audit.basicReady ? <CheckCircle2 size={13} className="text-success-ink" /> : <Circle size={13} className="text-line-strong" />}
+              基本要求{audit.basicReady ? "已达成" : "未达成"}
+            </span>
+            <span className="inline-flex items-center gap-1 text-muted">
+              {audit.publicReady ? <CheckCircle2 size={13} className="text-success-ink" /> : <Circle size={13} className="text-line-strong" />}
+              公开评审{audit.publicReady ? "已满足一条通道" : "尚未满足"}
+            </span>
+            {audit.ready && (
+              <span className="inline-flex items-center gap-1 font-semibold text-success-ink">
+                <CheckCircle2 size={13} />成果条件已齐
+              </span>
+            )}
+          </div>
+          <div className="border-t border-line">
+            <button
+              onClick={() => setOpen(!open)}
+              className="flex w-full items-center justify-between px-5 py-3 text-left transition-colors hover:bg-wash/50"
+            >
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent">
+                {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                {open ? "收起判定详情" : "展开判定详情"}
+              </span>
+              <span className="text-[11px] text-faint">基本要求 / 公开评审通道 / 逐篇等级</span>
+            </button>
+            {open && (
+              <div className="border-t border-line bg-paper px-5 py-4">
+                <DegreeBoard student={student} />
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="border-t border-line px-5 py-3 text-xs text-warning-ink">
+          未设置学科 / 学位层次，无法判定毕业要求 —— 可在成员页点「编辑」补上。
+        </p>
       )}
     </div>
   );
@@ -309,24 +358,11 @@ export default function DegreeRequirements() {
   const [program, setProgram] = useState<ProgramName>("集成电路科学与工程");
   const meta = PROGRAMS.find((p) => p.program === program) ?? PROGRAMS[0];
 
-  // 从成员卡片入口带过来的 student 参数定位学生；默认取在读学生中的第一位。
+  // 全体学生纳入同一套管理逻辑：不再按 ?student= 只定位一人。
+  // 成员卡片入口带的 student 参数仅用于高亮对应学生，不改变"展示所有人"的结果。
   const members = useTaskStore((s) => s.members);
   const students = members.filter((m) => m.role !== "teacher");
-  const studentName = params.get("student");
-  const student =
-    students.find((s) => s.name === studentName) ??
-    students.find((s) => s.status === "在读") ??
-    students[0];
-
-  const achievements = useAchievementStore((s) => s.achievements);
-  const audit = useMemo(() => {
-    if (!student?.program || !student?.degree) return null;
-    return auditCandidate(
-      { name: student.name, program: student.program, degree: student.degree },
-      achievements
-    );
-  }, [achievements, student?.name, student?.program, student?.degree]);
-  const paperCount = audit?.papers.filter((p) => p.level !== "非目录" && p.credited).length ?? 0;
+  const highlightName = params.get("student");
 
   // 条款按 id 取：cs-硕士 / ice-博士 等；findRequirement 的第二参数是 requirementId，
   // 不是「硕士 / 博士」这两个字，早前传错导致「本专业成果要求」区块一直是空的。
@@ -349,51 +385,45 @@ export default function DegreeRequirements() {
           </div>
           <div>
             <h1 className="font-serif text-2xl font-bold text-ink">学位要求与选刊指南</h1>
-            <p className="text-sm text-muted mt-1">查看个人学位达成状态，按专业查期刊会议、核对等级</p>
+            <p className="text-sm text-muted mt-1">全体学生毕业要求一览，按专业查期刊会议、核对等级</p>
           </div>
         </div>
       </div>
 
-      {/* 个人学位达成状态：默认收起，点击展开详情（由成员卡片入口跳转而来） */}
-      {student && (
-        <div className="mb-6 overflow-hidden rounded-2xl border border-line bg-paper">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-wash text-accent ring-1 ring-inset ring-accent/15">
-                <Award size={19} />
-              </div>
-              <div>
-                <p className="font-serif text-base font-semibold text-ink">
-                  {student.name} · {student.degree ?? "硕士"}毕业要求
-                </p>
-                <p className="mt-0.5 text-xs text-muted">{student.program ?? "集成电路科学与工程"}</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-wash px-2.5 py-1 text-xs text-muted">
-              <FileText size={12} />目录内成果 {paperCount} 篇
-            </span>
-          </div>
-          {audit ? (
-            <>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line px-5 py-3 text-xs">
-                <span className="inline-flex items-center gap-1 text-muted">
-                  {audit.basicReady ? <CheckCircle2 size={13} className="text-success-ink" /> : <Circle size={13} className="text-line-strong" />}
-                  基本要求{audit.basicReady ? "已达成" : "未达成"}
-                </span>
-                <span className="inline-flex items-center gap-1 text-muted">
-                  {audit.publicReady ? <CheckCircle2 size={13} className="text-success-ink" /> : <Circle size={13} className="text-line-strong" />}
-                  公开评审{audit.publicReady ? "已满足一条通道" : "尚未满足"}
-                </span>
-              </div>
-              <DegreeDetails studentName={student.name} />
-            </>
-          ) : (
-            <p className="border-t border-line px-5 py-3 text-xs text-warning-ink">
-              未设置学科 / 学位层次，无法判定毕业要求 —— 可在成员页点「编辑」补上。
+      {/* 一、学生毕业要求：全体学生按同一套规则审计，摘要常显、详情默认收起 */}
+      <section className="mb-8">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="font-serif text-lg font-semibold text-ink">学生毕业要求</h2>
+            <p className="mt-1 text-xs text-muted">
+              每位学生按本人的学科与学位层次，用同一套目录规则核算达成情况
             </p>
-          )}
+          </div>
+          <span className="text-xs text-faint">共 {students.length} 名学生</span>
         </div>
-      )}
+        {students.length === 0 ? (
+          <div className="rounded-2xl border border-line bg-paper px-6 py-10 text-center text-sm text-faint">
+            暂无学生记录 —— 可在成员页添加。
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {students.map((s) => (
+              <div
+                key={s.name}
+                className={s.name === highlightName ? "rounded-2xl ring-2 ring-accent/40" : undefined}
+              >
+                <StudentAuditCard student={s} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 二、选刊指南：整体默认收起，点击才展开 */}
+      <Section
+        title="选刊指南"
+        desc="按学科口径查期刊会议、核对等级；下方各子条目点击后展开"
+      >
 
       <div className="mb-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
         {PROGRAMS.map((p) => (
@@ -422,10 +452,10 @@ export default function DegreeRequirements() {
       </div>
 
       <div className="space-y-4">
-        <Section title="选刊指南 · 如何用好这份手册" defaultOpen={false}>
+        <Section title="如何用好这份手册（使用步骤）">
           <ol className="space-y-2.5">
             {[
-              { n: "1", t: "先看状态", d: "页面顶部显示本人的学位达成状态与目录内成果数，点「展开判定详情」查看逐条规则。" },
+              { n: "1", t: "先看状态", d: "上方「学生毕业要求」显示每位学生的达成状态与目录内成果数，点对应学生的「展开判定详情」查看逐条规则。" },
               { n: "2", t: "选对学科", d: "在上方切换到本人所在学科（如集成电路科学与工程），清单与等级只按该学科口径判定。" },
               { n: "3", t: "按方向找刊", d: "在「期刊与会议清单」里按研究方向、档位、类型筛选，优先看对口方向且档位达标的目标。" },
               { n: "4", t: "核对认定", d: "投稿前核对最新版目录与预警名单；成果认定一律以申请学位时学院执行的目录版本为准。" },
@@ -521,7 +551,8 @@ export default function DegreeRequirements() {
             便于从「我做的方向」出发找刊，而不是从刊名猜。
           </p>
         </Section>
-      </div>
+        </div>
+      </Section>
     </div>
   );
 }
