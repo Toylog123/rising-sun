@@ -105,7 +105,7 @@ export default function MembersSection() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* 学术带头人（挂名，仅一行体现背景资历，不展开介绍） */}
+            {/* 学术带头人（正式介绍：突出资历与团队引领，不当实际指导教师，不显示邮箱/方向/编辑） */}
             {(() => {
               const honorary = sorted.filter((m) => m.role === "teacher" && m.name !== advisor);
               if (honorary.length === 0) return null;
@@ -115,16 +115,27 @@ export default function MembersSection() {
                     <GraduationCap size={18} className="text-accent" />
                     学术带头人
                   </h3>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="space-y-4">
                     {honorary.map((t) => (
-                      <div
+                      <article
                         key={t.name}
-                        className="inline-flex items-center gap-2 rounded-xl border border-line bg-paper px-4 py-2.5"
+                        className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
                       >
-                        <Avatar name={t.name} src={t.avatar} size={32} />
-                        <span className="font-serif text-base font-semibold text-ink">{t.name}</span>
-                        {t.title && <span className="text-xs text-muted">{t.title}</span>}
-                      </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Avatar name={t.name} src={t.avatar} size={52} />
+                          <h4 className="font-serif text-xl font-bold text-ink">{t.name}</h4>
+                          {t.title && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
+                              {t.title}
+                            </span>
+                          )}
+                        </div>
+                        {t.bio && (
+                          <p className="mt-3 text-sm text-ink leading-[1.85] text-justify">
+                            {t.bio}
+                          </p>
+                        )}
+                      </article>
                     ))}
                   </div>
                 </section>
