@@ -18,7 +18,8 @@ const STATUS_BG: Record<string, string> = {
   blue: "bg-info-wash text-info-ink border-info-line",
 };
 
-export default function Students() {
+/** 首页「成员」模块：整合原成员页的完整展示与增删改交互 */
+export default function MembersSection() {
   const advisor = useTaskStore((s) => s.advisor);
   const members = useTaskStore((s) => s.members);
   const tasks = useTaskStore((s) => s.tasks);
@@ -70,37 +71,26 @@ export default function Students() {
   };
 
   return (
-    <div className="font-sans">
-      <section className="relative overflow-hidden bg-gradient-to-br from-paper via-wash to-wash">
-        <div className="paper-grain pointer-events-none absolute inset-0 opacity-[0.035]" />
-        <div className="relative mx-auto max-w-5xl px-5 sm:px-8 py-14 sm:py-16">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-control bg-gradient-to-br from-accent to-accent-deep text-white shadow-brand shadow-hairline ring-1 ring-inset ring-white/15">
-                <Users size={20} />
-              </div>
-              <div>
-                <h1 className="font-serif text-3xl font-bold text-ink">课题组成员</h1>
-                <p className="text-sm text-muted mt-1">
-                  共 {total} 人 · 在读 {active} · 已毕业 {alumni} · 指导老师 {advisor || "—"}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={openAdd}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
-            >
-              <Plus size={15} />
-              添加成员
-            </button>
+    <section id="members" className="scroll-mt-20 border-t border-line bg-paper">
+      <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
+        {/* 模块标题（与首页其它区块一致：eyebrow + section-mark 标题） */}
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span className="eyebrow mb-4"><Users size={12} className="text-accent" />课题组成员</span>
+            <h2 className="section-mark font-serif text-3xl font-bold tracking-heading text-ink sm:text-4xl">我们的团队</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              共 {total} 人 · 在读 {active} · 已毕业 {alumni} · 指导老师 {advisor || "—"}
+            </p>
           </div>
-          <p className="mt-4 text-[15px] text-body-strong leading-relaxed max-w-3xl">
-            课题组由 1 位指导老师与 {active} 位在读研究生组成，研究方向涵盖芯片设计自动化、AI for EDA 与工程变更优化（ECO）。
-          </p>
+          <button
+            onClick={openAdd}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-accent-deep"
+          >
+            <Plus size={15} />
+            添加成员
+          </button>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-5xl px-5 sm:px-8 py-12">
         {sorted.length === 0 ? (
           <div className="rounded-2xl bg-paper border border-line px-6 py-16 text-center">
             <Users size={32} className="mx-auto text-faint" />
@@ -121,10 +111,10 @@ export default function Students() {
               if (!teacher) return null;
               return (
                 <section>
-                  <h2 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
+                  <h3 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
                     <GraduationCap size={18} className="text-accent" />
                     指导老师
-                  </h2>
+                  </h3>
                   <article
                     key={teacher.name}
                     className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
@@ -132,9 +122,9 @@ export default function Students() {
                     <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                       <div className="flex items-center gap-3 flex-wrap">
                         <Avatar name={teacher.name} src={teacher.avatar} size={52} />
-                        <h3 className="font-serif text-xl font-bold text-ink">
+                        <h4 className="font-serif text-xl font-bold text-ink">
                           {teacher.name}
-                        </h3>
+                        </h4>
                         {teacher.title && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
                             {teacher.title}
@@ -201,10 +191,10 @@ export default function Students() {
 
             {/* 学生（列表） */}
             <section>
-              <h2 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
+              <h3 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
                 <Users size={18} className="text-accent" />
                 在读研究生
-              </h2>
+              </h3>
               <div className="space-y-4">
                 {sorted.filter((m) => m.role !== "teacher").map((s) => {
                   const grade = calcGrade(s.enrolledAt);
@@ -219,9 +209,9 @@ export default function Students() {
                         <div>
                           <div className="flex items-center gap-3 flex-wrap">
                             <Avatar name={s.name} src={s.avatar} size={48} />
-                            <h3 className="font-serif text-xl font-bold text-ink">
+                            <h4 className="font-serif text-xl font-bold text-ink">
                               {s.name}
-                            </h3>
+                            </h4>
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium ${STATUS_BG[tone] ?? STATUS_BG.gray}`}
                             >
@@ -369,13 +359,13 @@ export default function Students() {
         <p className="mt-6 text-xs text-faint">
           提示：年级根据入校时间按学年自动计算（每年 9 月起算）。任何写入都会同步到 GitHub 仓库的 <code>tasks.json</code>。
         </p>
-      </section>
+      </div>
 
       <StudentEditor
         open={editorOpen}
         initial={editing}
         onClose={() => setEditorOpen(false)}
       />
-    </div>
+    </section>
   );
 }

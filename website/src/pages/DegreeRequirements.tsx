@@ -373,7 +373,7 @@ export default function DegreeRequirements() {
     <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12">
       <div className="mb-8">
         <Link
-          to="/students"
+          to="/#members"
           className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors mb-4"
         >
           <ArrowLeft size={14} />

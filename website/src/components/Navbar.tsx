@@ -36,7 +36,6 @@ function ClearCacheButton() {
 const navLinks = [
   { to: "/", label: "首页" },
   { to: "/tasks", label: "任务" },
-  { to: "/students", label: "成员" },
   { to: "/achievements", label: "成果" },
   { to: "/meetings", label: "组会" },
   { to: "/degree-requirements", label: "学位要求" },
