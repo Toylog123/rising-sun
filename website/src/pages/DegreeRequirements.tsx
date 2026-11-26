@@ -11,7 +11,6 @@ import {
   ExternalLink,
   BookOpen,
   Award,
-  Compass,
   FileText,
   CheckCircle2,
   Circle,
@@ -451,28 +450,6 @@ export default function DegreeRequirements() {
       </div>
 
       <div className="space-y-4">
-        <Section title="如何用好这份手册（使用步骤）">
-          <ol className="space-y-2.5">
-            {[
-              { n: "1", t: "先看状态", d: "上方「学生毕业要求」显示每位学生的达成状态与目录内成果数，点对应学生的「展开判定详情」查看逐条规则。" },
-              { n: "2", t: "选对学科", d: "在上方切换到本人所在学科（如集成电路科学与工程），清单与等级只按该学科口径判定。" },
-              { n: "3", t: "按方向找刊", d: "在「期刊与会议清单」里按研究方向、档位、类型筛选，优先看对口方向且档位达标的目标。" },
-              { n: "4", t: "核对认定", d: "投稿前核对最新版目录与预警名单；成果认定一律以申请学位时学院执行的目录版本为准。" },
-            ].map((s) => (
-              <li key={s.n} className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-wash text-xs font-semibold text-accent ring-1 ring-inset ring-accent/15">{s.n}</span>
-                <p className="text-sm leading-relaxed text-body-strong">
-                  <span className="font-semibold text-ink">{s.t}：</span>{s.d}
-                </p>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-3 flex items-start gap-1.5 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-xs text-muted">
-            <Compass size={13} className="mt-0.5 shrink-0 text-accent" />
-            档位从高到低为「一类目录 / A 档 / B 档 / 基本目录」；「基本目录」只用于满足基本要求，公开评审需更高档位。
-          </p>
-        </Section>
-
         <Section title="一、本专业的成果要求（硕士 / 博士）" count={2}>
           <div className="space-y-3">
             {[
@@ -506,7 +483,7 @@ export default function DegreeRequirements() {
           <VenueList program={program} />
         </Section>
 
-        <Section title="四、数据来源" defaultOpen={false}>
+        <Section title="三、数据来源" defaultOpen={false}>
           <ul className="space-y-2.5">
             {VENUE_SOURCES.map((s) => (
               <li key={s.id} className="text-sm">
