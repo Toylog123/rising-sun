@@ -2,14 +2,13 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus, Pencil, Trash2, Users, Calendar, FlaskConical, GraduationCap,
-  Mail, Github, ExternalLink, ArrowRight,
+  Mail, Github, ExternalLink, ArrowRight, Award,
 } from "lucide-react";
 import { useTaskStore, latestStatus, statusTone, type Student } from "@/store/tasks";
 import { calcGrade, statusToneStudent } from "@/lib/students";
 import { confirmDialog } from "@/store/ui";
 import StudentEditor from "@/components/StudentEditor";
 import Avatar from "@/components/Avatar";
-import { DegreeProgress } from "@/components/DegreeBoard";
 
 const STATUS_BG: Record<string, string> = {
   green: "bg-success-wash text-success-ink border-success-line",
@@ -289,7 +288,22 @@ export default function Students() {
                         </p>
                       )}
 
-                      <DegreeProgress student={s} />
+                      {/* 学位要求：卡片只保留简洁入口，状态与详情统一放到「学位要求」分页面 */}
+                      {(s.program || s.degree) && (
+                        <Link
+                          to={`/degree-requirements?student=${encodeURIComponent(s.name)}`}
+                          className="group/deg mt-3 flex items-center justify-between gap-2 rounded-xl border border-line bg-canvas/60 px-3 py-2.5 transition-colors hover:border-accent/40 hover:bg-wash/60"
+                        >
+                          <span className="inline-flex items-center gap-2 text-xs font-medium text-ink">
+                            <Award size={14} className="text-accent" />
+                            {s.degree ?? "硕士"}毕业要求 · {s.program ?? "集成电路科学与工程"}
+                          </span>
+                          <span className="inline-flex items-center gap-0.5 text-xs text-accent transition-colors group-hover/deg:text-accent-deep">
+                            查看详情
+                            <ArrowRight size={13} className="transition-transform group-hover/deg:translate-x-0.5" />
+                          </span>
+                        </Link>
+                      )}
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {(s.email || s.homepage || s.github) ? (
