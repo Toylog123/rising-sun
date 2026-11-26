@@ -31,7 +31,6 @@ const DIRECTIONS = [
 export default function Home() {
   const allTasks = useTaskStore((s) => s.tasks);
   const tasks = allTasks.filter((t) => !t.archived);
-  const advisor = useTaskStore((s) => s.advisor);
   const syncStatus = useTaskStore((s) => s.syncStatus);
   const syncError = useTaskStore((s) => s.syncError);
   const lastSyncedAt = useTaskStore((s) => s.lastSyncedAt);
@@ -93,9 +92,7 @@ export default function Home() {
               <span className="eyebrow !border-accent/25 !bg-accent/[0.06] !text-accent-deep"><FlaskConical size={12} className="text-accent" />芯片设计自动化 · EDA</span>
               <span className="flex items-center gap-3.5 text-[13px] text-muted">
                 <span className="inline-flex items-center gap-1.5"><Sparkles size={12} className="text-accent/70" />成立于 2025</span>
-                {advisor && (
-                  <span className="inline-flex items-center gap-1.5"><GraduationCap size={13} className="text-accent/70" />指导老师 · {advisor}</span>
-                )}
+                <span className="inline-flex items-center gap-1.5" title="课题组学术带头人"><GraduationCap size={13} className="text-accent/70" />学术带头人 · 郭阳研究员</span>
               </span>
             </div>
             <h1 className="rise-in font-serif text-5xl font-black leading-[1.12] tracking-heading text-ink sm:text-[4.5rem]" style={{ animationDelay: "100ms" }}>

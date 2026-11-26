@@ -79,7 +79,7 @@ export default function MembersSection() {
             <span className="eyebrow mb-4"><Users size={12} className="text-accent" />课题组成员</span>
             <h2 className="section-mark font-serif text-3xl font-bold tracking-heading text-ink sm:text-4xl">我们的团队</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              共 {total} 人 · 在读 {active} · 已毕业 {alumni} · 指导老师 {advisor || "—"}
+              共 {total} 人 · 在读 {active} · 已毕业 {alumni}
             </p>
           </div>
           <button
@@ -105,86 +105,116 @@ export default function MembersSection() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* 指导老师（顶部） */}
+            {/* 学术带头人（挂名，仅一行体现背景资历，不展开介绍） */}
             {(() => {
-              const teacher = sorted.find((m) => m.role === "teacher");
-              if (!teacher) return null;
+              const honorary = sorted.filter((m) => m.role === "teacher" && m.name !== advisor);
+              if (honorary.length === 0) return null;
               return (
                 <section>
                   <h3 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
                     <GraduationCap size={18} className="text-accent" />
-                    指导老师
+                    学术带头人
                   </h3>
-                  <article
-                    key={teacher.name}
-                    className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
-                  >
-                    <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <Avatar name={teacher.name} src={teacher.avatar} size={52} />
-                        <h4 className="font-serif text-xl font-bold text-ink">
-                          {teacher.name}
-                        </h4>
-                        {teacher.title && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
-                            {teacher.title}
-                          </span>
-                        )}
+                  <div className="flex flex-wrap gap-3">
+                    {honorary.map((t) => (
+                      <div
+                        key={t.name}
+                        className="inline-flex items-center gap-2 rounded-xl border border-line bg-paper px-4 py-2.5"
+                      >
+                        <Avatar name={t.name} src={t.avatar} size={32} />
+                        <span className="font-serif text-base font-semibold text-ink">{t.name}</span>
+                        {t.title && <span className="text-xs text-muted">{t.title}</span>}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => openEdit(teacher)}
-                          title="编辑"
-                          className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleRemove(teacher)}
-                          title="移除"
-                          className="p-1.5 rounded-md text-muted hover:text-danger-ink hover:bg-danger-wash transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
 
-                    {teacher.researchAreas && teacher.researchAreas.length > 0 && (
-                      <div className="mt-3">
-                        <p className="flex items-center gap-1 text-xs font-semibold text-faint mb-1.5">
-                          <FlaskConical size={12} />
-                          研究方向
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {teacher.researchAreas.map((r) => (
-                            <span
-                              key={r}
-                              className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs text-accent"
+            {/* 指导教师（实际带学生，完整卡片） */}
+            {(() => {
+              const teachers = sorted.filter((m) => m.role === "teacher" && m.name === advisor);
+              if (teachers.length === 0) return null;
+              return (
+                <section>
+                  <h3 className="font-serif text-lg font-bold text-ink mb-3 flex items-center gap-2">
+                    <GraduationCap size={18} className="text-accent" />
+                    指导教师
+                  </h3>
+                  <div className="space-y-4">
+                    {teachers.map((teacher) => (
+                      <article
+                        key={teacher.name}
+                        className="rounded-2xl bg-paper border border-line p-5 transition-all hover:shadow-md hover:border-accent/30"
+                      >
+                        <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <Avatar name={teacher.name} src={teacher.avatar} size={52} />
+                            <h4 className="font-serif text-xl font-bold text-ink">
+                              {teacher.name}
+                            </h4>
+                            {teacher.title && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
+                                {teacher.title}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openEdit(teacher)}
+                              title="编辑"
+                              className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-paper transition-colors"
                             >
-                              {r}
-                            </span>
-                          ))}
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleRemove(teacher)}
+                              title="移除"
+                              className="p-1.5 rounded-md text-muted hover:text-danger-ink hover:bg-danger-wash transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
 
-                    {teacher.bio && (
-                      <p className="mt-3 text-sm text-ink leading-relaxed">
-                        {teacher.bio}
-                      </p>
-                    )}
+                        {teacher.researchAreas && teacher.researchAreas.length > 0 && (
+                          <div className="mt-3">
+                            <p className="flex items-center gap-1 text-xs font-semibold text-faint mb-1.5">
+                              <FlaskConical size={12} />
+                              研究方向
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {teacher.researchAreas.map((r) => (
+                                <span
+                                  key={r}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-md bg-accent/10 border border-accent/20 text-xs text-accent"
+                                >
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-                    {teacher.email && (
-                      <div className="mt-3">
-                        <a
-                          href={`mailto:${teacher.email}`}
-                          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
-                        >
-                          <Mail size={12} /> {teacher.email}
-                        </a>
-                      </div>
-                    )}
-                  </article>
+                        {teacher.bio && (
+                          <p className="mt-3 text-sm text-ink leading-relaxed">
+                            {teacher.bio}
+                          </p>
+                        )}
+
+                        {teacher.email && (
+                          <div className="mt-3">
+                            <a
+                              href={`mailto:${teacher.email}`}
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted bg-paper hover:bg-wash transition-colors"
+                            >
+                              <Mail size={12} /> {teacher.email}
+                            </a>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
                 </section>
               );
             })()}
