@@ -9,7 +9,6 @@ import {
   X,
   Info,
   ExternalLink,
-  AlertTriangle,
   BookOpen,
   Award,
   Compass,
@@ -17,7 +16,7 @@ import {
   CheckCircle2,
   Circle,
 } from "lucide-react";
-import { GOTCHAS, VENUE_SOURCES, FIELD_TAGS, type FieldTag } from "@/data/venueCatalog";
+import { VENUE_SOURCES, type FieldTag } from "@/data/venueCatalog";
 import {
   PROGRAMS,
   GRADE_ORDER,
@@ -384,7 +383,7 @@ export default function DegreeRequirements() {
             <GraduationCap size={20} />
           </div>
           <div>
-            <h1 className="font-serif text-2xl font-bold text-ink">学位要求与选刊指南</h1>
+            <h1 className="font-serif text-2xl font-bold text-ink">学位要求与投稿指南</h1>
             <p className="text-sm text-muted mt-1">全体学生毕业要求一览，按专业查期刊会议、核对等级</p>
           </div>
         </div>
@@ -419,9 +418,9 @@ export default function DegreeRequirements() {
         )}
       </section>
 
-      {/* 二、选刊指南：整体默认收起，点击才展开 */}
+      {/* 二、投稿指南：整体默认收起，点击才展开 */}
       <Section
-        title="选刊指南"
+        title="投稿指南"
         desc="按学科口径查期刊会议、核对等级；下方各子条目点击后展开"
       >
 
@@ -507,17 +506,6 @@ export default function DegreeRequirements() {
           <VenueList program={program} />
         </Section>
 
-        <Section title="三、容易搞错的条目" defaultOpen={false}>
-          <ul className="space-y-2">
-            {GOTCHAS.map((g, i) => (
-              <li key={i} className="flex gap-2 text-sm text-body-strong leading-relaxed">
-                <AlertTriangle size={13} className="shrink-0 mt-1 text-warning-ink" />
-                <span className="flex-1">{g}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
         <Section title="四、数据来源" defaultOpen={false}>
           <ul className="space-y-2.5">
             {VENUE_SOURCES.map((s) => (
@@ -538,19 +526,6 @@ export default function DegreeRequirements() {
           </ul>
         </Section>
 
-        <Section title="五、方向标签说明" defaultOpen={false}>
-          <div className="flex flex-wrap gap-1.5">
-            {FIELD_TAGS.map((f) => (
-              <Tag key={f} tone="blue">
-                {f}
-              </Tag>
-            ))}
-          </div>
-          <p className="text-xs text-faint leading-relaxed mt-2">
-            一个条目可以有多个标签（例如 NSREC 同时属于「辐射效应」与「测试与可靠性」）。筛选时按标签取并集，
-            便于从「我做的方向」出发找刊，而不是从刊名猜。
-          </p>
-        </Section>
         </div>
       </Section>
     </div>
